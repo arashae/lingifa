@@ -211,7 +211,8 @@ object BundledVocabularyImporter {
             sourceLicense = optString("sourceLicense", "Original"),
             datasetVersion = datasetVersion,
             frequencyRank = optInt("frequencyRank", 0),
-            examPriority = optInt("examPriority", 0)
+            examPriority = optInt("examPriority", 0),
+            learningOrder = optInt("learningOrder", 0)
         )
     }
 
@@ -248,6 +249,7 @@ object BundledVocabularyImporter {
             datasetVersion = incoming.datasetVersion,
             frequencyRank = chooseFrequencyRank(existing.frequencyRank, incoming.frequencyRank),
             examPriority = maxOf(existing.examPriority, incoming.examPriority),
+            learningOrder = chooseLearningOrder(existing.learningOrder, incoming.learningOrder),
             updatedAt = System.currentTimeMillis()
         )
     }
@@ -259,6 +261,12 @@ object BundledVocabularyImporter {
     }
 
     private fun chooseFrequencyRank(existing: Int, incoming: Int): Int = when {
+        existing <= 0 -> incoming
+        incoming <= 0 -> existing
+        else -> minOf(existing, incoming)
+    }
+
+    private fun chooseLearningOrder(existing: Int, incoming: Int): Int = when {
         existing <= 0 -> incoming
         incoming <= 0 -> existing
         else -> minOf(existing, incoming)

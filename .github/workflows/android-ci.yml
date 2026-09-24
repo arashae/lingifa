@@ -1,6 +1,8 @@
 name: Android APK Build
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -25,16 +27,15 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-36" "platforms;android-36-ext18" "build-tools;36.0.0"
 
-      - name: Set up Gradle
+      - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Make Gradle wrapper executable
-        run: chmod +x gradlew
+        with:
+          gradle-version: '9.3.1'
 
       - name: Run unit tests and build debug APK
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug --stacktrace
+        run: gradle --no-daemon testDebugUnitTest assembleDebug --stacktrace
 
       - name: Upload debug APK
         if: success()

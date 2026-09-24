@@ -30,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +61,7 @@ fun VocabPacksScreen(
     onNavigateToExamTracks: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+    val syncStates by viewModel.packSyncStates.collectAsState()
 
     PersianRtlLayout {
         Scaffold(
@@ -121,17 +123,27 @@ fun VocabPacksScreen(
                 }
 
                 item {
-                    Text(
-                        text = "بانک‌ها و بسته‌های واژگان:",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "بانک‌ها و بسته‌های واژگان:",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         )
-                    )
+                        Text(
+                            text = "بانک‌های مادر را یک‌بار دانلود کنید؛ بعد از آن لغات و مرورها کاملاً آفلاین در Room می‌مانند.",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
                 }
 
                 items(state.packs, key = { it.id }) { pack ->
                     VocabPackCard(
                         pack = pack,
+                        syncState = syncStates[pack.id],
+                        onSync = { viewModel.syncMasterPack(pack.id) },
                         onViewWords = {
                             viewModel.onPackFilterChanged(pack.id)
                             onFilterByPack(pack.id)
@@ -148,6 +160,8 @@ fun VocabPacksScreen(
 @Composable
 private fun VocabPackCard(
     pack: VocabularyPack,
+    syncState: PackSyncUiState?,
+    onSync: () -> Unit,
     onViewWords: () -> Unit
 ) {
     val icon: ImageVector = when (pack.iconName) {
@@ -168,9 +182,11 @@ private fun VocabPackCard(
         else -> SecondaryTeal
     }
 
-    val target = pack.targetWordCount.coerceAtLeast(0)
-    val installed = pack.installedWordCount.coerceAtLeast(0)
+    val target = maxOf(pack.targetWordCount, syncState?.target ?: 0).coerceAtLeast(0)
+    val installed = maxOf(pack.installedWordCount, syncState?.installed ?: 0).coerceAtLeast(0)
     val progress = if (target > 0) (installed.toFloat() / target.toFloat()).coerceIn(0f, 1f) else 0f
+    val isSyncing = syncState?.isRunning == true
+    val isComplete = pack.isCorePack && target > 0 && installed >= target
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -233,8 +249,11 @@ private fun VocabPackCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "پوشش فعلی بانک",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                        text = if (isComplete) "بانک کامل و آفلاین" else "پوشش فعلی بانک",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = if (isComplete) SuccessGreen else MaterialTheme.colorScheme.onSurface
+                        )
                     )
                     Text(
                         text = "$installed / $target واژه",
@@ -251,50 +270,95 @@ private fun VocabPackCard(
                         .fillMaxWidth()
                         .height(7.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = iconBgColor,
+                    color = if (isComplete) SuccessGreen else iconBgColor,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${(progress * 100).toInt()}٪ از هدف بانک نصب شده است",
+                    text = syncState?.message?.takeIf { it.isNotBlank() }
+                        ?: "${(progress * 100).toInt()}٪ از هدف بانک نصب شده است",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (syncState?.stage == "error") {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 )
+                if ((syncState?.warningCount ?: 0) > 0) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "بخشی از منابع در دسترس نبود؛ دانلود قابل ادامه است.",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(8.dp)
+            if (pack.isCorePack) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = if (pack.isCorePack) {
-                            "$installed واژه قابل مطالعه"
-                        } else {
-                            "${pack.wordCount} واژه آموزشی"
-                        },
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                    if (!isComplete) {
+                        Button(
+                            onClick = onSync,
+                            enabled = !isSyncing,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = iconBgColor)
+                        ) {
+                            Text(
+                                text = when {
+                                    isSyncing -> "در حال دانلود…"
+                                    installed > 0 -> "ادامه دانلود"
+                                    else -> "دانلود کامل بانک"
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = onViewWords,
+                        enabled = installed > 0,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("مطالعه $installed واژه", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-
-                Button(
-                    onClick = onViewWords,
-                    enabled = !pack.isCorePack || installed > 0,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("مشاهده و مطالعه لغات", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "${pack.wordCount} واژه آموزشی",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    Button(
+                        onClick = onViewWords,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                    ) {
+                        Text("مشاهده و مطالعه لغات", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

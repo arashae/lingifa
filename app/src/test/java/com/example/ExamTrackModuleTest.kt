@@ -9,15 +9,17 @@ import com.example.data.local.ExamTrackDao
 import com.example.data.local.UserProfileDao
 import com.example.data.model.ExamTrackType
 import com.example.data.model.UserProfile
+import com.example.data.model.VocabularyItem
+import com.example.data.model.VocabularyPackItem
 import com.example.data.repository.DailyStreakRepository
 import com.example.data.repository.ExamTrackRepository
 import com.example.data.seed.ExamTrackDataSeed
+import com.example.data.seed.InitialDataSeed
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -94,6 +96,37 @@ class ExamTrackModuleTest {
             assertTrue(word.exampleFa.isNotBlank())
             assertTrue(word.stageNumber in 1..4)
         }
+    }
+
+    @Test
+    fun downloadedMasterVocabulary_appearsReactivelyInIeltsTrack() = runBlocking {
+        val insertedId = database.vocabularyDao().insert(
+            VocabularyItem(
+                word = "institutionalize",
+                persianMeaning = "نهادینه کردن",
+                englishDefinition = "to establish something as a normal or accepted system",
+                cefrLevel = "C1",
+                ieltsRelevance = "High",
+                tags = listOf("IELTS", "Academic"),
+                source = "test",
+                examPriority = 88
+            )
+        )
+        database.vocabularyPackItemDao().insert(
+            VocabularyPackItem(
+                packId = InitialDataSeed.IELTS_MASTER_PACK_ID,
+                vocabularyId = insertedId
+            )
+        )
+
+        val state = repository.getTrackState(ExamTrackType.IELTS).first()
+        val allWords = state.stages.flatMap { it.words }
+        val downloaded = allWords.firstOrNull { it.word.equals("institutionalize", ignoreCase = true) }
+
+        assertTrue("Downloaded master-bank word must enter IELTS track", downloaded != null)
+        assertEquals("نهادینه کردن", downloaded?.persianMeaning)
+        assertTrue(downloaded?.id?.startsWith("master_ielts_") == true)
+        assertTrue(downloaded?.stageNumber in 1..4)
     }
 
     @Test

@@ -37,6 +37,9 @@ data class VocabularyItem(
     val frequencyRank: Int = 0,
     @ColumnInfo(defaultValue = "0")
     val examPriority: Int = 0,
+    /** Stable position in the CEFR curriculum; lower values are introduced first. */
+    @ColumnInfo(defaultValue = "0")
+    val learningOrder: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val mastery: Int = 0, // 0 to 100

@@ -20,12 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,8 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.model.VocabularyPack
 import com.example.ui.components.CefrBadge
@@ -64,12 +58,7 @@ fun VocabPacksScreen(
     PersianRtlLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                LinguaTopAppBar(
-                    title = "بانک‌های واژگان",
-                    onBack = onBack
-                )
-            }
+            topBar = { LinguaTopAppBar(title = "بانک‌های واژگان", onBack = onBack) }
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
@@ -90,16 +79,14 @@ fun VocabPacksScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "هر بانک را یک‌بار دریافت کنید و بعد کاملاً آفلاین مطالعه کنید.",
+                            text = "یک‌بار دریافت کنید؛ بعد آفلاین مطالعه و مرور کنید.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                item {
-                    ExamTracksEntryCard(onClick = onNavigateToExamTracks)
-                }
+                item { ExamTracksEntryCard(onClick = onNavigateToExamTracks) }
 
                 item {
                     Row(
@@ -109,11 +96,7 @@ fun VocabPacksScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "همه بانک‌ها",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text("همه بانک‌ها", style = MaterialTheme.typography.titleMedium)
                         Text(
                             text = "${state.packs.size} بسته",
                             style = MaterialTheme.typography.labelMedium,
@@ -198,20 +181,12 @@ private fun VocabPackCard(
     onSync: () -> Unit,
     onViewWords: () -> Unit
 ) {
-    val icon: ImageVector = when (pack.iconName) {
-        "school" -> Icons.Default.School
-        "menu_book" -> Icons.Default.MenuBook
-        "psychology" -> Icons.Default.Psychology
-        "edit_note" -> Icons.Default.EditNote
-        "record_voice_over" -> Icons.Default.RecordVoiceOver
-        else -> Icons.Default.Translate
-    }
-
     val target = maxOf(pack.targetWordCount, syncState?.target ?: 0).coerceAtLeast(0)
     val installed = maxOf(pack.installedWordCount, syncState?.installed ?: 0).coerceAtLeast(0)
     val progress = if (target > 0) (installed.toFloat() / target.toFloat()).coerceIn(0f, 1f) else 0f
     val isSyncing = syncState?.isRunning == true
     val isComplete = pack.isCorePack && target > 0 && installed >= target
+    val statusMessage = syncState?.message?.takeIf { it.isNotBlank() }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -220,7 +195,10 @@ private fun VocabPackCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -233,7 +211,7 @@ private fun VocabPackCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = icon,
+                        imageVector = Icons.Default.MenuBook,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
@@ -291,12 +269,11 @@ private fun VocabPackCard(
                         color = if (isComplete) SuccessGreen else MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
-                    val message = syncState?.message?.takeIf { it.isNotBlank() }
-                    if (message != null) {
+                    if (statusMessage != null) {
                         Text(
-                            text = message,
+                            text = statusMessage,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (syncState.stage == "error") {
+                            color = if (syncState?.stage == "error") {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -337,7 +314,7 @@ private fun VocabPackCard(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = when {
+                            when {
                                 isSyncing -> "در حال دریافت…"
                                 installed > 0 -> "ادامه دریافت"
                                 else -> "دریافت کامل"

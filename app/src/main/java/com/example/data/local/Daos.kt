@@ -71,6 +71,9 @@ interface VocabularyDao {
     @Query("SELECT COUNT(*) FROM vocabulary_items")
     suspend fun getCountSync(): Int
 
+    @Query("SELECT * FROM vocabulary_items")
+    suspend fun getAllVocabulariesSync(): List<VocabularyItem>
+
     @Query("SELECT COUNT(*) FROM vocabulary_items WHERE mastery >= 70")
     fun getLearnedCount(): Flow<Int>
 

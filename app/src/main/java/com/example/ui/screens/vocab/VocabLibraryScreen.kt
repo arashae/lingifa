@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -81,7 +82,8 @@ fun VocabLibraryScreen(
     onNavigateToImportCenter: () -> Unit,
     onNavigateToPacks: () -> Unit,
     onNavigateToAiVocabCard: () -> Unit = {},
-    onNavigateToExamTracks: () -> Unit = {}
+    onNavigateToExamTracks: () -> Unit = {},
+    onNavigateToReview: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -147,7 +149,8 @@ fun VocabLibraryScreen(
                         onNavigateToExamTracks = onNavigateToExamTracks,
                         onNavigateToPacks = onNavigateToPacks,
                         onNavigateToImportCenter = onNavigateToImportCenter,
-                        onNavigateToAiVocabCard = onNavigateToAiVocabCard
+                        onNavigateToAiVocabCard = onNavigateToAiVocabCard,
+                        onNavigateToReview = onNavigateToReview
                     )
 
                     FilterStrip(
@@ -239,7 +242,8 @@ private fun QuickActions(
     onNavigateToExamTracks: () -> Unit,
     onNavigateToPacks: () -> Unit,
     onNavigateToImportCenter: () -> Unit,
-    onNavigateToAiVocabCard: () -> Unit
+    onNavigateToAiVocabCard: () -> Unit,
+    onNavigateToReview: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -280,6 +284,13 @@ private fun QuickActions(
                 modifier = Modifier.weight(1f)
             )
         }
+        QuickActionCard(
+            icon = Icons.Default.Timer,
+            title = "مرور لغات",
+            subtitle = "کلمات آمادهٔ مرور و تثبیت حافظه",
+            onClick = onNavigateToReview,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

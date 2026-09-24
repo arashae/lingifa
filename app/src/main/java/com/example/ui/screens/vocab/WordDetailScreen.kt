@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -56,7 +57,6 @@ import com.example.ui.components.CefrBadge
 import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
-import com.example.ui.theme.SuccessGreen
 
 @Composable
 fun WordDetailScreen(

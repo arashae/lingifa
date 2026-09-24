@@ -245,6 +245,9 @@ fun AppNavGraph(
                         onFilterByPack = {
                             navController.popBackStack()
                         },
+                        onStartCefrLevel = {
+                            navController.popBackStack()
+                        },
                         onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) }
                     )
                 }

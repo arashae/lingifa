@@ -117,7 +117,11 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
 
             _uiState.update {
                 it.copy(
-                    activeStudyStage = stage.copy(words = sessionWords),
+                    activeStudyStage = stage.copy(
+                        words = sessionWords,
+                        masteredCount = 0,
+                        totalCount = sessionWords.size
+                    ),
                     studyWordIndex = 0,
                     isCardFlipped = false,
                     statusMessage = "جلسه امروز: ${sessionWords.size} واژه از مرحله ${stage.stageNumber}"

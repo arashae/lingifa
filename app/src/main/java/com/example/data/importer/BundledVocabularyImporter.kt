@@ -68,9 +68,12 @@ object BundledVocabularyImporter {
             val version = chunk.getString("version")
             val packId = chunk.getString("packId")
             val assetPath = chunk.getString("asset")
+            val expectedItems = chunk.optInt("expectedItems", -1)
 
             val existingChunk = chunkDao.get(chunkId)
-            if (existingChunk?.version == version) {
+            if (existingChunk?.version == version &&
+                (expectedItems < 0 || existingChunk.itemCount == expectedItems)
+            ) {
                 skippedChunks++
                 continue
             }
@@ -84,6 +87,12 @@ object BundledVocabularyImporter {
                     vocabularyDao = vocabularyDao,
                     packItemDao = packItemDao
                 )
+
+                if (expectedItems >= 0) {
+                    require(result.processedItems == expectedItems) {
+                        "Chunk $chunkId expected $expectedItems items but processed ${result.processedItems}"
+                    }
+                }
 
                 chunkDao.upsert(
                     VocabularyDatasetChunk(

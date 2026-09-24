@@ -44,7 +44,7 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -123,6 +123,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN learningOrder INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -131,7 +137,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
                     .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()

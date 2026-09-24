@@ -12,6 +12,7 @@ import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
 import com.example.data.repository.VocabularyRepository
 import com.example.network.GeminiClient
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,6 +38,7 @@ data class VocabLibraryUiState(
     val statusMessage: String? = null
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application, viewModelScope)
@@ -55,10 +57,6 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _filePreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _statusMessage = MutableStateFlow<String?>(null)
 
-    /**
-     * Pack filtering must go through the many-to-many membership table. Keeping this as a Flow
-     * also means newly imported master-bank chunks appear immediately without rebuilding UI state.
-     */
     private val wordsForSelectedPack: Flow<List<VocabularyItem>> =
         _selectedPackId.flatMapLatest { packId ->
             if (packId == null) repo.allVocabularies else repo.getByPack(packId)

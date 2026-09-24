@@ -47,10 +47,19 @@ The v5 -> v6 migration preserves existing vocabulary and progress.
 
 ## Build
 
-Debug APK:
+The repository currently carries the Gradle wrapper properties but not the wrapper launcher/JAR, so a fresh clone should use an installed Gradle **9.3.1** rather than `./gradlew`.
+
+Requirements used by CI:
+
+- JDK 21 (required for Robolectric tests against Android API 36)
+- Gradle 9.3.1
+- Android SDK Platform 36.1
+- Android Build Tools 36.0.0
+
+Run the same quality gate used by CI:
 
 ```bash
-./gradlew testDebugUnitTest assembleDebug
+gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
 ```
 
 Expected APK:
@@ -59,7 +68,7 @@ Expected APK:
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-A manual GitHub Actions workflow exists at `.github/workflows/android-ci.yml` and uploads the debug APK as an artifact when GitHub-hosted runners are available.
+The GitHub Actions workflow at `.github/workflows/android-ci.yml` runs unit tests, Android lint, builds the debug APK, and uploads it as an artifact.
 
 For release signing and environment details see [`docs/BUILD_AND_RELEASE.md`](docs/BUILD_AND_RELEASE.md).
 

@@ -2,6 +2,8 @@ package com.example.data.importer
 
 import android.content.Context
 import android.util.Log
+import androidx.room.withTransaction
+import com.example.data.local.AppDatabase
 import com.example.data.local.VocabularyDao
 import com.example.data.local.VocabularyDatasetChunkDao
 import com.example.data.local.VocabularyPackItemDao
@@ -41,6 +43,7 @@ object BundledVocabularyImporter {
 
     suspend fun importBundledCatalog(
         context: Context,
+        database: AppDatabase,
         vocabularyDao: VocabularyDao,
         packItemDao: VocabularyPackItemDao,
         chunkDao: VocabularyDatasetChunkDao
@@ -81,6 +84,7 @@ object BundledVocabularyImporter {
             try {
                 val result = importJsonlChunk(
                     context = context,
+                    database = database,
                     assetPath = assetPath,
                     packId = packId,
                     datasetVersion = version,
@@ -126,6 +130,7 @@ object BundledVocabularyImporter {
 
     private suspend fun importJsonlChunk(
         context: Context,
+        database: AppDatabase,
         assetPath: String,
         packId: String,
         datasetVersion: String,
@@ -137,12 +142,15 @@ object BundledVocabularyImporter {
         var memberships = 0
         var processed = 0
 
-        context.assets.open(assetPath).bufferedReader().use { reader ->
-            while (true) {
-                val rawLine = reader.readLine() ?: break
-                val line = rawLine.trim()
-                if (line.isEmpty() || line.startsWith("#")) continue
+        val lines = context.assets.open(assetPath).bufferedReader().use { reader ->
+            reader.lineSequence()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") }
+                .toList()
+        }
 
+        database.withTransaction {
+            for (line in lines) {
                 val json = JSONObject(line)
                 val word = json.getString("word").trim()
                 val persianMeaning = json.getString("persianMeaning").trim()

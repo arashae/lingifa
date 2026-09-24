@@ -193,6 +193,16 @@ interface VocabularyPackDao {
 
     @Query("SELECT COUNT(*) FROM vocabulary_packs")
     suspend fun getPackCount(): Int
+
+    @Query(
+        """
+        UPDATE vocabulary_packs
+        SET installedWordCount = (
+            SELECT COUNT(*) FROM vocabulary_pack_items WHERE vocabulary_pack_items.packId = vocabulary_packs.id
+        )
+        """
+    )
+    suspend fun refreshAllInstalledCounts()
 }
 
 @Dao
@@ -202,6 +212,16 @@ interface VocabularyPackItemDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(items: List<VocabularyPackItem>)
+
+    @Query(
+        """
+        INSERT OR IGNORE INTO vocabulary_pack_items (packId, vocabularyId, addedAt)
+        SELECT 'pack_cefr_' || lower(cefrLevel), id, updatedAt
+        FROM vocabulary_items
+        WHERE cefrLevel IS NOT NULL AND cefrLevel != ''
+        """
+    )
+    suspend fun populateCefrMemberships()
 
     @Query("DELETE FROM vocabulary_pack_items WHERE packId = :packId")
     suspend fun deleteByPack(packId: String)

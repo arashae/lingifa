@@ -195,6 +195,7 @@ abstract class AppDatabase : RoomDatabase() {
 
                         val summary = BundledVocabularyImporter.importBundledCatalog(
                             context = appContext,
+                            database = database,
                             vocabularyDao = database.vocabularyDao(),
                             packItemDao = database.vocabularyPackItemDao(),
                             chunkDao = database.vocabularyDatasetChunkDao()
@@ -279,15 +280,9 @@ abstract class AppDatabase : RoomDatabase() {
                 refreshInstalledCounts(database)
             }
 
-            /** Attach every existing and newly imported word to its general CEFR path. */
+            /** Attach every existing and newly imported word to its general CEFR path using instant SQLite batch copy. */
             private suspend fun ensureCefrMemberships(database: AppDatabase) {
-                val memberships = database.vocabularyDao().getAllVocabulariesSync().flatMap { item ->
-                    val id = item.id
-                    InitialDataSeed.getPackIdsFor(item)
-                        .filter { it.startsWith("pack_cefr_") }
-                        .map { packId -> VocabularyPackItem(packId = packId, vocabularyId = id) }
-                }
-                database.vocabularyPackItemDao().insertAll(memberships)
+                database.vocabularyPackItemDao().populateCefrMemberships()
             }
 
             private fun buildMemberships(
@@ -302,14 +297,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
 
             private suspend fun refreshInstalledCounts(database: AppDatabase) {
-                val packDao = database.vocabularyPackDao()
-                val membershipDao = database.vocabularyPackItemDao()
-                for (pack in InitialDataSeed.getDefaultPacks()) {
-                    packDao.updateInstalledWordCount(
-                        packId = pack.id,
-                        count = membershipDao.getPackItemCount(pack.id)
-                    )
-                }
+                database.vocabularyPackDao().refreshAllInstalledCounts()
             }
 
             private suspend fun populateIeltsDecks(database: AppDatabase) {

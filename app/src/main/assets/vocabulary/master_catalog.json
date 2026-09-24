@@ -1,35 +1,339 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026.09.24.2",
+  "catalogVersion": "2026.09.24.3",
   "targets": {
-    "pack_ielts_master": 9000,
-    "pack_toefl_master": 7000,
-    "pack_gre_master": 5000
+    "pack_ielts_master": 5040,
+    "pack_toefl_master": 6974,
+    "pack_gre_master": 7504
   },
   "chunks": [
     {
       "id": "ielts-core-001",
-      "version": "1.0.0",
+      "version": "3.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_001.jsonl",
-      "expectedItems": 20,
-      "source": "LinguaFa Original"
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-002",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-003",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_003.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-004",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_004.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-005",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_005.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-006",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_006.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-007",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_007.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-008",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_008.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-009",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_009.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-010",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_010.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "ielts-core-011",
+      "version": "3.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_011.jsonl",
+      "expectedItems": 40,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
     },
     {
       "id": "toefl-core-001",
-      "version": "1.0.0",
+      "version": "3.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_001.jsonl",
-      "expectedItems": 20,
-      "source": "LinguaFa Original"
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-002",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-003",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_003.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-004",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_004.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-005",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_005.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-006",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_006.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-007",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_007.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-008",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_008.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-009",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_009.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-010",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_010.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-011",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_011.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-012",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_012.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-013",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_013.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-014",
+      "version": "3.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_014.jsonl",
+      "expectedItems": 474,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
     },
     {
       "id": "gre-core-001",
-      "version": "1.0.0",
+      "version": "3.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_001.jsonl",
-      "expectedItems": 20,
-      "source": "LinguaFa Original"
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-002",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-003",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_003.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-004",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_004.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-005",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_005.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-006",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_006.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-007",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_007.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-008",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_008.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-009",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_009.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-010",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_010.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-011",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_011.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-012",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_012.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-013",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_013.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-014",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_014.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-015",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_015.jsonl",
+      "expectedItems": 500,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "gre-core-016",
+      "version": "3.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_016.jsonl",
+      "expectedItems": 4,
+      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
     }
   ]
 }

@@ -1,5 +1,6 @@
 package com.example.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -24,12 +25,17 @@ data class VocabularyItem(
     val commonMistakes: String = "",
     val ieltsRelevance: String = "Medium",
     val toeflRelevance: String = "Medium",
+    @ColumnInfo(defaultValue = "'Medium'")
     val greRelevance: String = "Medium",
     val tags: List<String> = emptyList(),
     val source: String = "Default",
+    @ColumnInfo(defaultValue = "''")
     val sourceLicense: String = "",
+    @ColumnInfo(defaultValue = "'1'")
     val datasetVersion: String = "1",
+    @ColumnInfo(defaultValue = "0")
     val frequencyRank: Int = 0,
+    @ColumnInfo(defaultValue = "0")
     val examPriority: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
@@ -62,10 +68,15 @@ data class VocabularyPack(
     val isDownloaded: Boolean = true,
     val category: String,
     val iconName: String,
+    @ColumnInfo(defaultValue = "1")
     val version: Int = 1,
+    @ColumnInfo(defaultValue = "'LinguaFa'")
     val source: String = "LinguaFa",
+    @ColumnInfo(defaultValue = "0")
     val targetWordCount: Int = wordCount,
+    @ColumnInfo(defaultValue = "0")
     val installedWordCount: Int = 0,
+    @ColumnInfo(defaultValue = "0")
     val isCorePack: Boolean = false
 )
 

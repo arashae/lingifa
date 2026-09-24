@@ -42,8 +42,8 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
-      - name: Run unit tests and build debug APK
-        run: gradle --no-daemon testDebugUnitTest assembleDebug --stacktrace
+      - name: Test, lint and build debug APK
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug --stacktrace
 
       - name: Upload debug APK
         if: success()

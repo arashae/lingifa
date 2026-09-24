@@ -71,6 +71,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _filePreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _statusMessage = MutableStateFlow<String?>(null)
     private val _packSyncStates = MutableStateFlow<Map<String, PackSyncUiState>>(emptyMap())
+    private val _activeMasterSyncPackId = MutableStateFlow<String?>(null)
     val packSyncStates: StateFlow<Map<String, PackSyncUiState>> = _packSyncStates.asStateFlow()
 
     private val wordsForSelectedPack: Flow<List<VocabularyItem>> =
@@ -167,6 +168,15 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     fun syncMasterPack(packId: String) {
         if (_packSyncStates.value[packId]?.isRunning == true) return
 
+        val activePackId = _activeMasterSyncPackId.value
+        if (activePackId != null && activePackId != packId) {
+            val activeTitle = uiState.value.packs.firstOrNull { it.id == activePackId }?.titleFa
+                ?: "بانک فعلی"
+            _statusMessage.value = "ابتدا دانلود «$activeTitle» را تمام کنید؛ برای جلوگیری از محدودیت سرور، بانک‌ها همزمان دانلود نمی‌شوند."
+            return
+        }
+
+        _activeMasterSyncPackId.value = packId
         val pack = uiState.value.packs.firstOrNull { it.id == packId }
         updatePackSyncState(
             packId,
@@ -230,6 +240,10 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
                 _statusMessage.value = "خطا در دانلود بانک واژگان: ${t.message ?: "ارتباط شبکه"}"
+            } finally {
+                if (_activeMasterSyncPackId.value == packId) {
+                    _activeMasterSyncPackId.value = null
+                }
             }
         }
     }

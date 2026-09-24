@@ -52,6 +52,7 @@ class BundledVocabularyCatalogTest {
     fun everyChunkMatchesManifestAndContainsValidPersianEntries() {
         val chunks = readCatalog().getJSONArray("chunks")
         val normalizedWordsByPack = mutableMapOf<String, MutableSet<String>>()
+        val placeholder = "معنی فارسی در منابع آزاد فعلی پیدا نشد"
 
         for (i in 0 until chunks.length()) {
             val chunk = chunks.getJSONObject(i)
@@ -75,6 +76,7 @@ class BundledVocabularyCatalogTest {
 
                 assertFalse("Blank word in $assetPath", word.isBlank())
                 assertFalse("Blank Persian meaning for $word", persianMeaning.isBlank())
+                assertFalse("Placeholder Persian meaning for $word", persianMeaning == placeholder)
                 assertTrue(
                     "Duplicate word $word inside offline pack $packId",
                     normalizedWords.add(word.lowercase())

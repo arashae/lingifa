@@ -6,6 +6,7 @@ import com.example.data.local.MistakeDao
 import com.example.data.local.UserProfileDao
 import com.example.data.local.VocabularyDao
 import com.example.data.local.VocabularyPackDao
+import com.example.data.local.VocabularyPackItemDao
 import com.example.data.model.MistakeRecord
 import com.example.data.model.UserProfile
 import com.example.data.model.VocabularyItem
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.Flow
 
 class VocabularyRepository(
     private val vocabDao: VocabularyDao,
-    private val packDao: VocabularyPackDao
+    private val packDao: VocabularyPackDao,
+    private val packItemDao: VocabularyPackItemDao? = null
 ) {
     val allVocabularies: Flow<List<VocabularyItem>> = vocabDao.getAllVocabularies()
     val totalCount: Flow<Int> = vocabDao.getCount()
@@ -60,11 +62,25 @@ class VocabularyRepository(
     }
 
     suspend fun delete(item: VocabularyItem) {
+        removePackMemberships(item.id)
         vocabDao.delete(item)
     }
 
     suspend fun deleteById(id: Long) {
+        removePackMemberships(id)
         vocabDao.deleteById(id)
+    }
+
+    private suspend fun removePackMemberships(vocabularyId: Long) {
+        val membershipDao = packItemDao ?: return
+        val affectedPackIds = membershipDao.getPackIdsForVocabularySync(vocabularyId)
+        membershipDao.deleteByVocabulary(vocabularyId)
+        for (packId in affectedPackIds) {
+            packDao.updateInstalledWordCount(
+                packId = packId,
+                count = membershipDao.getPackItemCount(packId)
+            )
+        }
     }
 
     suspend fun recordReview(item: VocabularyItem, rating: ReviewRating, now: Long = System.currentTimeMillis()) {
@@ -100,7 +116,6 @@ class VocabularyRepository(
             if (existing != null) {
                 when (duplicateAction) {
                     DuplicateAction.SKIP -> {
-                        // skip this item
                         continue
                     }
                     DuplicateAction.UPDATE -> {

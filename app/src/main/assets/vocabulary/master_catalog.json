@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.09.24",
+  "targets": {
+    "pack_ielts_master": 9000,
+    "pack_toefl_master": 7000,
+    "pack_gre_master": 5000
+  },
+  "chunks": [
+    {
+      "id": "gre-core-001",
+      "version": "1.0.0",
+      "packId": "pack_gre_master",
+      "asset": "vocabulary/gre/gre_core_001.jsonl",
+      "expectedItems": 20,
+      "source": "LinguaFa Original"
+    }
+  ]
+}

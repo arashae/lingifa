@@ -11,6 +11,7 @@ import com.example.data.importer.VocabularyFileParser
 import com.example.data.local.AppDatabase
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
+import com.example.data.model.UserProfile
 import com.example.data.repository.VocabularyRepository
 import com.example.network.GeminiClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,6 +34,7 @@ data class VocabLibraryUiState(
     val selectedLevel: String = "همه",
     val selectedStatus: String = "همه",
     val selectedPackId: String? = null,
+    val learningLevel: String = "B2",
     val isLoading: Boolean = false,
     val isAiGenerating: Boolean = false,
     val aiGeneratedPreview: List<ParsedImportItem> = emptyList(),
@@ -89,7 +91,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         _isAiGenerating,
         _aiPreview,
         _filePreview,
-        _statusMessage
+        _statusMessage,
+        db.userProfileDao().getProfile()
     ) { params ->
         @Suppress("UNCHECKED_CAST")
         val allWords = params[0] as List<VocabularyItem>
@@ -105,6 +108,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         @Suppress("UNCHECKED_CAST")
         val filePreview = params[8] as List<ParsedImportItem>
         val statusMsg = params[9] as String?
+        val profile = params[10] as UserProfile?
 
         val filtered = allWords.filter { item ->
             val matchesQuery = query.isEmpty() ||
@@ -125,8 +129,15 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             matchesQuery && matchesLevel && matchesStatus
         }
 
+        val curriculumWords = filtered.sortedWith(
+            compareBy<VocabularyItem> { curriculumLevelRank(it.cefrLevel) }
+                .thenBy { if (it.learningOrder > 0) it.learningOrder else Int.MAX_VALUE }
+                .thenBy { if (it.frequencyRank > 0) it.frequencyRank else Int.MAX_VALUE }
+                .thenBy { it.word.lowercase() }
+        )
+
         VocabLibraryUiState(
-            words = filtered,
+            words = curriculumWords,
             totalCount = allWords.size,
             learnedCount = allWords.count { it.mastery >= 70 },
             packs = packs,
@@ -134,6 +145,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             selectedLevel = level,
             selectedStatus = status,
             selectedPackId = packId,
+            learningLevel = profile?.currentLevel ?: "B2",
             isAiGenerating = aiGen,
             aiGeneratedPreview = aiPreview,
             fileImportPreview = filePreview,
@@ -159,6 +171,17 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onPackFilterChanged(packId: String?) {
         _selectedPackId.value = packId
+    }
+
+    /** Lets a learner start at any CEFR level, without forcing a placement test. */
+    fun selectLearningLevel(level: String) {
+        _selectedLevel.value = level
+        viewModelScope.launch {
+            val profileDao = db.userProfileDao()
+            val current = profileDao.getProfileSync() ?: UserProfile()
+            profileDao.insertOrUpdate(current.copy(currentLevel = level))
+            _statusMessage.value = "مسیر یادگیری از سطح $level انتخاب شد."
+        }
     }
 
     fun clearStatusMessage() {
@@ -256,6 +279,17 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getWordById(id: Long): Flow<VocabularyItem?> {
         return repo.getById(id)
+    }
+
+    private fun curriculumLevelRank(level: String): Int = when (level.trim().uppercase()) {
+        "PRE-A1" -> 0
+        "A1" -> 1
+        "A2" -> 2
+        "B1" -> 3
+        "B2" -> 4
+        "C1" -> 5
+        "C2" -> 6
+        else -> 99
     }
 
     fun toggleFavorite(item: VocabularyItem) {

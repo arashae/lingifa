@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Psychology
@@ -31,8 +28,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -125,14 +122,14 @@ fun VocabPacksScreen(
 
                 item {
                     Text(
-                        text = "سایر بسته‌های واژگان تخصصی:",
+                        text = "بانک‌ها و بسته‌های واژگان:",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                 }
 
-                items(state.packs) { pack ->
+                items(state.packs, key = { it.id }) { pack ->
                     VocabPackCard(
                         pack = pack,
                         onViewWords = {
@@ -171,6 +168,10 @@ private fun VocabPackCard(
         else -> SecondaryTeal
     }
 
+    val target = pack.targetWordCount.coerceAtLeast(0)
+    val installed = pack.installedWordCount.coerceAtLeast(0)
+    val progress = if (target > 0) (installed.toFloat() / target.toFloat()).coerceIn(0f, 1f) else 0f
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -183,7 +184,10 @@ private fun VocabPackCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(44.dp)
@@ -191,10 +195,15 @@ private fun VocabPackCard(
                             .background(iconBgColor.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = icon, contentDescription = null, tint = iconBgColor, modifier = Modifier.size(24.dp))
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconBgColor,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = pack.titleFa,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
@@ -205,6 +214,7 @@ private fun VocabPackCard(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 CefrBadge(level = pack.level)
             }
 
@@ -214,6 +224,44 @@ private fun VocabPackCard(
                 text = pack.descriptionFa,
                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
+
+            if (pack.isCorePack && target > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "پوشش فعلی بانک",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = "$installed / $target واژه",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(7.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = iconBgColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${(progress * 100).toInt()}٪ از هدف بانک نصب شده است",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -227,7 +275,11 @@ private fun VocabPackCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "${pack.wordCount} واژه آموزشی",
+                        text = if (pack.isCorePack) {
+                            "$installed واژه قابل مطالعه"
+                        } else {
+                            "${pack.wordCount} واژه آموزشی"
+                        },
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
@@ -238,6 +290,7 @@ private fun VocabPackCard(
 
                 Button(
                     onClick = onViewWords,
+                    enabled = !pack.isCorePack || installed > 0,
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                 ) {

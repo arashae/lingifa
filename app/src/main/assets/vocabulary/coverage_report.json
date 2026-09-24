@@ -10,6 +10,14 @@
     "TOEFL": 6974,
     "GRE": 7504
   },
+  "cefrCounts": {
+    "A1": 292,
+    "A2": 707,
+    "B1": 968,
+    "B2": 1209,
+    "C1": 1105,
+    "C2": 16321
+  },
   "missingPersianBeforeFallback": {
     "IELTS": 0,
     "TOEFL": 0,
@@ -22,14 +30,14 @@
   },
   "chunkSize": 500,
   "placeholderPersianBeforePostprocess": {
-    "IELTS": 157,
-    "TOEFL": 89,
-    "GRE": 72
+    "IELTS": 0,
+    "TOEFL": 0,
+    "GRE": 0
   },
   "persianFallbackResolved": {
-    "IELTS": 157,
-    "TOEFL": 89,
-    "GRE": 72
+    "IELTS": 0,
+    "TOEFL": 0,
+    "GRE": 0
   },
   "placeholderPersianAfterPostprocess": {
     "IELTS": 0,

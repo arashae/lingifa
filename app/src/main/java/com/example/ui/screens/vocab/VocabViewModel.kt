@@ -40,7 +40,11 @@ data class VocabLibraryUiState(
 class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application, viewModelScope)
-    private val repo = VocabularyRepository(db.vocabularyDao(), db.vocabularyPackDao())
+    private val repo = VocabularyRepository(
+        vocabDao = db.vocabularyDao(),
+        packDao = db.vocabularyPackDao(),
+        packItemDao = db.vocabularyPackItemDao()
+    )
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedLevel = MutableStateFlow("همه")
@@ -266,7 +270,6 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                 else -> VocabularyFileParser.parseCsv(content)
             }
 
-            // Check duplicates
             for (p in parsed) {
                 val existing = repo.checkDuplicate(p.word)
                 if (existing != null) {

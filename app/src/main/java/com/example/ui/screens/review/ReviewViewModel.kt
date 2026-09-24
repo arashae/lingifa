@@ -64,10 +64,10 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             val sessionItems = if (due.isNotEmpty()) {
                 due.take(15)
             } else {
-                // Free review should reinforce words the learner has actually studied;
-                // use brand-new items only when there is no learning history yet.
-                val learned = all.filter { it.mastery > 0 }
-                (learned.ifEmpty { all }).shuffled().take(10)
+                // Free review reinforces only words the learner has actually studied.
+                // New imports must first be introduced through a learning path.
+                val learned = all.filter { it.correctCount > 0 || it.incorrectCount > 0 }
+                learned.shuffled().take(10)
             }
 
             if (sessionItems.isNotEmpty()) {

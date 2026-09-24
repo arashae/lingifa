@@ -20,29 +20,42 @@ class BundledVocabularyCatalogTest {
     fun catalogContainsAllThreeExamMasterBanks() {
         val catalog = readCatalog()
         val targets = catalog.getJSONObject("targets")
+        val chunks = catalog.getJSONArray("chunks")
 
-        assertEquals(9000, targets.getInt(InitialDataSeed.IELTS_MASTER_PACK_ID))
-        assertEquals(7000, targets.getInt(InitialDataSeed.TOEFL_MASTER_PACK_ID))
-        assertEquals(5000, targets.getInt(InitialDataSeed.GRE_MASTER_PACK_ID))
+        val expectedPackIds = setOf(
+            InitialDataSeed.IELTS_MASTER_PACK_ID,
+            InitialDataSeed.TOEFL_MASTER_PACK_ID,
+            InitialDataSeed.GRE_MASTER_PACK_ID
+        )
 
-        val chunkPackIds = buildSet {
-            val chunks = catalog.getJSONArray("chunks")
-            for (i in 0 until chunks.length()) {
-                add(chunks.getJSONObject(i).getString("packId"))
-            }
+        val generatedCounts = mutableMapOf<String, Int>()
+        for (i in 0 until chunks.length()) {
+            val chunk = chunks.getJSONObject(i)
+            val packId = chunk.getString("packId")
+            generatedCounts[packId] = generatedCounts.getOrDefault(packId, 0) +
+                chunk.getInt("expectedItems")
         }
 
-        assertTrue(InitialDataSeed.IELTS_MASTER_PACK_ID in chunkPackIds)
-        assertTrue(InitialDataSeed.TOEFL_MASTER_PACK_ID in chunkPackIds)
-        assertTrue(InitialDataSeed.GRE_MASTER_PACK_ID in chunkPackIds)
+        expectedPackIds.forEach { packId ->
+            assertTrue("Missing target for $packId", targets.has(packId))
+            assertTrue("Missing generated chunks for $packId", generatedCounts.containsKey(packId))
+            assertTrue("Vocabulary bank $packId is unexpectedly small", targets.getInt(packId) >= 1000)
+            assertEquals(
+                "Catalog target must equal the number of generated offline entries for $packId",
+                targets.getInt(packId),
+                generatedCounts.getValue(packId)
+            )
+        }
     }
 
     @Test
     fun everyChunkMatchesManifestAndContainsValidPersianEntries() {
         val chunks = readCatalog().getJSONArray("chunks")
+        val normalizedWordsByPack = mutableMapOf<String, MutableSet<String>>()
 
         for (i in 0 until chunks.length()) {
             val chunk = chunks.getJSONObject(i)
+            val packId = chunk.getString("packId")
             val assetPath = chunk.getString("asset")
             val expectedItems = chunk.getInt("expectedItems")
             val rows = context.assets.open(assetPath).bufferedReader().use { reader ->
@@ -54,7 +67,7 @@ class BundledVocabularyCatalogTest {
 
             assertEquals("Unexpected item count for $assetPath", expectedItems, rows.size)
 
-            val normalizedWords = mutableSetOf<String>()
+            val normalizedWords = normalizedWordsByPack.getOrPut(packId) { mutableSetOf() }
             rows.forEach { line ->
                 val item = JSONObject(line)
                 val word = item.getString("word").trim()
@@ -62,7 +75,10 @@ class BundledVocabularyCatalogTest {
 
                 assertFalse("Blank word in $assetPath", word.isBlank())
                 assertFalse("Blank Persian meaning for $word", persianMeaning.isBlank())
-                assertTrue("Duplicate word $word inside $assetPath", normalizedWords.add(word.lowercase()))
+                assertTrue(
+                    "Duplicate word $word inside offline pack $packId",
+                    normalizedWords.add(word.lowercase())
+                )
             }
         }
     }

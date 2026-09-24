@@ -72,9 +72,9 @@ fun ListeningDetailScreen(
     var userAnswers by remember { mutableStateOf(mutableMapOf<String, Int>()) }
     var checkedAnswers by remember { mutableStateOf(mutableMapOf<String, Boolean>()) }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(tts) {
         onDispose {
-            tts.stop()
+            tts.shutdown()
         }
     }
 

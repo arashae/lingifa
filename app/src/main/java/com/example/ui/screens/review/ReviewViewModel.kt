@@ -58,14 +58,11 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     fun startSession() {
         viewModelScope.launch {
-            val due = vocabRepo.getDueVocabularies().first()
-            val all = vocabRepo.allVocabularies.first()
-
+            val due = vocabRepo.getDueVocabulariesForReview(limit = 30).first()
             val sessionItems = if (due.isNotEmpty()) {
                 due.take(15)
             } else {
-                // If no items due, pick 10 words for refresher practice
-                all.shuffled().take(10)
+                vocabRepo.getRandomVocabularies(10)
             }
 
             if (sessionItems.isNotEmpty()) {
@@ -75,14 +72,14 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                     sessionTotal = sessionItems.size,
                     currentExerciseType = ReviewExerciseType.FLASHCARD
                 )
-                setupCurrentExercise(sessionItems[0], all)
+                setupCurrentExercise(sessionItems[0])
             } else {
                 _uiState.value = ReviewSessionUiState(isSessionFinished = true)
             }
         }
     }
 
-    private fun setupCurrentExercise(item: VocabularyItem, allWords: List<VocabularyItem>) {
+    private suspend fun setupCurrentExercise(item: VocabularyItem) {
         val exerciseTypes = listOf(
             ReviewExerciseType.FLASHCARD,
             ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
@@ -92,14 +89,18 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         val chosenType = exerciseTypes.random()
 
         val options = when (chosenType) {
-            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOOSE -> {
-                val distractors = allWords.filter { it.word != item.word }
-                    .shuffled().take(3).map { it.persianMeaning }
+            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOICE -> {
+                val distractors = vocabRepo.getRandomVocabularies(8)
+                    .filter { it.word != item.word }
+                    .take(3)
+                    .map { it.persianMeaning }
                 (distractors + item.persianMeaning).shuffled()
             }
             ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> {
-                val distractors = allWords.filter { it.word != item.word }
-                    .shuffled().take(3).map { it.word }
+                val distractors = vocabRepo.getRandomVocabularies(8)
+                    .filter { it.word != item.word }
+                    .take(3)
+                    .map { it.word }
                 (distractors + item.word).shuffled()
             }
             else -> emptyList()
@@ -196,7 +197,6 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     fun advanceQueue(wasSuccess: Boolean = true) {
         viewModelScope.launch {
-            val all = vocabRepo.allVocabularies.first()
             val nextIndex = _uiState.value.currentIndex + 1
             val newCompleted = _uiState.value.completedCount + 1
             val newXp = _uiState.value.xpEarned + (if (wasSuccess) 10 else 2)
@@ -207,7 +207,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                     completedCount = newCompleted,
                     xpEarned = newXp
                 )
-                setupCurrentExercise(_uiState.value.queue[nextIndex], all)
+                setupCurrentExercise(_uiState.value.queue[nextIndex])
             } else {
                 streakRepo.recordPracticeActivity(
                     itemsCount = newCompleted,

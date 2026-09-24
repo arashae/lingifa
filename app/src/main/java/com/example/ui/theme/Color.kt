@@ -2,49 +2,41 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// LinguaFa design system — calm, high-contrast, vocabulary-first.
-// The palette intentionally stays close to MongoDB's restrained green language
-// without copying its product UI.
+val PrimaryBlue = Color(0xFF1E6651)
+val PrimaryBlueLight = Color(0xFF3B9275)
+val PrimaryContainerBlue = Color(0xFFDCEFE7)
+val OnPrimaryContainerBlue = Color(0xFF123C2F)
 
-// Brand / semantic colors (kept with the existing public names for compatibility).
-val PrimaryBlue = Color(0xFF00684A)
-val PrimaryBlueLight = Color(0xFF0B8F68)
-val PrimaryContainerBlue = Color(0xFFDFF7EA)
-val OnPrimaryContainerBlue = Color(0xFF073B2D)
+val SecondaryTeal = Color(0xFF58746A)
+val SecondaryContainerTeal = Color(0xFFE4EFEA)
 
-val SecondaryTeal = Color(0xFF4B6F63)
-val SecondaryContainerTeal = Color(0xFFE7F0EC)
+val AccentGold = Color(0xFFB7791F)
+val AccentGoldLight = Color(0xFFE6B85C)
+val AccentGoldContainer = Color(0xFFFFF0D4)
 
-val AccentGold = Color(0xFFC98612)
-val AccentGoldLight = Color(0xFFF2C14E)
-val AccentGoldContainer = Color(0xFFFFF4D6)
+val SuccessGreen = Color(0xFF267B55)
+val SuccessGreenContainer = Color(0xFFDDF1E6)
 
-val SuccessGreen = Color(0xFF178A56)
-val SuccessGreenContainer = Color(0xFFDDF5E8)
+val ErrorRed = Color(0xFFB64949)
+val ErrorRedContainer = Color(0xFFFFE1DE)
 
-val ErrorRed = Color(0xFFBA1A1A)
-val ErrorRedContainer = Color(0xFFFFDAD6)
-
-// Neutral foundation.
-val NeutralDark = Color(0xFF10211B)
-val NeutralSlate = Color(0xFF40534C)
-val NeutralMuted = Color(0xFF6F817A)
-val NeutralLight = Color(0xFFF7F9F8)
+val NeutralDark = Color(0xFF17231F)
+val NeutralSlate = Color(0xFF4C5D56)
+val NeutralMuted = Color(0xFF718079)
+val NeutralLight = Color(0xFFF7F8F5)
 val SurfaceCard = Color(0xFFFFFFFF)
-val SurfaceBorder = Color(0xFFDCE5E1)
-val SurfaceSoft = Color(0xFFF0F5F3)
-val SurfaceStrong = Color(0xFFE7EFEB)
+val SurfaceBorder = Color(0xFFDCE4DF)
+val SurfaceSoft = Color(0xFFF0F4F1)
+val SurfaceStrong = Color(0xFFE6EEEA)
 
-// Focus accent — used sparingly for selected/active states.
-val FocusGreen = Color(0xFF00A66F)
-val FocusGreenSoft = Color(0xFFD8F5E9)
+val FocusGreen = Color(0xFF2A8C68)
+val FocusGreenSoft = Color(0xFFD8F0E5)
 
-// Dark scheme.
-val DarkBackground = Color(0xFF071510)
-val DarkSurface = Color(0xFF0D2119)
-val DarkSurfaceElevated = Color(0xFF142B22)
-val DarkPrimary = Color(0xFF5DD6A8)
-val DarkPrimaryContainer = Color(0xFF123F31)
-val DarkOnBackground = Color(0xFFE8F2EE)
-val DarkMuted = Color(0xFFA9BBB4)
-val DarkBorder = Color(0xFF29433A)
+val DarkBackground = Color(0xFF101613)
+val DarkSurface = Color(0xFF151D19)
+val DarkSurfaceElevated = Color(0xFF1C2923)
+val DarkPrimary = Color(0xFF8BD8B4)
+val DarkPrimaryContainer = Color(0xFF1B4837)
+val DarkOnBackground = Color(0xFFE5EEE9)
+val DarkMuted = Color(0xFFA7B8B0)
+val DarkBorder = Color(0xFF304039)

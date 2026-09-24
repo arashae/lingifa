@@ -331,14 +331,14 @@ fun ImportCenterScreen(
                                 QuickMethodButton(
                                     icon = Icons.Default.AutoAwesome,
                                     title = "ساخت با AI",
-                                    color = Color(0xFF8B5CF6),
+                                    color = PrimaryBlue,
                                     onClick = onNavigateToAiGenerate,
                                     modifier = Modifier.weight(1f)
                                 )
                                 QuickMethodButton(
                                     icon = Icons.Default.Inventory2,
                                     title = "بسته‌های لغت",
-                                    color = Color(0xFF0D9488),
+                                    color = PrimaryBlue,
                                     onClick = onNavigateToPacks,
                                     modifier = Modifier.weight(1f)
                                 )

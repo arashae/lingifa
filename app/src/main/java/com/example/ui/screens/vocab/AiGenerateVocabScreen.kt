@@ -143,7 +143,7 @@ fun AiGenerateVocabScreen(
                             },
                             enabled = promptInput.isNotBlank() && !state.isAiGenerating,
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6)),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             if (state.isAiGenerating) {

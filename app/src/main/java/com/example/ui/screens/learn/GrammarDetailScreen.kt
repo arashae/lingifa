@@ -185,7 +185,7 @@ fun GrammarDetailScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f))
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -202,7 +202,7 @@ fun GrammarDetailScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = topic.iranianCommonMistakesFa,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF991B1B), lineHeight = 22.sp)
+                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onErrorContainer, lineHeight = 22.sp)
                             )
                         }
                     }

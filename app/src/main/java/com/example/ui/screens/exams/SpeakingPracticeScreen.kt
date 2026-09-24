@@ -74,6 +74,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -120,6 +121,9 @@ fun SpeakingPracticeScreen(
 
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     var showHistorySheet by remember { mutableStateOf(false) }
 
@@ -363,7 +367,7 @@ fun SpeakingPracticeScreen(
                             enabled = state.candidateTranscript.isNotBlank() && !state.isEvaluating,
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7C3AED),
+                                containerColor = PrimaryBlue,
                                 contentColor = Color.White
                             ),
                             modifier = Modifier
@@ -595,26 +599,26 @@ private fun IeltsCueCardView(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = Color(0xFF7C3AED),
+                    tint = PrimaryBlue,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = "تولید با هوش مصنوعی:",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7C3AED)
+                    color = PrimaryBlue
                 )
                 listOf("Environment", "Artificial Intelligence", "Higher Education", "Urbanization", "Hometown").forEach { topic ->
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF7C3AED).copy(alpha = 0.08f),
+                        color = PrimaryBlue.copy(alpha = 0.08f),
                         modifier = Modifier.clickable { onGenerateAiPrompt(topic) }
                     ) {
                         Text(
                             text = topic,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF7C3AED),
+                            color = PrimaryBlue,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -888,7 +892,7 @@ private fun IeltsSpeakingFeedbackDashboard(
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = Color(0xFFFEF3C7),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.35f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentGold.copy(alpha = 0.35f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(

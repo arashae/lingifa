@@ -38,6 +38,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +69,9 @@ fun WordDetailScreen(
     val item by wordFlow.collectAsState(initial = null)
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
     var selectedLangTab by remember { mutableStateOf(0) }
     var feedbackMessage by remember { mutableStateOf<String?>(null) }
 

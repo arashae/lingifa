@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -69,6 +70,9 @@ fun SrsReviewScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
 
     PersianRtlLayout {
         Scaffold(
@@ -133,7 +137,7 @@ fun SrsReviewScreen(
                             Spacer(modifier = Modifier.height(14.dp))
 
                             Surface(
-                                color = Color(0xFFF0FDF4),
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(

@@ -29,6 +29,18 @@ class VocabularyRepository(
         return vocabDao.getDueVocabularies(currentTime)
     }
 
+    fun getDueCount(currentTime: Long = System.currentTimeMillis()): Flow<Int> {
+        return vocabDao.getDueCount(currentTime)
+    }
+
+    fun getDueVocabulariesForReview(limit: Int = 30, currentTime: Long = System.currentTimeMillis()): Flow<List<VocabularyItem>> {
+        return vocabDao.getDueVocabulariesForReview(currentTime, limit)
+    }
+
+    suspend fun getRandomVocabularies(limit: Int): List<VocabularyItem> {
+        return vocabDao.getRandomVocabularies(limit)
+    }
+
     fun search(query: String): Flow<List<VocabularyItem>> {
         return vocabDao.searchVocabularies(query)
     }

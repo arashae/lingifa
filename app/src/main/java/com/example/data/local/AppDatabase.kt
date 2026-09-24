@@ -44,7 +44,7 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -129,6 +129,16 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_normalizedWord ON vocabulary_items(normalizedWord)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_nextReview ON vocabulary_items(nextReview)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_cefrLevel ON vocabulary_items(cefrLevel)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_mastery ON vocabulary_items(mastery)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_isFavorite ON vocabulary_items(isFavorite)")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -137,7 +147,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()

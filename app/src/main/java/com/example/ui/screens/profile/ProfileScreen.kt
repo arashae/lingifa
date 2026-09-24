@@ -59,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -177,7 +176,7 @@ fun ProfileScreen(
                         icon = Icons.Default.LocalFireDepartment,
                         value = "${state.profile.streakDays} روز",
                         label = "زنجیره مطالعه",
-                        color = Color(0xFFEA580C),
+                        color = AccentGold,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
@@ -252,10 +251,10 @@ fun ProfileScreen(
                                 modifier = Modifier
                                     .size(42.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFFEF2F2)),
+                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(22.dp))
+                                Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(22.dp))
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {

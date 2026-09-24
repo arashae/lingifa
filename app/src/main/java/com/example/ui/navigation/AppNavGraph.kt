@@ -11,13 +11,14 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -57,42 +58,36 @@ import com.example.ui.screens.vocab.VocabPacksScreen
 import com.example.ui.screens.vocab.VocabViewModel
 import com.example.ui.screens.vocab.WordDetailScreen
 
-data class BottomNavItem(
+private data class BottomNavItem(
     val titleFa: String,
     val route: String,
     val icon: ImageVector
 )
 
+private val bottomNavItems = listOf(
+    BottomNavItem("خانه", Screen.Home.route, Icons.Default.Home),
+    BottomNavItem("لغات", Screen.Vocab.route, Icons.Default.AutoStories),
+    BottomNavItem("یادگیری", Screen.Learn.route, Icons.Default.School),
+    BottomNavItem("تمرین", Screen.Practice.route, Icons.Default.FitnessCenter),
+    BottomNavItem("پیشرفت", Screen.Profile.route, Icons.Default.Person)
+)
+
 @Composable
-fun AppNavGraph(
-    homeViewModel: HomeViewModel = viewModel(),
-    vocabViewModel: VocabViewModel = viewModel(),
-    reviewViewModel: ReviewViewModel = viewModel(),
-    tutorViewModel: TutorViewModel = viewModel(),
-    learnViewModel: LearnViewModel = viewModel(),
-    examsViewModel: ExamsViewModel = viewModel(),
-    profileViewModel: ProfileViewModel = viewModel()
-) {
+fun AppNavGraph() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-    val bottomItems = listOf(
-        BottomNavItem("خانه", Screen.Home.route, Icons.Default.Home),
-        BottomNavItem("لغات من", Screen.Vocab.route, Icons.Default.AutoStories),
-        BottomNavItem("یادگیری", Screen.Learn.route, Icons.Default.School),
-        BottomNavItem("تمرین", Screen.Practice.route, Icons.Default.FitnessCenter),
-        BottomNavItem("پیشرفت", Screen.Profile.route, Icons.Default.Person)
-    )
-
-    val showBottomBar = currentRoute in bottomItems.map { it.route }
+    val showBottomBar = currentRoute != null && bottomNavItems.any { it.route == currentRoute }
 
     PersianRtlLayout {
         Scaffold(
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background,
             bottomBar = {
                 if (showBottomBar) {
-                    NavigationBar {
-                        bottomItems.forEach { item ->
+                    NavigationBar(
+                        tonalElevation = 0.dp
+                    ) {
+                        bottomNavItems.forEach { item ->
                             val selected = currentRoute == item.route
                             NavigationBarItem(
                                 selected = selected,
@@ -109,8 +104,19 @@ fun AppNavGraph(
                                     Icon(imageVector = item.icon, contentDescription = item.titleFa)
                                 },
                                 label = {
-                                    Text(text = item.titleFa, fontSize = 11.sp)
-                                }
+                                    Text(
+                                        text = item.titleFa,
+                                        maxLines = 1
+                                    )
+                                },
+                                alwaysShowLabel = selected,
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             )
                         }
                     }
@@ -124,15 +130,11 @@ fun AppNavGraph(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Bottom Bar Screens
                 composable(Screen.Home.route) {
                     HomeScreen(
-                        viewModel = homeViewModel,
+                        viewModel = viewModel<HomeViewModel>(),
                         onNavigateToVocab = { navController.navigate(Screen.Vocab.route) },
-                        onNavigateToReview = {
-                            reviewViewModel.startSession()
-                            navController.navigate(Screen.SrsReview.route)
-                        },
+                        onNavigateToReview = { navController.navigate(Screen.SrsReview.route) },
                         onNavigateToTutor = { navController.navigate(Screen.AiTutor.route) },
                         onNavigateToLearn = { navController.navigate(Screen.Learn.route) },
                         onNavigateToSpeaking = { navController.navigate(Screen.SpeakingPractice.route) },
@@ -146,7 +148,7 @@ fun AppNavGraph(
 
                 composable(Screen.Vocab.route) {
                     VocabLibraryScreen(
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onNavigateToDetail = { vocabId ->
                             navController.navigate(Screen.WordDetail.createRoute(vocabId))
                         },
@@ -161,7 +163,7 @@ fun AppNavGraph(
 
                 composable(Screen.Learn.route) {
                     LearnHomeScreen(
-                        viewModel = learnViewModel,
+                        viewModel = viewModel<LearnViewModel>(),
                         onNavigateToGrammarDetail = { topicId ->
                             navController.navigate(Screen.GrammarDetail.createRoute(topicId))
                         },
@@ -176,10 +178,7 @@ fun AppNavGraph(
 
                 composable(Screen.Practice.route) {
                     PracticeScreen(
-                        onNavigateToReview = {
-                            reviewViewModel.startSession()
-                            navController.navigate(Screen.SrsReview.route)
-                        },
+                        onNavigateToReview = { navController.navigate(Screen.SrsReview.route) },
                         onNavigateToSpeaking = { navController.navigate(Screen.SpeakingPractice.route) },
                         onNavigateToWriting = { navController.navigate(Screen.WritingGrader.route) },
                         onNavigateToDiagnostic = { navController.navigate(Screen.DiagnosticTest.route) },
@@ -190,12 +189,11 @@ fun AppNavGraph(
 
                 composable(Screen.Profile.route) {
                     ProfileScreen(
-                        viewModel = profileViewModel,
+                        viewModel = viewModel<ProfileViewModel>(),
                         onNavigateToMistakes = { navController.navigate(Screen.MistakeNotebook.route) }
                     )
                 }
 
-                // Sub-screens
                 composable(
                     route = Screen.WordDetail.route,
                     arguments = listOf(navArgument("vocabId") { type = NavType.LongType })
@@ -203,21 +201,21 @@ fun AppNavGraph(
                     val vocabId = backStackEntry.arguments?.getLong("vocabId") ?: 0L
                     WordDetailScreen(
                         vocabId = vocabId,
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.AddWord.route) {
                     AddWordScreen(
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.AiGenerateVocab.route) {
                     AiGenerateVocabScreen(
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -230,7 +228,7 @@ fun AppNavGraph(
 
                 composable(Screen.ImportCenter.route) {
                     ImportCenterScreen(
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onBack = { navController.popBackStack() },
                         onNavigateToAddManual = { navController.navigate(Screen.AddWord.route) },
                         onNavigateToAiGenerate = { navController.navigate(Screen.AiGenerateVocab.route) },
@@ -240,14 +238,10 @@ fun AppNavGraph(
 
                 composable(Screen.VocabPacks.route) {
                     VocabPacksScreen(
-                        viewModel = vocabViewModel,
+                        viewModel = viewModel<VocabViewModel>(),
                         onBack = { navController.popBackStack() },
-                        onFilterByPack = {
-                            navController.popBackStack()
-                        },
-                        onStartCefrLevel = {
-                            navController.popBackStack()
-                        },
+                        onFilterByPack = { navController.popBackStack() },
+                        onStartCefrLevel = { navController.popBackStack() },
                         onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) }
                     )
                 }
@@ -260,14 +254,14 @@ fun AppNavGraph(
 
                 composable(Screen.SrsReview.route) {
                     SrsReviewScreen(
-                        viewModel = reviewViewModel,
+                        viewModel = viewModel<ReviewViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.AiTutor.route) {
                     AiTutorScreen(
-                        viewModel = tutorViewModel,
+                        viewModel = viewModel<TutorViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -276,9 +270,8 @@ fun AppNavGraph(
                     route = Screen.GrammarDetail.route,
                     arguments = listOf(navArgument("topicId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
                     GrammarDetailScreen(
-                        topicId = topicId,
+                        topicId = backStackEntry.arguments?.getString("topicId") ?: "",
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -287,10 +280,9 @@ fun AppNavGraph(
                     route = Screen.ReadingDetail.route,
                     arguments = listOf(navArgument("passageId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val passageId = backStackEntry.arguments?.getString("passageId") ?: ""
                     ReadingDetailScreen(
-                        passageId = passageId,
-                        viewModel = learnViewModel,
+                        passageId = backStackEntry.arguments?.getString("passageId") ?: "",
+                        viewModel = viewModel<LearnViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -299,45 +291,44 @@ fun AppNavGraph(
                     route = Screen.ListeningDetail.route,
                     arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
                     ListeningDetailScreen(
-                        exerciseId = exerciseId,
-                        viewModel = learnViewModel,
+                        exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: "",
+                        viewModel = viewModel<LearnViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.WritingGrader.route) {
                     WritingGraderScreen(
-                        viewModel = examsViewModel,
+                        viewModel = viewModel<ExamsViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.SpeakingPractice.route) {
                     SpeakingPracticeScreen(
-                        viewModel = examsViewModel,
+                        viewModel = viewModel<ExamsViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.MistakeNotebook.route) {
                     MistakeNotebookScreen(
-                        viewModel = profileViewModel,
+                        viewModel = viewModel<ProfileViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.DiagnosticTest.route) {
                     DiagnosticTestScreen(
-                        viewModel = examsViewModel,
+                        viewModel = viewModel<ExamsViewModel>(),
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(Screen.Onboarding.route) {
                     OnboardingScreen(
-                        profileViewModel = profileViewModel,
+                        profileViewModel = viewModel<ProfileViewModel>(),
                         onComplete = {
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(Screen.Onboarding.route) { inclusive = true }

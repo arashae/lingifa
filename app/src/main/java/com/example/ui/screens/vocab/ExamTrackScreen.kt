@@ -69,6 +69,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -109,6 +110,9 @@ fun ExamTrackScreen(
 
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     var showGoalDialog by remember { mutableStateOf(false) }
 

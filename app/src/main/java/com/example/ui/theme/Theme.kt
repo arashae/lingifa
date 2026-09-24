@@ -16,15 +16,15 @@ import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
-    onPrimary = Color(0xFF063326),
+    onPrimary = Color(0xFF073323),
     primaryContainer = DarkPrimaryContainer,
-    onPrimaryContainer = Color(0xFFC7F3E1),
-    secondary = Color(0xFF9EC8B8),
-    onSecondary = Color(0xFF12362A),
-    secondaryContainer = Color(0xFF21483A),
-    onSecondaryContainer = Color(0xFFD5EEE4),
+    onPrimaryContainer = Color(0xFFB9EED4),
+    secondary = Color(0xFFA7C6BA),
+    onSecondary = Color(0xFF17372C),
+    secondaryContainer = Color(0xFF29483C),
+    onSecondaryContainer = Color(0xFFD5EEE3),
     tertiary = AccentGoldLight,
-    onTertiary = Color(0xFF3F2E00),
+    onTertiary = Color(0xFF3D2A00),
     background = DarkBackground,
     onBackground = DarkOnBackground,
     surface = DarkSurface,
@@ -32,9 +32,9 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = DarkSurfaceElevated,
     onSurfaceVariant = DarkMuted,
     outline = DarkBorder,
-    outlineVariant = Color(0xFF20382F),
+    outlineVariant = Color(0xFF24342C),
     error = Color(0xFFFFB4AB),
-    errorContainer = Color(0xFF93000A)
+    errorContainer = Color(0xFF7A2724)
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -45,7 +45,7 @@ private val LightColorScheme = lightColorScheme(
     secondary = SecondaryTeal,
     onSecondary = Color.White,
     secondaryContainer = SecondaryContainerTeal,
-    onSecondaryContainer = Color(0xFF183A2F),
+    onSecondaryContainer = Color(0xFF17382D),
     tertiary = AccentGold,
     onTertiary = Color.White,
     tertiaryContainer = AccentGoldContainer,
@@ -56,17 +56,17 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = SurfaceSoft,
     onSurfaceVariant = NeutralSlate,
     outline = SurfaceBorder,
-    outlineVariant = Color(0xFFE8EEEB),
+    outlineVariant = Color(0xFFE7EDE9),
     error = ErrorRed,
     errorContainer = ErrorRedContainer
 )
 
 private val LinguaShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(22.dp),
-    extraLarge = RoundedCornerShape(28.dp)
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(18.dp),
+    extraLarge = RoundedCornerShape(22.dp)
 )
 
 @Composable

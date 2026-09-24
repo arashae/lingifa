@@ -6,14 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
 import com.example.data.model.StreakInfo
 import com.example.data.model.UserProfile
-import com.example.data.model.VocabularyItem
 import com.example.data.repository.DailyStreakRepository
 import com.example.data.repository.UserProfileRepository
 import com.example.data.repository.VocabularyRepository
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -23,7 +20,6 @@ data class HomeUiState(
     val totalWordsCount: Int = 0,
     val learnedWordsCount: Int = 0,
     val dueWordsCount: Int = 0,
-    val dueWords: List<VocabularyItem> = emptyList(),
     val dailyMinutesPlanned: Int = 35,
     val dailyMinutesCompleted: Int = 12,
     val dailyVocabReviewGoal: Int = 20,
@@ -48,14 +44,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         profileRepo.profile,
         vocabRepo.totalCount,
         vocabRepo.learnedCount,
-        vocabRepo.getDueVocabularies()
-    ) { profile, total, learned, dueList ->
+        vocabRepo.getDueCount()
+    ) { profile, total, learned, dueCount ->
         HomeUiState(
             userProfile = profile ?: UserProfile(),
             totalWordsCount = total,
             learnedWordsCount = learned,
-            dueWordsCount = dueList.size,
-            dueWords = dueList.take(5),
+            dueWordsCount = dueCount,
             dailyMinutesPlanned = profile?.dailyMinutes ?: 35,
             streakDays = profile?.streakDays ?: 4
         )

@@ -84,7 +84,7 @@ fun MistakeNotebookScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f))
                 ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
@@ -99,7 +99,7 @@ fun MistakeNotebookScreen(
                             )
                             Text(
                                 text = "اشتباهات شما در جلسات مرور لغت و تمرین‌ها ثبت شده تا با تکرار فاصله دار بر آنها مسلط شوید.",
-                                style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF991B1B))
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onErrorContainer)
                             )
                         }
                     }

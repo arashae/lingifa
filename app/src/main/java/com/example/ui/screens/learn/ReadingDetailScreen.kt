@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,9 @@ fun ReadingDetailScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
     var userAnswers by remember { mutableStateOf(mutableMapOf<String, Int>()) }
     var checkedAnswers by remember { mutableStateOf(mutableMapOf<String, Boolean>()) }
 

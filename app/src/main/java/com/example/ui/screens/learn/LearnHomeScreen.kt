@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -38,15 +38,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.GrammarTopic
 import com.example.data.model.ListeningExercise
 import com.example.data.model.ReadingPassage
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SecondaryTeal
+
+private val learnTabs = listOf("گرامر", "Reading", "Listening")
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -57,105 +61,141 @@ fun LearnHomeScreen(
     onNavigateToListeningDetail: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    val tabs = listOf("گرامر", "Reading", "Listening")
-    val selectedIndex = tabs.indexOf(state.selectedCategory).coerceAtLeast(0)
+    val selectedIndex = learnTabs.indexOf(state.selectedCategory).coerceAtLeast(0)
 
     PersianRtlLayout {
-        Scaffold { paddingValues ->
+        Scaffold(
+            topBar = { LinguaTopAppBar(title = "یادگیری") },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
             ) {
-                // Category Tabs
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "یک قدم کوچک، هر روز",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Text(
+                        text = "مسیرهای کوتاه و کاربردی برای تقویت زبان",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
                 PrimaryTabRow(
                     selectedTabIndex = selectedIndex,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
+                    containerColor = MaterialTheme.colorScheme.background,
+                    divider = {}
                 ) {
-                    tabs.forEachIndexed { index, title ->
+                    learnTabs.forEachIndexed { index, title ->
                         Tab(
                             selected = selectedIndex == index,
-                            onClick = { viewModel.selectCategory(tabs[index]) },
-                            text = { Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+                            onClick = { viewModel.selectCategory(title) },
+                            text = {
+                                Text(
+                                    text = title,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                )
+                            }
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Content List
+                Spacer(modifier = Modifier.height(8.dp))
                 when (state.selectedCategory) {
-                    "گرامر" -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            item {
-                                Text(
-                                    text = "سرفصل‌های گرامر کاربردی با توضیح فارسی و اشتباهات رایج ایرانی‌ها:",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                )
-                            }
-                            items(state.grammarTopics) { topic ->
-                                GrammarTopicCard(
-                                    topic = topic,
-                                    onClick = { onNavigateToGrammarDetail(topic.id) }
-                                )
-                            }
-                            item { Spacer(modifier = Modifier.height(24.dp)) }
-                        }
-                    }
-                    "Reading" -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            item {
-                                Text(
-                                    text = "متون آکادمیک آیلتس و تافل با امکان ضربه روی هر کلمه برای مشاهده معنی و افزودن به لغات من:",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                )
-                            }
-                            items(state.readingPassages) { passage ->
-                                ReadingPassageCard(
-                                    passage = passage,
-                                    onClick = { onNavigateToReadingDetail(passage.id) }
-                                )
-                            }
-                            item { Spacer(modifier = Modifier.height(24.dp)) }
-                        }
-                    }
-                    "Listening" -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            item {
-                                Text(
-                                    text = "تمرین‌های شنیداری با پخش صوت هوشمند، سوالات تستی و رونوشت کلمه‌به‌کلمه:",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                )
-                            }
-                            items(state.listeningExercises) { exercise ->
-                                ListeningExerciseCard(
-                                    exercise = exercise,
-                                    onClick = { onNavigateToListeningDetail(exercise.id) }
-                                )
-                            }
-                            item { Spacer(modifier = Modifier.height(24.dp)) }
-                        }
-                    }
+                    "گرامر" -> GrammarList(
+                        topics = state.grammarTopics,
+                        onClick = onNavigateToGrammarDetail
+                    )
+                    "Reading" -> ReadingList(
+                        passages = state.readingPassages,
+                        onClick = onNavigateToReadingDetail
+                    )
+                    else -> ListeningList(
+                        exercises = state.listeningExercises,
+                        onClick = onNavigateToListeningDetail
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun GrammarList(
+    topics: List<GrammarTopic>,
+    onClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                text = "گرامر کاربردی با توضیح فارسی و نکته‌های رایج",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        items(topics, key = { it.id }) { topic ->
+            GrammarTopicCard(topic = topic, onClick = { onClick(topic.id) })
+        }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+    }
+}
+
+@Composable
+private fun ReadingList(
+    passages: List<ReadingPassage>,
+    onClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                text = "متن‌های آکادمیک با تمرکز بر لغات کاربردی آزمون",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        items(passages, key = { it.id }) { passage ->
+            ReadingPassageCard(passage = passage, onClick = { onClick(passage.id) })
+        }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+    }
+}
+
+@Composable
+private fun ListeningList(
+    exercises: List<ListeningExercise>,
+    onClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                text = "تمرین شنیداری با پخش صوت، تست و رونوشت",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        items(exercises, key = { it.id }) { exercise ->
+            ListeningExerciseCard(exercise = exercise, onClick = { onClick(exercise.id) })
+        }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
     }
 }
 
@@ -164,58 +204,30 @@ private fun GrammarTopicCard(
     topic: GrammarTopic,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.School, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(22.dp))
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = topic.titleFa,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        CefrBadge(level = topic.level)
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
+    LearningCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconTile(icon = Icons.Default.School, tint = PrimaryBlue)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = topic.titleEn,
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        text = topic.titleFa,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    CefrBadge(level = topic.level)
                 }
+                Text(
+                    text = topic.titleEn,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -225,41 +237,18 @@ private fun ReadingPassageCard(
     passage: ReadingPassage,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Bookmark, contentDescription = null, tint = SecondaryTeal, modifier = Modifier.size(20.dp))
+    LearningCard(onClick = onClick) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Bookmark, contentDescription = null, tint = SecondaryTeal, modifier = Modifier.size(19.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = passage.titleFa,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                    Text(text = passage.titleFa, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 CefrBadge(level = passage.level)
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = passage.titleEn,
-                style = MaterialTheme.typography.bodySmall.copy(color = PrimaryBlue, fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = passage.summaryFa,
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                maxLines = 2
-            )
+            Text(text = passage.titleEn, style = MaterialTheme.typography.bodySmall, color = PrimaryBlue, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = passage.summaryFa, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -269,40 +258,53 @@ private fun ListeningExerciseCard(
     exercise: ListeningExercise,
     onClick: () -> Unit
 ) {
+    LearningCard(onClick = onClick) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Hearing, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(19.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = exercise.titleFa, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                CefrBadge(level = exercise.level)
+            }
+            Text(text = exercise.titleEn, style = MaterialTheme.typography.bodySmall, color = PrimaryBlue, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = "${exercise.exam} · ${exercise.topic}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun LearningCard(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Hearing, contentDescription = null, tint = Color(0xFF8B5CF6), modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = exercise.titleFa,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-                CefrBadge(level = exercise.level)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = exercise.titleEn,
-                style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF8B5CF6), fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "قالب: ${exercise.exam} | موضوع: ${exercise.topic}",
-                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-            )
+        Box(modifier = Modifier.padding(15.dp)) {
+            content()
         }
+    }
+}
+
+@Composable
+private fun IconTile(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(21.dp))
     }
 }

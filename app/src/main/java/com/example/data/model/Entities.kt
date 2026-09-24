@@ -5,7 +5,16 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "vocabulary_items")
+@Entity(
+    tableName = "vocabulary_items",
+    indices = [
+        Index(value = ["normalizedWord"]),
+        Index(value = ["nextReview"]),
+        Index(value = ["cefrLevel"]),
+        Index(value = ["mastery"]),
+        Index(value = ["isFavorite"])
+    ]
+)
 data class VocabularyItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

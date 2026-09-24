@@ -64,8 +64,10 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             val sessionItems = if (due.isNotEmpty()) {
                 due.take(15)
             } else {
-                // If no items due, pick 10 words for refresher practice
-                all.shuffled().take(10)
+                // Free review should reinforce words the learner has actually studied;
+                // use brand-new items only when there is no learning history yet.
+                val learned = all.filter { it.mastery > 0 }
+                (learned.ifEmpty { all }).shuffled().take(10)
             }
 
             if (sessionItems.isNotEmpty()) {

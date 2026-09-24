@@ -4,8 +4,8 @@
 The primary generator intentionally keeps every exam-tagged ECDICT entry, even
 when no exact Persian translation exists in the enrichment datasets. This pass
 resolves common inflections/derivations against meanings already present in the
-bundled banks and applies a small reviewed override map for compounds and
-irregular forms. It never removes a vocabulary item.
+bundled banks and applies a reviewed override map for compounds, irregular
+forms, abbreviations and rare derivatives. It never removes a vocabulary item.
 """
 
 from __future__ import annotations
@@ -67,6 +67,82 @@ MANUAL = {
     "qualms": "تردیدها یا عذاب وجدان‌ها",
     "naysay": "مخالفت کردن؛ منفی‌بافی کردن",
     "versemonger": "شاعر ضعیف یا شعرساز کم‌مایه",
+
+    # Reviewed exact fallbacks left after the morphology pass.
+    "beds": "تخت‌ها؛ بسترها",
+    "bedsit": "اتاق یا واحد کوچک یک‌نفره برای خواب و زندگی",
+    "booklist": "فهرست کتاب‌ها",
+    "cages": "قفس‌ها",
+    "cheaper": "ارزان‌تر",
+    "classmates": "همکلاسی‌ها",
+    "contaminants": "آلاینده‌ها؛ مواد آلوده‌کننده",
+    "crops": "محصولات زراعی؛ کشت‌ها",
+    "fingers": "انگشتان دست",
+    "floors": "کف‌ها؛ طبقات ساختمان",
+    "forbes": "فوربز؛ نام خاص و نام مجلهٔ تجاری فوربز",
+    "hens": "مرغ‌های ماده",
+    "instructors": "مدرسان؛ مربیان",
+    "investigators": "بازرسان؛ محققان",
+    "kilograms": "کیلوگرم‌ها",
+    "mathematic": "ریاضی؛ مربوط به ریاضیات",
+    "memorise": "به خاطر سپردن؛ حفظ کردن",
+    "ohp": "اورهد پروژکتور؛ دستگاه نمایش شفافیت‌ها",
+    "passengers": "مسافران",
+    "peasants": "دهقانان؛ کشاورزان روستایی",
+    "readers": "خوانندگان",
+    "rivers": "رودخانه‌ها",
+    "robots": "ربات‌ها",
+    "smokers": "افراد سیگاری",
+    "tones": "لحن‌ها؛ تُن‌های صدا",
+    "travelers": "مسافران؛ سفرکنندگان",
+    "universities": "دانشگاه‌ها",
+    "visitors": "بازدیدکنندگان؛ مهمانان",
+
+    "bandleader": "رهبر گروه موسیقی",
+    "crossbreeding": "دورگه‌گیری؛ آمیزش نژادها یا گونه‌ها",
+    "embryological": "رویان‌شناختی؛ مربوط به جنین‌شناسی",
+    "facelift": "کشیدن پوست صورت؛ نوسازی یا بهسازی ظاهری",
+    "flagella": "تاژک‌ها؛ زائده‌های شلاق‌مانند سلولی",
+    "handcrafted": "دست‌ساز؛ ساخته‌شده با دست",
+    "iconographic": "شمایل‌نگارانه؛ مربوط به تصویرنگاری و نمادهای تصویری",
+    "industrialized": "صنعتی‌شده",
+    "interconnected": "به‌هم‌پیوسته؛ مرتبط با یکدیگر",
+    "interconnecting": "به‌هم‌پیونددهنده؛ مرتبط‌کننده",
+    "locomote": "حرکت کردن از جایی به جای دیگر",
+    "multifaceted": "چندوجهی؛ دارای جنبه‌های متعدد",
+    "multistory": "چندطبقه",
+    "patroller": "مامور گشت؛ گشت‌زن",
+    "seamen": "دریانوردان؛ ملوانان",
+    "stereophotograph": "عکس استریوسکوپی؛ تصویر سه‌بعدنما",
+    "stylized": "سبک‌پردازی‌شده؛ به‌صورت قراردادی بازنمایی‌شده",
+    "supercontinent": "ابرقاره",
+    "surpassingly": "به‌طور فوق‌العاده؛ بسیار",
+    "telecommuter": "دورکار؛ کارمندی که از راه دور کار می‌کند",
+
+    "brattish": "لوس و بچگانه؛ بدرفتار مانند کودک لوس",
+    "circumlocutory": "حاشیه‌گو؛ غیرمستقیم و دور از صراحت",
+    "daubster": "نقاش ناشی یا بدکار",
+    "defoliator": "عامل برگ‌ریز؛ ماده یا جانداری که برگ‌ها را از بین می‌برد",
+    "denunciate": "محکوم کردن؛ افشا یا تقبیح کردن",
+    "desalinize": "نمک‌زدایی کردن",
+    "distention": "اتساع؛ کشیدگی یا تورم",
+    "dysfunctional": "ناکارآمد؛ دارای اختلال عملکرد",
+    "freelancer": "آزادکار؛ فردی که مستقل و پروژه‌ای کار می‌کند",
+    "impressed": "تحت تأثیر قرارگرفته؛ متاثر",
+    "leisureliness": "آرامی و بی‌شتابی؛ حالت فراغت‌گونه",
+    "oafishness": "زمختی و کودنی؛ رفتار دست‌وپاچلفتی",
+    "palings": "نرده‌ها؛ حصارهای چوبی",
+    "renunciate": "چشم‌پوشی یا انکار کردن؛ ترک کردن حق یا ادعا",
+    "rollicking": "شاد و پرهیاهو؛ سرزنده",
+    "scad": "مقدار بسیار زیاد؛ انبوه",
+    "underutilized": "کم‌استفاده‌شده؛ کمتر از ظرفیت به‌کاررفته",
+    "undisputable": "غیرقابل انکار؛ مسلم",
+    "unenlightened": "ناآگاه؛ فاقد آگاهی یا روشنگری",
+    "ungrudging": "بی‌دریغ؛ با رضایت و بدون اکراه",
+    "unregulated": "تنظیم‌نشده؛ بدون مقررات یا نظارت",
+    "unscented": "بی‌بو؛ بدون عطر افزوده",
+    "unstinting": "بی‌دریغ؛ فراوان و سخاوتمندانه",
+    "vaunting": "خودستایانه؛ لاف‌زنانه",
 }
 
 IRREGULAR = {
@@ -95,7 +171,6 @@ def candidate_bases(word: str) -> list[str]:
     if w in IRREGULAR:
         add(IRREGULAR[w])
 
-    # Hyphen/space variants and useful compound heads.
     if "-" in w:
         add(w.replace("-", " "))
         add(w.replace("-", ""))
@@ -109,7 +184,6 @@ def candidate_bases(word: str) -> list[str]:
             add(parts[0])
             add(parts[-1])
 
-    # Plurals.
     if w.endswith("ies") and len(w) > 4:
         add(w[:-3] + "y")
     if w.endswith("ves") and len(w) > 4:
@@ -123,7 +197,6 @@ def candidate_bases(word: str) -> list[str]:
     if w.endswith("s") and not w.endswith("ss") and len(w) > 3:
         add(w[:-1])
 
-    # -ing forms: make, run, lie-style approximations.
     if w.endswith("ying") and len(w) > 5:
         add(w[:-4] + "ie")
     if w.endswith("ing") and len(w) > 5:
@@ -133,7 +206,6 @@ def candidate_bases(word: str) -> list[str]:
         if len(stem) >= 2 and stem[-1] == stem[-2]:
             add(stem[:-1])
 
-    # Past/participle forms.
     if w.endswith("ied") and len(w) > 4:
         add(w[:-3] + "y")
     if w.endswith("ed") and len(w) > 4:
@@ -143,7 +215,6 @@ def candidate_bases(word: str) -> list[str]:
         if len(stem) >= 2 and stem[-1] == stem[-2]:
             add(stem[:-1])
 
-    # Comparatives/superlatives.
     if w.endswith("iest") and len(w) > 5:
         add(w[:-4] + "y")
     if w.endswith("ier") and len(w) > 4:
@@ -155,11 +226,9 @@ def candidate_bases(word: str) -> list[str]:
         add(w[:-2])
         add(w[:-1])
 
-    # Common derivational suffixes. Prefer a real known base; no meaning is
-    # invented unless a candidate is present in the bundled meaning map.
     suffixes = (
         ("ically", "ic"), ("ally", "al"), ("ily", "y"), ("ly", ""),
-        ("ness", ""), ("lessness", "less"), ("ment", ""), ("ments", ""),
+        ("lessness", "less"), ("ness", ""), ("ments", ""), ("ment", ""),
         ("ation", "ate"), ("ization", "ize"), ("isation", "ise"),
         ("izer", "ize"), ("iser", "ise"), ("able", ""), ("ible", ""),
         ("al", ""), ("ical", ""), ("ous", ""), ("ish", ""),
@@ -168,7 +237,6 @@ def candidate_bases(word: str) -> list[str]:
         if w.endswith(suffix) and len(w) > len(suffix) + 2:
             add(w[:-len(suffix)] + replacement)
 
-    # Prefix stripping only succeeds if the resulting base exists.
     for prefix in ("un", "non", "re", "over", "under", "semi", "inter", "sub"):
         if w.startswith(prefix) and len(w) > len(prefix) + 3:
             add(w[len(prefix):])
@@ -193,11 +261,15 @@ def load_rows():
 def main() -> None:
     rows_by_file = load_rows()
     meanings: dict[str, str] = {}
-    for rows in rows_by_file.values():
+    placeholder_before = defaultdict(int)
+    for path, rows in rows_by_file.items():
+        exam = path.parent.name.upper()
         for item in rows:
             word = normalized(item.get("word", ""))
             meaning = (item.get("persianMeaning") or "").strip()
-            if word and meaning and meaning != PLACEHOLDER:
+            if meaning == PLACEHOLDER:
+                placeholder_before[exam] += 1
+            elif word and meaning:
                 meanings.setdefault(word, meaning)
     meanings.update(MANUAL)
 
@@ -239,17 +311,20 @@ def main() -> None:
             )
             changed_files += 1
 
-    # Refresh coverage with the quality state after this pass.
     report_path = ASSET_ROOT / "coverage_report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["placeholderPersianBeforePostprocess"] = {exam: placeholder_before.get(exam, 0) for exam in ("IELTS", "TOEFL", "GRE")}
     report["persianFallbackResolved"] = {exam: resolved.get(exam, 0) for exam in ("IELTS", "TOEFL", "GRE")}
     report["placeholderPersianAfterPostprocess"] = {exam: len(unresolved.get(exam, [])) for exam in ("IELTS", "TOEFL", "GRE")}
     report["placeholderPersianSamplesAfterPostprocess"] = {exam: unresolved.get(exam, [])[:100] for exam in ("IELTS", "TOEFL", "GRE")}
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(f"Updated {changed_files} chunk files")
+    print("Placeholders before:", dict(placeholder_before))
     print("Resolved:", dict(resolved))
     print("Remaining placeholders:", {k: len(v) for k, v in unresolved.items()})
+    if any(unresolved.values()):
+        raise SystemExit("Unresolved Persian placeholders remain; add reviewed fallbacks before release")
 
 
 if __name__ == "__main__":

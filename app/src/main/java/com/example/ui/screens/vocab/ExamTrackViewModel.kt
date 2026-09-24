@@ -8,7 +8,6 @@ import com.example.data.local.AppDatabase
 import com.example.data.model.ExamTrackStage
 import com.example.data.model.ExamTrackState
 import com.example.data.model.ExamTrackType
-import com.example.data.model.ExamWordItem
 import com.example.data.model.StreakInfo
 import com.example.data.model.StreakUpdateResult
 import com.example.data.repository.DailyStreakRepository
@@ -42,7 +41,8 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
     val trackRepository = ExamTrackRepository(
         db.examTrackDao(),
         db.userProfileDao(),
-        db.dailyStreakDao()
+        db.dailyStreakDao(),
+        db.vocabularyDao()
     )
     val streakRepository = DailyStreakRepository(
         db.dailyStreakDao(),
@@ -88,14 +88,39 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * A master stage may contain thousands of words. A study session intentionally opens only
+     * the user's daily goal worth of not-yet-mastered cards, keeping Compose/SRS responsive.
+     */
     fun startStudyingStage(stage: ExamTrackStage) {
         viewModelScope.launch {
             trackRepository.selectCurrentStage(_uiState.value.selectedTrack, stage.stageNumber)
+
+            val dailyGoal = currentTrackState.value.dailyGoalWords.coerceAtLeast(1)
+            val sessionWords = stage.words
+                .asSequence()
+                .filterNot { it.isMastered }
+                .take(dailyGoal)
+                .toList()
+
+            if (sessionWords.isEmpty()) {
+                _uiState.update {
+                    it.copy(
+                        activeStudyStage = null,
+                        studyWordIndex = 0,
+                        isCardFlipped = false,
+                        statusMessage = "همه واژه‌های این مرحله را یاد گرفته‌اید."
+                    )
+                }
+                return@launch
+            }
+
             _uiState.update {
                 it.copy(
-                    activeStudyStage = stage,
+                    activeStudyStage = stage.copy(words = sessionWords),
                     studyWordIndex = 0,
-                    isCardFlipped = false
+                    isCardFlipped = false,
+                    statusMessage = "جلسه امروز: ${sessionWords.size} واژه از مرحله ${stage.stageNumber}"
                 )
             }
         }
@@ -150,13 +175,12 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
                     )
                 }
             } else {
-                // Completed stage review
                 _uiState.update {
                     it.copy(
                         activeStudyStage = null,
                         studyWordIndex = 0,
                         isCardFlipped = false,
-                        statusMessage = "تبریک! تمام لغات این مرحله را بررسی کردید (+۱۵ XP و ثبت در زنجیره روزانه)",
+                        statusMessage = "جلسه امروز تمام شد؛ پیشرفت شما ذخیره شد (+۱۵ XP برای هر واژه).",
                         streakResult = streakResult
                     )
                 }

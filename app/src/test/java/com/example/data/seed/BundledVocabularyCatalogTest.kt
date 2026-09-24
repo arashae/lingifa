@@ -2,7 +2,6 @@ package com.example.data.seed
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -74,7 +73,8 @@ class BundledVocabularyCatalogTest {
             .use { it.readText() }
         val catalog = JSONObject(text)
         assertTrue(catalog.getInt("schemaVersion") >= 1)
-        assertTrue(catalog.optJSONArray("chunks") ?: JSONArray() is JSONArray)
+        assertTrue(catalog.has("chunks"))
+        assertTrue(catalog.getJSONArray("chunks").length() > 0)
         return catalog
     }
 }

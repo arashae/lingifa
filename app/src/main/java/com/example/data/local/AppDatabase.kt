@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.DailyStreakRecord
 import com.example.data.model.ExamTrackSettingsRecord
@@ -16,6 +17,7 @@ import com.example.data.model.MistakeRecord
 import com.example.data.model.UserProfile
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
+import com.example.data.model.VocabularyPackItem
 import com.example.data.seed.IeltsDeckSeed
 import com.example.data.seed.InitialDataSeed
 import kotlinx.coroutines.CoroutineScope
@@ -23,13 +25,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @Database(
     entities = [
         VocabularyItem::class,
         VocabularyPack::class,
+        VocabularyPackItem::class,
         MistakeRecord::class,
         UserProfile::class,
         IeltsVocabularyDeck::class,
@@ -39,13 +41,14 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun vocabularyDao(): VocabularyDao
     abstract fun vocabularyPackDao(): VocabularyPackDao
+    abstract fun vocabularyPackItemDao(): VocabularyPackItemDao
     abstract fun mistakeDao(): MistakeDao
     abstract fun userProfileDao(): UserProfileDao
     abstract fun ieltsFlashcardDao(): IeltsFlashcardDao
@@ -57,6 +60,52 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        /**
+         * Preserve existing vocabulary/progress while upgrading the old one-pack-per-word
+         * model to a many-to-many vocabulary catalog. Older migrations may still use the
+         * existing destructive fallback, but the common v5 -> v6 upgrade is non-destructive.
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN greRelevance TEXT NOT NULL DEFAULT 'Medium'")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN sourceLicense TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN datasetVersion TEXT NOT NULL DEFAULT '1'")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN frequencyRank INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN examPriority INTEGER NOT NULL DEFAULT 0")
+
+                db.execSQL("ALTER TABLE vocabulary_packs ADD COLUMN version INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE vocabulary_packs ADD COLUMN source TEXT NOT NULL DEFAULT 'LinguaFa'")
+                db.execSQL("ALTER TABLE vocabulary_packs ADD COLUMN targetWordCount INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vocabulary_packs ADD COLUMN installedWordCount INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vocabulary_packs ADD COLUMN isCorePack INTEGER NOT NULL DEFAULT 0")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS vocabulary_pack_items (
+                        packId TEXT NOT NULL,
+                        vocabularyId INTEGER NOT NULL,
+                        addedAt INTEGER NOT NULL,
+                        PRIMARY KEY(packId, vocabularyId)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_vocabulary_pack_items_vocabularyId " +
+                        "ON vocabulary_pack_items(vocabularyId)"
+                )
+
+                // Preserve every legacy pack assignment before new master memberships are added.
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO vocabulary_pack_items(packId, vocabularyId, addedAt)
+                    SELECT packName, id, updatedAt
+                    FROM vocabulary_items
+                    WHERE packName IS NOT NULL AND packName != ''
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -64,6 +113,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
+                    .addMigrations(MIGRATION_5_6)
                     .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(scope))
                     .build()
@@ -86,12 +136,16 @@ abstract class AppDatabase : RoomDatabase() {
 
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
-                // Ensure initial seed runs if empty
                 INSTANCE?.let { database ->
                     scope.launch(Dispatchers.IO) {
-                        if (database.vocabularyPackDao().getPackCount() == 0) {
+                        ensureVocabularyCatalog(database)
+
+                        if (database.vocabularyDao().getCountSync() == 0) {
                             populateDatabase(database)
                         } else {
+                            ensureSeedMemberships(database)
+                            ensureDefaultProfile(database)
+
                             if (database.ieltsFlashcardDao().getDeckCountSync() == 0) {
                                 populateIeltsDecks(database)
                             }
@@ -103,36 +157,91 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-            private suspend fun populateDatabase(database: AppDatabase) {
-                val packDao = database.vocabularyPackDao()
-                val vocabDao = database.vocabularyDao()
+            private suspend fun ensureDefaultProfile(database: AppDatabase) {
                 val profileDao = database.userProfileDao()
-
-                // Insert User Profile default
                 if (profileDao.getProfileSync() == null) {
                     profileDao.insertOrUpdate(UserProfile())
                 }
+            }
 
-                // Insert Packs
-                packDao.insertAll(InitialDataSeed.getDefaultPacks())
+            private suspend fun ensureVocabularyCatalog(database: AppDatabase) {
+                database.vocabularyPackDao().insertAllIfMissing(InitialDataSeed.getDefaultPacks())
+            }
 
-                // Insert Vocabulary Seed
-                vocabDao.insertAll(InitialDataSeed.getSeedVocabulary())
+            private suspend fun populateDatabase(database: AppDatabase) {
+                val packDao = database.vocabularyPackDao()
+                val vocabDao = database.vocabularyDao()
 
-                // Insert IELTS Flashcard Decks and Cards
+                ensureDefaultProfile(database)
+
+                // Insert built-in pack metadata, including IELTS/TOEFL/GRE master banks.
+                packDao.insertAllIfMissing(InitialDataSeed.getDefaultPacks())
+
+                // Insert bootstrap vocabulary and build many-to-many memberships.
+                val seedItems = InitialDataSeed.getSeedVocabulary()
+                val insertedIds = vocabDao.insertAll(seedItems)
+                val memberships = buildMemberships(seedItems, insertedIds)
+                database.vocabularyPackItemDao().insertAll(memberships)
+                refreshInstalledCounts(database)
+
                 populateIeltsDecks(database)
-
-                // Insert Initial Daily Streak Records
                 populateStreakRecords(database)
+            }
+
+            /**
+             * Existing v5 installs already have the 350-word bootstrap. After migration,
+             * attach those rows to the new master banks without duplicating vocabulary rows.
+             */
+            private suspend fun ensureSeedMemberships(database: AppDatabase) {
+                val membershipDao = database.vocabularyPackItemDao()
+                val needsBackfill =
+                    membershipDao.getPackItemCount(InitialDataSeed.IELTS_MASTER_PACK_ID) == 0 &&
+                    membershipDao.getPackItemCount(InitialDataSeed.TOEFL_MASTER_PACK_ID) == 0 &&
+                    membershipDao.getPackItemCount(InitialDataSeed.GRE_MASTER_PACK_ID) == 0
+
+                if (!needsBackfill) {
+                    refreshInstalledCounts(database)
+                    return
+                }
+
+                val memberships = mutableListOf<VocabularyPackItem>()
+                for (seedItem in InitialDataSeed.getSeedVocabulary()) {
+                    val stored = database.vocabularyDao().getByNormalizedWord(seedItem.normalizedWord) ?: continue
+                    InitialDataSeed.getPackIdsFor(seedItem).forEach { packId ->
+                        memberships += VocabularyPackItem(packId = packId, vocabularyId = stored.id)
+                    }
+                }
+                membershipDao.insertAll(memberships)
+                refreshInstalledCounts(database)
+            }
+
+            private fun buildMemberships(
+                items: List<VocabularyItem>,
+                ids: List<Long>
+            ): List<VocabularyPackItem> {
+                return items.zip(ids).flatMap { (item, id) ->
+                    InitialDataSeed.getPackIdsFor(item).map { packId ->
+                        VocabularyPackItem(packId = packId, vocabularyId = id)
+                    }
+                }
+            }
+
+            private suspend fun refreshInstalledCounts(database: AppDatabase) {
+                val packDao = database.vocabularyPackDao()
+                val membershipDao = database.vocabularyPackItemDao()
+                for (pack in InitialDataSeed.getDefaultPacks()) {
+                    packDao.updateInstalledWordCount(
+                        packId = pack.id,
+                        count = membershipDao.getPackItemCount(pack.id)
+                    )
+                }
             }
 
             private suspend fun populateIeltsDecks(database: AppDatabase) {
                 val ieltsDao = database.ieltsFlashcardDao()
                 if (ieltsDao.getDeckCountSync() == 0) {
-                    val defaultDecks = IeltsDeckSeed.getDefaultDecks()
-                    ieltsDao.insertDecks(defaultDecks)
-                    val defaultCards = IeltsDeckSeed.getDefaultFlashcards()
-                    ieltsDao.insertCards(defaultCards)
+                    ieltsDao.insertDecks(IeltsDeckSeed.getDefaultDecks())
+                    ieltsDao.insertCards(IeltsDeckSeed.getDefaultFlashcards())
                 }
             }
 
@@ -140,7 +249,6 @@ abstract class AppDatabase : RoomDatabase() {
                 val streakDao = database.dailyStreakDao()
                 if (streakDao.getTotalDaysCountSync() == 0) {
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                    val cal = Calendar.getInstance()
                     val activities = listOf("VOCABULARY", "IELTS_FLASHCARDS", "REVIEW", "AI_CARD")
 
                     // Seed past 3 days + today (4-day active streak)

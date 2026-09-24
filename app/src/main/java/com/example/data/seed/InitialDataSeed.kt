@@ -5,12 +5,67 @@ import com.example.data.model.VocabularyPack
 
 object InitialDataSeed {
 
+    const val IELTS_MASTER_PACK_ID = "pack_ielts_master"
+    const val TOEFL_MASTER_PACK_ID = "pack_toefl_master"
+    const val GRE_MASTER_PACK_ID = "pack_gre_master"
+
     fun getDefaultPacks(): List<VocabularyPack> = listOf(
+        VocabularyPack(
+            id = IELTS_MASTER_PACK_ID,
+            titleFa = "بانک جامع واژگان IELTS",
+            titleEn = "IELTS Master Vocabulary Bank",
+            descriptionFa = "بانک اصلی واژگان آیلتس برای Reading، Listening، Writing و Speaking. محتوا به‌صورت نسخه‌بندی‌شده و مرحله‌ای نصب می‌شود و یک لغت می‌تواند هم‌زمان عضو چند بسته باشد.",
+            level = "A2-C2",
+            exam = "IELTS",
+            wordCount = 9000,
+            isDownloaded = false,
+            category = "Master Bank",
+            iconName = "school",
+            version = 1,
+            source = "LinguaFa curated/original and legally redistributable sources",
+            targetWordCount = 9000,
+            installedWordCount = 0,
+            isCorePack = true
+        ),
+        VocabularyPack(
+            id = TOEFL_MASTER_PACK_ID,
+            titleFa = "بانک جامع واژگان TOEFL",
+            titleEn = "TOEFL Academic Master Vocabulary Bank",
+            descriptionFa = "بانک اصلی واژگان آکادمیک و دانشگاهی برای TOEFL iBT با پوشش متون علمی، سخنرانی‌ها، Writing و Speaking.",
+            level = "B1-C2",
+            exam = "TOEFL",
+            wordCount = 7000,
+            isDownloaded = false,
+            category = "Master Bank",
+            iconName = "menu_book",
+            version = 1,
+            source = "LinguaFa curated/original and legally redistributable sources",
+            targetWordCount = 7000,
+            installedWordCount = 0,
+            isCorePack = true
+        ),
+        VocabularyPack(
+            id = GRE_MASTER_PACK_ID,
+            titleFa = "بانک جامع واژگان GRE",
+            titleEn = "GRE Verbal Master Vocabulary Bank",
+            descriptionFa = "بانک واژگان پیشرفته GRE Verbal برای Text Completion، Sentence Equivalence و درک دقیق واژگان در متن.",
+            level = "B2-C2",
+            exam = "GRE",
+            wordCount = 5000,
+            isDownloaded = false,
+            category = "Master Bank",
+            iconName = "psychology",
+            version = 1,
+            source = "LinguaFa curated/original and legally redistributable sources",
+            targetWordCount = 5000,
+            installedWordCount = 0,
+            isCorePack = true
+        ),
         VocabularyPack(
             id = "pack_ielts_academic",
             titleFa = "لغات ضروری آیلتس آکادمیک",
             titleEn = "IELTS Academic Essentials",
-            descriptionFa = "واژگان منتخب با بالاترین تکرار در ریدینگ و رایتینگ تسک ۱ و ۲ آیلتس آکادمیک به همراه مثال و کالوکیشن.",
+            descriptionFa = "واژگان منتخب با بالاترین کاربرد در ریدینگ و رایتینگ تسک ۱ و ۲ آیلتس آکادمیک به همراه مثال و کالوکیشن.",
             level = "B2-C1",
             exam = "IELTS",
             wordCount = 120,
@@ -34,7 +89,7 @@ object InitialDataSeed {
             id = "pack_c1_advanced",
             titleFa = "لغات پیشرفته سطح C1 و C2",
             titleEn = "C1-C2 Master Vocabulary",
-            descriptionFa = "واژگان فاخر و کلمات آکادمیک سطح پیشرفته برای نمره‌های ۸ به بالا در آزمون‌های بین‌المللی.",
+            descriptionFa = "واژگان پیشرفته و آکادمیک سطح C1 و C2 برای آزمون‌های بین‌المللی و متون دانشگاهی.",
             level = "C1-C2",
             exam = "All Exams",
             wordCount = 110,
@@ -44,8 +99,8 @@ object InitialDataSeed {
         ),
         VocabularyPack(
             id = "pack_oxford_essential",
-            titleFa = "واژگان کلیدی آکسفورد (B1-B2)",
-            titleEn = "Oxford Essential 3000",
+            titleFa = "واژگان کلیدی عمومی (B1-B2)",
+            titleEn = "Core Essential Vocabulary",
             descriptionFa = "لغات پرکاربرد مکالمه روزمره، مطالعه دانشگاهی و درک فیلم و اخبار به زبان انگلیسی.",
             level = "B1-B2",
             exam = "General",
@@ -58,7 +113,7 @@ object InitialDataSeed {
             id = "pack_ielts_writing",
             titleFa = "کالوکیشن‌ها و واژگان رایتینگ آیلتس",
             titleEn = "IELTS Writing Collocations",
-            descriptionFa = "کالوکیشن‌های طلایی، واژگان تحلیل داده در تسک ۱ و پیوندهای منطقی برای تسک ۲.",
+            descriptionFa = "کالوکیشن‌های کاربردی، واژگان تحلیل داده در تسک ۱ و پیوندهای منطقی برای تسک ۲.",
             level = "B2-C1",
             exam = "IELTS",
             wordCount = 85,
@@ -70,7 +125,7 @@ object InitialDataSeed {
             id = "pack_ielts_speaking",
             titleFa = "اصطلاحات و افعال عبارتی اسپیکینگ",
             titleEn = "IELTS Speaking & Phrasal Verbs",
-            descriptionFa = "افعال عبارتی پرکاربرد و اصطلاحات طبیعی برای افزایش روانی کلام و نمره Fluency.",
+            descriptionFa = "افعال عبارتی و اصطلاحات طبیعی برای افزایش دقت و روانی کلام در اسپیکینگ.",
             level = "B1-B2",
             exam = "IELTS",
             wordCount = 75,
@@ -90,7 +145,24 @@ object InitialDataSeed {
         all.addAll(VocabSeedExtended.getItems())
         all.addAll(VocabSeedExtended2.getItems())
         all.addAll(VocabSeedExtended3.getItems())
-        // Total items is 15 + 15 + 15 + 15 + 10 + 72 + 103 + 105 = 350 items!
+        // Existing offline bootstrap: 350 items. Master banks are populated in versioned chunks.
         return all
+    }
+
+    /**
+     * Derives all built-in pack memberships for a vocabulary row.
+     * This intentionally keeps the legacy packName membership while also attaching
+     * words tagged for IELTS/TOEFL/GRE to their master banks.
+     */
+    fun getPackIdsFor(item: VocabularyItem): Set<String> {
+        val result = linkedSetOf<String>()
+        item.packName.takeIf { it.isNotBlank() }?.let(result::add)
+
+        val normalizedTags = item.tags.map { it.trim().uppercase() }.toSet()
+        if ("IELTS" in normalizedTags) result.add(IELTS_MASTER_PACK_ID)
+        if ("TOEFL" in normalizedTags) result.add(TOEFL_MASTER_PACK_ID)
+        if ("GRE" in normalizedTags) result.add(GRE_MASTER_PACK_ID)
+
+        return result
     }
 }

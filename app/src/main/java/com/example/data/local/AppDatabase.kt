@@ -182,6 +182,7 @@ abstract class AppDatabase : RoomDatabase() {
                             packItemDao = database.vocabularyPackItemDao(),
                             chunkDao = database.vocabularyDatasetChunkDao()
                         )
+                        ensureCefrMemberships(database)
                         refreshInstalledCounts(database)
                     }
                 }
@@ -243,6 +244,17 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 membershipDao.insertAll(memberships)
                 refreshInstalledCounts(database)
+            }
+
+            /** Attach every existing and newly imported word to its general CEFR path. */
+            private suspend fun ensureCefrMemberships(database: AppDatabase) {
+                val memberships = database.vocabularyDao().getAllVocabulariesSync().flatMap { item ->
+                    val id = item.id
+                    InitialDataSeed.getPackIdsFor(item)
+                        .filter { it.startsWith("pack_cefr_") }
+                        .map { packId -> VocabularyPackItem(packId = packId, vocabularyId = id) }
+                }
+                database.vocabularyPackItemDao().insertAll(memberships)
             }
 
             private fun buildMemberships(

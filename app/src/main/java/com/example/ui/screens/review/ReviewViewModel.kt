@@ -89,7 +89,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         val chosenType = exerciseTypes.random()
 
         val options = when (chosenType) {
-            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOICE -> {
+            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOOSE -> {
                 val distractors = vocabRepo.getRandomVocabularies(8)
                     .filter { it.word != item.word }
                     .take(3)

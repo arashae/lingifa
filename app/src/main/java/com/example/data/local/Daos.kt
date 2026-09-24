@@ -27,7 +27,7 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items WHERE isFavorite = 1 ORDER BY word ASC")
     fun getFavoriteVocabularies(): Flow<List<VocabularyItem>>
 
-    @Query("SELECT * FROM vocabulary_items WHERE cefrLevel = :level ORDER BY word ASC")
+    @Query("SELECT * FROM vocabulary_items WHERE cefrLevel = :level ORDER BY CASE WHEN learningOrder > 0 THEN learningOrder ELSE 2147483647 END, CASE WHEN frequencyRank > 0 THEN frequencyRank ELSE 2147483647 END, word ASC")
     fun getByLevel(level: String): Flow<List<VocabularyItem>>
 
     @Query(

@@ -158,10 +158,7 @@ fun AppNavGraph() {
                         onNavigateToPacks = { navController.navigate(Screen.VocabPacks.route) },
                         onNavigateToAiVocabCard = { navController.navigate(Screen.AiVocabCard.route) },
                         onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) },
-                        onNavigateToReview = {
-                            reviewViewModel.startSession()
-                            navController.navigate(Screen.SrsReview.route)
-                        }
+                        onNavigateToReview = { navController.navigate(Screen.SrsReview.route) }
                     )
                 }
 

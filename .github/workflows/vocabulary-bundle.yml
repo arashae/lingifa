@@ -51,6 +51,10 @@ jobs:
             echo "Vocabulary assets are already up to date."
           else
             git commit -m "data: bundle complete offline IELTS TOEFL GRE vocabulary"
+            # Other chats/workflows may update UI on main while this data job is running.
+            # Rebase the generated-assets commit so we never overwrite or reject their work.
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
 

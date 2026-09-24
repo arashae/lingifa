@@ -152,13 +152,11 @@ object AiVocabCardGenerator {
     suspend fun generateVocabularyCard(query: String): AiVocabCardData = withContext(Dispatchers.IO) {
         val cleanWord = query.trim().lowercase()
 
-        // 1. Try preloaded high-yield dictionary for exact/partial match
         val matched = PRELOADED_KNOWLEDGE_BASE[cleanWord]
         if (matched != null) {
             return@withContext matched
         }
 
-        // 2. Try Gemini API if key is available
         if (GeminiClient.hasValidApiKey()) {
             try {
                 val aiResult = GeminiClient.enrichWord(cleanWord)
@@ -183,14 +181,13 @@ object AiVocabCardGenerator {
                         )
                     }
                 }
-            } catch (e: Exception) {
-                // fallback gracefully
+            } catch (_: Exception) {
+                // Fall back to an explicit unverified card below.
             }
         }
 
-        // 3. Fallback: Return unverified status instead of synthetic fake data
         val capitalized = cleanWord.replaceFirstChar { it.uppercase() }
-        return AiVocabCardData(
+        return@withContext AiVocabCardData(
             word = capitalized,
             phonetic = "",
             partOfSpeech = "",

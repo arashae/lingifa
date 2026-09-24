@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Graduation Cap Top Diamond -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M54,28 L74,37 L54,46 L34,37 Z" />
+
+    <!-- Cap Base Arc -->
+    <path
+        android:fillColor="#D97706"
+        android:pathData="M43,42 L43,49 C43,53.5 50.5,56 54,56 C57.5,56 65,53.5 65,49 L65,42 L54,47 Z" />
+
+    <!-- Cap Tassel -->
+    <path
+        android:fillColor="#FDE68A"
+        android:pathData="M70,39 L75,48 L73,56 L77,56 L75,48 Z" />
+
+    <!-- Open Book Left Page -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,60 C42,57 32,58 27,61 L27,78 C32,75 42,74 52,77 Z" />
+
+    <!-- Open Book Right Page -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:pathData="M56,60 C66,57 76,58 81,61 L81,78 C76,75 66,74 56,77 Z" />
+
+    <!-- Book Spine Glow -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M52.5,59.5 L55.5,59.5 L55.5,77.5 L52.5,77.5 Z" />
+
+    <!-- Left Page Text Lines -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M32,65 L47,65 L47,66.8 L32,66.8 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M32,69 L45,69 L45,70.8 L32,70.8 Z" />
+
+    <!-- Right Page Text Lines -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M61,65 L76,65 L76,66.8 L61,66.8 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M63,69 L76,69 L76,70.8 L63,70.8 Z" />
+
+    <!-- Audio / AI Wave Sparks -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M23,45 C23,43 25,41 27,42 C27.5,42.2 27.5,43 27,43.5 C25.5,44.5 25.5,46.5 27,47.5 C27.5,48 27.5,48.8 27,49 C25,50 23,48 23,45 Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M85,45 C85,43 83,41 81,42 C80.5,42.2 80.5,43 81,43.5 C82.5,44.5 82.5,46.5 81,47.5 C80.5,48 80.5,48.8 81,49 C83,50 85,48 85,45 Z" />
+</vector>

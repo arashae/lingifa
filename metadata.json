@@ -1,0 +1,6 @@
+{
+  "name": "LinguaFa AI",
+  "description": "Native English learning & exam preparation (IELTS/TOEFL) for Persian speakers with AI-powered vocabulary, active recall, and adaptive tutoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

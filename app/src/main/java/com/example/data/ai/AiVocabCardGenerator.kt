@@ -8,6 +8,21 @@ import kotlinx.coroutines.withContext
 object AiVocabCardGenerator {
 
     private val PRELOADED_KNOWLEDGE_BASE = mapOf(
+        "collaboration" to AiVocabCardData(
+            word = "Collaboration",
+            phonetic = "/kəˌlæb.əˈreɪ.ʃən/",
+            partOfSpeech = "noun",
+            persianTranslation = "همکاری، مشارکت، کار مشترک",
+            englishDefinition = "The act of working together with other people or organizations to achieve a shared goal.",
+            exampleSentenceEn = "Successful research often depends on close collaboration between experts from different fields.",
+            exampleSentenceFa = "پژوهش موفق اغلب به همکاری نزدیک میان متخصصان حوزه‌های مختلف وابسته است.",
+            collocations = listOf("close collaboration", "international collaboration", "collaboration between teams"),
+            synonyms = listOf("cooperation", "partnership", "teamwork"),
+            antonyms = listOf("competition", "isolation"),
+            cefrLevel = "B2",
+            ieltsTipFa = "برای موضوعات کار تیمی، آموزش، پژوهش و محیط کار در رایتینگ و اسپیکینگ کاربرد زیادی دارد.",
+            persianCommonMistake = "با cooperation هم‌معنی است، اما collaboration معمولاً روی کار مشترک برای تولید یا رسیدن به یک نتیجه تأکید دارد."
+        ),
         "mitigate" to AiVocabCardData(
             word = "Mitigate",
             phonetic = "/ˈmɪt.ɪ.ɡeɪt/",

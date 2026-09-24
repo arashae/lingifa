@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.audio.TtsManager
+import com.example.srs.ReviewRating
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.PersianRtlLayout
@@ -174,9 +175,18 @@ fun WordDetailScreen(
 
                 ReviewActionCard(
                     feedbackMessage = feedbackMessage,
-                    onKnown = { feedbackMessage = "این واژه به‌عنوان «بلدم» ثبت شد." },
-                    onPractice = { feedbackMessage = "برای مرور نزدیک علامت‌گذاری شد." },
-                    onHard = { feedbackMessage = "در مرورهای با اولویت بالاتر قرار گرفت." }
+                    onKnown = {
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD)
+                        feedbackMessage = "ثبت شد؛ این واژه در زمان مناسب برای مرور برمی‌گردد."
+                    },
+                    onPractice = {
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN)
+                        feedbackMessage = "ثبت شد؛ این واژه به مرور نزدیک اضافه شد."
+                    },
+                    onHard = {
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
+                        feedbackMessage = "ثبت شد؛ فاصلهٔ مرور این واژه کوتاه‌تر خواهد بود."
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(22.dp))

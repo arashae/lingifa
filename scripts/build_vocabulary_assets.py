@@ -37,6 +37,9 @@ EXAMS = {
     "GRE": {"tag": "gre", "pack": "pack_gre_master", "dir": "gre", "prefix": "gre_core", "default_cefr": "C1"},
 }
 
+CEFR_LEVELS = ("A1", "A2", "B1", "B2", "C1", "C2")
+CEFR_PACKS = {level: f"pack_cefr_{level.lower()}" for level in CEFR_LEVELS}
+
 POS_MAP = {
     "n": "noun", "v": "verb", "a": "adjective", "adj": "adjective",
     "r": "adverb", "adv": "adverb", "prep": "preposition",
@@ -198,11 +201,12 @@ def load_persian_dictionary(tmp: Path) -> dict[str, str]:
     return mapping
 
 
-def load_ecdict(tmp: Path) -> dict[str, list[dict]]:
+def load_ecdict(tmp: Path) -> tuple[dict[str, list[dict]], dict[str, dict]]:
     csv_path = tmp / "ecdict.csv"
     download(ECDICT_CSV, csv_path)
     by_exam: dict[str, list[dict]] = {exam: [] for exam in EXAMS}
     seen: dict[str, set[str]] = {exam: set() for exam in EXAMS}
+    all_words: dict[str, dict] = {}
 
     with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -211,9 +215,6 @@ def load_ecdict(tmp: Path) -> dict[str, list[dict]]:
             if not english:
                 continue
             tags = tags_of(row.get("tag", ""))
-            matched = [exam for exam, cfg in EXAMS.items() if cfg["tag"] in tags]
-            if not matched:
-                continue
             base = {
                 "word": english,
                 "ipa": clean_text(row.get("phonetic")),
@@ -222,11 +223,13 @@ def load_ecdict(tmp: Path) -> dict[str, list[dict]]:
                 "frequencyRank": parse_int(row.get("frq")) or parse_int(row.get("bnc")),
                 "sourceTags": sorted(tags),
             }
+            all_words.setdefault(english, base)
+            matched = [exam for exam, cfg in EXAMS.items() if cfg["tag"] in tags]
             for exam in matched:
                 if english not in seen[exam]:
                     seen[exam].add(english)
                     by_exam[exam].append(dict(base))
-    return by_exam
+    return by_exam, all_words
 
 
 def load_existing_seed_meanings() -> dict[str, str]:
@@ -308,7 +311,59 @@ def enrich(exam: str, rows: list[dict], openjam: dict[str, dict], persian: dict[
     return enriched, missing_before_fallback
 
 
-def write_assets(exam_data: dict[str, list[dict]], missing: dict[str, list[str]]) -> None:
+def build_cefr_core(
+    ecdict: dict[str, dict],
+    openjam: dict[str, dict],
+    persian: dict[str, str],
+    seeds: dict[str, str],
+) -> dict[str, list[dict]]:
+    """Build the general A1–C2 curriculum from CEFR-annotated open data.
+
+    Unlike the exam banks, these records are selected by CEFR level first. A
+    record is kept only when a Persian meaning and an English definition are
+    available, so a large list never turns into a list of empty flashcards.
+    """
+    grouped: dict[str, list[dict]] = {level: [] for level in CEFR_LEVELS}
+    for word, oj in openjam.items():
+        level = clean_text(oj.get("cefrLevel")).upper()
+        if level not in CEFR_LEVELS:
+            continue
+        meta = ecdict.get(word, {})
+        meaning = clean_text(oj.get("persianMeaning")) or clean_text(persian.get(word)) or clean_text(seeds.get(word))
+        definition = clean_text(oj.get("englishDefinition")) or clean_text(meta.get("englishDefinition"))
+        if not meaning or not definition:
+            continue
+        grouped[level].append({
+            "word": word,
+            "ipa": clean_text(oj.get("ipa")) or clean_text(meta.get("ipa")),
+            "persianMeaning": meaning,
+            "englishDefinition": definition,
+            "partOfSpeech": clean_text(oj.get("partOfSpeech")) or clean_text(meta.get("partOfSpeech")) or "word",
+            "example": clean_text(oj.get("example")),
+            "examplePersian": clean_text(oj.get("examplePersian")),
+            "cefrLevel": level,
+            "synonyms": [], "antonyms": [], "collocations": [], "wordFamily": [],
+            "commonMistakes": "",
+            "ieltsRelevance": "Low", "toeflRelevance": "Low", "greRelevance": "Low",
+            "tags": ["General", "CEFR", "offline", "Openjam"],
+            "source": "Openjam + ECDICT + EnglishToPersianDictionaries",
+            "sourceLicense": "Openjam MIT; ECDICT MIT; EnglishToPersianDictionaries Apache-2.0",
+            "frequencyRank": parse_int(oj.get("frequencyRank")) or parse_int(meta.get("frequencyRank")),
+            "examPriority": 0,
+        })
+
+    for level, rows in grouped.items():
+        rows.sort(key=lambda item: (item["frequencyRank"] or 2_000_000, item["word"]))
+        for position, item in enumerate(rows, start=1):
+            item["learningOrder"] = position
+    return grouped
+
+
+def write_assets(
+    exam_data: dict[str, list[dict]],
+    cefr_data: dict[str, list[dict]],
+    missing: dict[str, list[str]],
+) -> None:
     chunks = []
     targets = {}
 
@@ -336,6 +391,29 @@ def write_assets(exam_data: dict[str, list[dict]], missing: dict[str, list[str]]
                 "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries",
             })
 
+    for level, rows in cefr_data.items():
+        key = level.lower()
+        out_dir = ASSET_ROOT / "cefr" / key
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for old in out_dir.glob("*.jsonl"):
+            old.unlink()
+        targets[CEFR_PACKS[level]] = len(rows)
+        for chunk_index, start in enumerate(range(0, len(rows), CHUNK_SIZE), start=1):
+            chunk_rows = rows[start : start + CHUNK_SIZE]
+            filename = f"{key}_core_{chunk_index:03d}.jsonl"
+            path = out_dir / filename
+            with path.open("w", encoding="utf-8", newline="\n") as handle:
+                for item in chunk_rows:
+                    handle.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
+            chunks.append({
+                "id": f"cefr-{key}-{chunk_index:03d}",
+                "version": DATASET_VERSION,
+                "packId": CEFR_PACKS[level],
+                "asset": f"vocabulary/cefr/{key}/{filename}",
+                "expectedItems": len(chunk_rows),
+                "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries",
+            })
+
     catalog = {
         "schemaVersion": 1,
         "catalogVersion": CATALOG_VERSION,
@@ -354,6 +432,7 @@ def write_assets(exam_data: dict[str, list[dict]], missing: dict[str, list[str]]
             "fallbackPersianEnrichment": "VahidN/EnglishToPersianDictionaries (Apache-2.0)",
         },
         "examCounts": {exam: len(rows) for exam, rows in exam_data.items()},
+        "cefrCounts": {level: len(rows) for level, rows in cefr_data.items()},
         "missingPersianBeforeFallback": {exam: len(words) for exam, words in missing.items()},
         "missingPersianSamples": {exam: words[:200] for exam, words in missing.items()},
         "chunkSize": CHUNK_SIZE,
@@ -366,15 +445,15 @@ def write_assets(exam_data: dict[str, list[dict]], missing: dict[str, list[str]]
     (ASSET_ROOT / "SOURCES.md").write_text(sources, encoding="utf-8")
 
 
-def validate(exam_data: dict[str, list[dict]]) -> None:
-    for exam, rows in exam_data.items():
-        assert rows, f"{exam}: no words generated"
+def validate(exam_data: dict[str, list[dict]], cefr_data: dict[str, list[dict]]) -> None:
+    for label, rows in {**exam_data, **cefr_data}.items():
+        assert rows, f"{label}: no words generated"
         words = [item["word"] for item in rows]
-        assert len(words) == len(set(words)), f"{exam}: duplicate words"
+        assert len(words) == len(set(words)), f"{label}: duplicate words"
         for item in rows:
-            assert item["word"].strip(), f"{exam}: blank word"
-            assert item["persianMeaning"].strip(), f"{exam}/{item['word']}: blank Persian meaning"
-            assert item["englishDefinition"].strip(), f"{exam}/{item['word']}: blank English definition"
+            assert item["word"].strip(), f"{label}: blank word"
+            assert item["persianMeaning"].strip(), f"{label}/{item['word']}: blank Persian meaning"
+            assert item["englishDefinition"].strip(), f"{label}/{item['word']}: blank English definition"
 
 
 def main() -> None:
@@ -383,7 +462,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="linguafa-vocab-") as tmpdir:
         tmp = Path(tmpdir)
         print("Downloading and parsing ECDICT…")
-        ecdict = load_ecdict(tmp)
+        exam_ecdict, all_ecdict = load_ecdict(tmp)
         print("Downloading and parsing Openjam enrichment…")
         openjam = load_openjam(tmp)
         print("Cloning and parsing English→Persian dictionaries…")
@@ -392,11 +471,15 @@ def main() -> None:
         final: dict[str, list[dict]] = {}
         missing: dict[str, list[str]] = {}
         for exam in EXAMS:
-            final[exam], missing[exam] = enrich(exam, ecdict[exam], openjam, persian, seeds)
+            final[exam], missing[exam] = enrich(exam, exam_ecdict[exam], openjam, persian, seeds)
             print(f"{exam}: {len(final[exam]):,} words; Persian misses before explicit fallback: {len(missing[exam]):,}")
 
-        validate(final)
-        write_assets(final, missing)
+        cefr = build_cefr_core(all_ecdict, openjam, persian, seeds)
+        for level, rows in cefr.items():
+            print(f"CEFR {level}: {len(rows):,} complete cards")
+
+        validate(final, cefr)
+        write_assets(final, cefr, missing)
 
     total = sum(len(v) for v in final.values())
     print(f"Generated {total:,} exam memberships across {len(EXAMS)} offline packs.")

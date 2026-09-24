@@ -9,7 +9,46 @@ object InitialDataSeed {
     const val TOEFL_MASTER_PACK_ID = "pack_toefl_master"
     const val GRE_MASTER_PACK_ID = "pack_gre_master"
 
+    private val CEFR_PACK_IDS = mapOf(
+        "A1" to "pack_cefr_a1",
+        "A2" to "pack_cefr_a2",
+        "B1" to "pack_cefr_b1",
+        "B2" to "pack_cefr_b2",
+        "C1" to "pack_cefr_c1",
+        "C2" to "pack_cefr_c2"
+    )
+
     fun getDefaultPacks(): List<VocabularyPack> = listOf(
+        VocabularyPack(
+            id = "pack_cefr_a1", titleFa = "مسیر عمومی A1", titleEn = "CEFR A1 Foundation",
+            descriptionFa = "پایه‌ترین واژه‌های پرکاربرد برای شروع مکالمه و زندگی روزمره.",
+            level = "A1", exam = "General", wordCount = 292, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_cefr_a2", titleFa = "مسیر عمومی A2", titleEn = "CEFR A2 Everyday English",
+            descriptionFa = "واژگان روزمره برای خرید، سفر، کارهای شخصی و مکالمه‌های کوتاه.",
+            level = "A2", exam = "General", wordCount = 707, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_cefr_b1", titleFa = "مسیر عمومی B1", titleEn = "CEFR B1 Independent",
+            descriptionFa = "واژه‌های ضروری برای بیان نظر، تجربه و ارتباط مستقل.",
+            level = "B1", exam = "General", wordCount = 968, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_cefr_b2", titleFa = "مسیر عمومی B2", titleEn = "CEFR B2 Upper Intermediate",
+            descriptionFa = "واژگان پرکاربردِ مطالعه، کار و بحث‌های پیچیده‌تر.",
+            level = "B2", exam = "General", wordCount = 1209, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_cefr_c1", titleFa = "مسیر عمومی C1", titleEn = "CEFR C1 Advanced",
+            descriptionFa = "واژگان پیشرفته و آکادمیک برای بیان دقیق و متون جدی.",
+            level = "C1", exam = "General", wordCount = 1105, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_cefr_c2", titleFa = "مسیر عمومی C2", titleEn = "CEFR C2 Proficient",
+            descriptionFa = "واژگان بسیار پیشرفته برای درک و تولید زبان در بالاترین سطح.",
+            level = "C2", exam = "General", wordCount = 16321, category = "CEFR Curriculum", iconName = "translate"
+        ),
         VocabularyPack(
             id = IELTS_MASTER_PACK_ID,
             titleFa = "بانک جامع واژگان IELTS",
@@ -162,6 +201,7 @@ object InitialDataSeed {
         if ("IELTS" in normalizedTags) result.add(IELTS_MASTER_PACK_ID)
         if ("TOEFL" in normalizedTags) result.add(TOEFL_MASTER_PACK_ID)
         if ("GRE" in normalizedTags) result.add(GRE_MASTER_PACK_ID)
+        CEFR_PACK_IDS[item.cefrLevel.trim().uppercase()]?.let(result::add)
 
         return result
     }

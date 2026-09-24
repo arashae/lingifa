@@ -21,14 +21,17 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items WHERE word LIKE '%' || :query || '%' OR persianMeaning LIKE '%' || :query || '%' ORDER BY word ASC")
     fun searchVocabularies(query: String): Flow<List<VocabularyItem>>
 
-    @Query("SELECT * FROM vocabulary_items WHERE nextReview <= :currentTime ORDER BY nextReview ASC")
+    @Query("SELECT * FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND nextReview <= :currentTime ORDER BY nextReview ASC")
     fun getDueVocabularies(currentTime: Long): Flow<List<VocabularyItem>>
 
-    @Query("SELECT COUNT(*) FROM vocabulary_items WHERE nextReview <= :currentTime")
+    @Query("SELECT COUNT(*) FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND nextReview <= :currentTime")
     fun getDueCount(currentTime: Long): Flow<Int>
 
-    @Query("SELECT * FROM vocabulary_items WHERE nextReview <= :currentTime ORDER BY nextReview ASC LIMIT :limit")
+    @Query("SELECT * FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND nextReview <= :currentTime ORDER BY nextReview ASC LIMIT :limit")
     fun getDueVocabulariesForReview(currentTime: Long, limit: Int): Flow<List<VocabularyItem>>
+
+    @Query("SELECT * FROM vocabulary_items WHERE correctCount > 0 OR incorrectCount > 0 ORDER BY lastReview DESC LIMIT :limit")
+    suspend fun getStudiedVocabulariesForReview(limit: Int): List<VocabularyItem>
 
     @Query("SELECT * FROM vocabulary_items ORDER BY RANDOM() LIMIT :limit")
     suspend fun getRandomVocabularies(limit: Int): List<VocabularyItem>
@@ -79,6 +82,9 @@ interface VocabularyDao {
 
     @Query("SELECT COUNT(*) FROM vocabulary_items")
     suspend fun getCountSync(): Int
+
+    @Query("SELECT * FROM vocabulary_items")
+    suspend fun getAllVocabulariesSync(): List<VocabularyItem>
 
     @Query("SELECT COUNT(*) FROM vocabulary_items WHERE mastery >= 70")
     fun getLearnedCount(): Flow<Int>

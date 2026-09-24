@@ -41,6 +41,10 @@ class VocabularyRepository(
         return vocabDao.getRandomVocabularies(limit)
     }
 
+    suspend fun getStudiedVocabulariesForReview(limit: Int): List<VocabularyItem> {
+        return vocabDao.getStudiedVocabulariesForReview(limit)
+    }
+
     fun search(query: String): Flow<List<VocabularyItem>> {
         return vocabDao.searchVocabularies(query)
     }

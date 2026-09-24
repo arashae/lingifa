@@ -62,7 +62,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             val sessionItems = if (due.isNotEmpty()) {
                 due.take(15)
             } else {
-                vocabRepo.getRandomVocabularies(10)
+                vocabRepo.getStudiedVocabulariesForReview(limit = 10)
             }
 
             if (sessionItems.isNotEmpty()) {

@@ -47,7 +47,8 @@ class InitialDataSeedTest {
         assertTrue(InitialDataSeed.IELTS_MASTER_PACK_ID in memberships)
         assertTrue(InitialDataSeed.TOEFL_MASTER_PACK_ID in memberships)
         assertTrue(InitialDataSeed.GRE_MASTER_PACK_ID in memberships)
-        assertEquals(4, memberships.size)
+        assertTrue("pack_cefr_b2" in memberships)
+        assertEquals(5, memberships.size)
     }
 
     @Test

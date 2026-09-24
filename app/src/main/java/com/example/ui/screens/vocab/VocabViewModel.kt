@@ -14,6 +14,7 @@ import com.example.data.model.VocabularyPack
 import com.example.data.model.UserProfile
 import com.example.data.repository.VocabularyRepository
 import com.example.network.GeminiClient
+import com.example.srs.ReviewRating
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -295,6 +296,13 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleFavorite(item: VocabularyItem) {
         viewModelScope.launch {
             repo.update(item.copy(isFavorite = !item.isFavorite))
+        }
+    }
+
+    /** Records the learner's first judgement so the word can enter SRS safely. */
+    fun recordLearningJudgement(item: VocabularyItem, rating: ReviewRating) {
+        viewModelScope.launch {
+            repo.recordReview(item, rating)
         }
     }
 

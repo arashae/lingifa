@@ -4,7 +4,13 @@
   "targets": {
     "pack_ielts_master": 5040,
     "pack_toefl_master": 6974,
-    "pack_gre_master": 7504
+    "pack_gre_master": 7504,
+    "pack_cefr_a1": 292,
+    "pack_cefr_a2": 707,
+    "pack_cefr_b1": 968,
+    "pack_cefr_b2": 1209,
+    "pack_cefr_c1": 1105,
+    "pack_cefr_c2": 16321
   },
   "chunks": [
     {
@@ -334,6 +340,358 @@
       "asset": "vocabulary/gre/gre_core_016.jsonl",
       "expectedItems": 4,
       "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-a1-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_a1",
+      "asset": "vocabulary/cefr/a1/a1_core_001.jsonl",
+      "expectedItems": 292,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-a2-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_a2",
+      "asset": "vocabulary/cefr/a2/a2_core_001.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-a2-002",
+      "version": "3.0.0",
+      "packId": "pack_cefr_a2",
+      "asset": "vocabulary/cefr/a2/a2_core_002.jsonl",
+      "expectedItems": 207,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-b1-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_b1",
+      "asset": "vocabulary/cefr/b1/b1_core_001.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-b1-002",
+      "version": "3.0.0",
+      "packId": "pack_cefr_b1",
+      "asset": "vocabulary/cefr/b1/b1_core_002.jsonl",
+      "expectedItems": 468,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-b2-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_b2",
+      "asset": "vocabulary/cefr/b2/b2_core_001.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-b2-002",
+      "version": "3.0.0",
+      "packId": "pack_cefr_b2",
+      "asset": "vocabulary/cefr/b2/b2_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-b2-003",
+      "version": "3.0.0",
+      "packId": "pack_cefr_b2",
+      "asset": "vocabulary/cefr/b2/b2_core_003.jsonl",
+      "expectedItems": 209,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c1-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c1",
+      "asset": "vocabulary/cefr/c1/c1_core_001.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c1-002",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c1",
+      "asset": "vocabulary/cefr/c1/c1_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c1-003",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c1",
+      "asset": "vocabulary/cefr/c1/c1_core_003.jsonl",
+      "expectedItems": 105,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-001",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_001.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-002",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_002.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-003",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_003.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-004",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_004.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-005",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_005.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-006",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_006.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-007",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_007.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-008",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_008.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-009",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_009.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-010",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_010.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-011",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_011.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-012",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_012.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-013",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_013.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-014",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_014.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-015",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_015.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-016",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_016.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-017",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_017.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-018",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_018.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-019",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_019.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-020",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_020.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-021",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_021.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-022",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_022.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-023",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_023.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-024",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_024.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-025",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_025.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-026",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_026.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-027",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_027.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-028",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_028.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-029",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_029.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-030",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_030.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-031",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_031.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-032",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_032.jsonl",
+      "expectedItems": 500,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "cefr-c2-033",
+      "version": "3.0.0",
+      "packId": "pack_cefr_c2",
+      "asset": "vocabulary/cefr/c2/c2_core_033.jsonl",
+      "expectedItems": 321,
+      "source": "Openjam CEFR + ECDICT + EnglishToPersianDictionaries"
     }
   ]
 }

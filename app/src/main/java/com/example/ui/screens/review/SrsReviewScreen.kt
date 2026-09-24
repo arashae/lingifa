@@ -121,7 +121,8 @@ fun SrsReviewScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
-                                text = "آفرین! مرور امروز تکمیل شد 🎉",
+                                text = if (state.sessionTotal == 0) "هنوز واژه‌ای برای مرور نداری"
+                                else "آفرین! مرور امروز تکمیل شد 🎉",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 textAlign = TextAlign.Center
                             )
@@ -129,7 +130,9 @@ fun SrsReviewScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "${state.sessionTotal} لغت با موفقیت مرور و در فواصل زمانی آینده برنامه‌ریزی شدند.",
+                                text = if (state.sessionTotal == 0)
+                                    "اول از مسیر CEFR یا بانک واژگان چند کلمه را وارد یادگیری کن؛ بعد مرور هوشمند خودش سراغشان می‌آید."
+                                else "${state.sessionTotal} لغت با موفقیت مرور و در فواصل زمانی آینده برنامه‌ریزی شدند.",
                                 style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
                                 textAlign = TextAlign.Center
                             )

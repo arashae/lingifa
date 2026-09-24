@@ -47,7 +47,12 @@ class ExamTrackModuleTest {
         profileDao = database.userProfileDao()
         profileDao.insertOrUpdate(UserProfile(id = 1, streakDays = 2, xp = 100))
 
-        repository = ExamTrackRepository(examTrackDao, profileDao, streakDao)
+        repository = ExamTrackRepository(
+            examTrackDao,
+            profileDao,
+            streakDao,
+            database.vocabularyDao()
+        )
         streakRepository = DailyStreakRepository(streakDao, profileDao)
     }
 
@@ -66,7 +71,6 @@ class ExamTrackModuleTest {
         assertTrue("TOEFL words should not be empty", toeflWords.size >= 10)
         assertTrue("GRE words should not be empty", greWords.size >= 10)
 
-        // Check each word has Persian meaning, phonetics, and academic example
         ieltsWords.forEach { word ->
             assertTrue(word.word.isNotBlank())
             assertTrue(word.persianMeaning.isNotBlank())
@@ -94,13 +98,11 @@ class ExamTrackModuleTest {
 
     @Test
     fun examTracks_canBeProgressedIndependentlyStageByStage() = runBlocking {
-        // Initially, IELTS progress is 0
         var ieltsState = repository.getTrackState(ExamTrackType.IELTS).first()
         assertEquals(0, ieltsState.totalWordsLearned)
         assertEquals(0, ieltsState.overallPercentage)
         assertEquals(4, ieltsState.stages.size)
 
-        // Mark 2 words in IELTS Stage 1 as mastered
         repository.updateWordMastery(
             trackType = ExamTrackType.IELTS,
             wordId = "ielts_s1_01",
@@ -123,17 +125,14 @@ class ExamTrackModuleTest {
         assertEquals(2, stage1.masteredCount)
         assertTrue(stage1.progressPercentage > 0)
 
-        // Verify TOEFL track is completely independent and remains unaffected (0 words)
         val toeflState = repository.getTrackState(ExamTrackType.TOEFL).first()
         assertEquals(0, toeflState.totalWordsLearned)
         assertEquals(0, toeflState.overallPercentage)
 
-        // Verify GRE track is completely independent (0 words)
         val greState = repository.getTrackState(ExamTrackType.GRE).first()
         assertEquals(0, greState.totalWordsLearned)
         assertEquals(0, greState.overallPercentage)
 
-        // Now progress GRE Stage 1
         repository.updateWordMastery(
             trackType = ExamTrackType.GRE,
             wordId = "gre_s1_01",
@@ -145,7 +144,6 @@ class ExamTrackModuleTest {
         assertEquals(1, updatedGreState.totalWordsLearned)
         assertEquals(1, updatedGreState.wordsStudiedToday)
 
-        // Daily streak was recorded in Room
         val streakInfo = streakRepository.streakInfo.first()
         assertTrue(streakInfo.isTodayCompleted)
         assertTrue(streakInfo.totalXp >= 145)
@@ -158,17 +156,15 @@ class ExamTrackModuleTest {
         var toeflState = repository.getTrackState(ExamTrackType.TOEFL).first()
         assertEquals(5, toeflState.dailyGoalWords)
 
-        // Study 3 words in TOEFL
         repository.updateWordMastery(ExamTrackType.TOEFL, "toefl_s1_01", 1, true)
         repository.updateWordMastery(ExamTrackType.TOEFL, "toefl_s1_02", 1, true)
         repository.updateWordMastery(ExamTrackType.TOEFL, "toefl_s1_03", 1, true)
 
         toeflState = repository.getTrackState(ExamTrackType.TOEFL).first()
         assertEquals(3, toeflState.wordsStudiedToday)
-        assertEquals(60, toeflState.dailyProgressPercentage) // (3 * 100) / 5 = 60%
+        assertEquals(60, toeflState.dailyProgressPercentage)
         assertFalse(toeflState.isDailyGoalMet)
 
-        // Study 2 more words to hit goal
         repository.updateWordMastery(ExamTrackType.TOEFL, "toefl_s1_04", 1, true)
         repository.updateWordMastery(ExamTrackType.TOEFL, "toefl_s1_05", 1, true)
 

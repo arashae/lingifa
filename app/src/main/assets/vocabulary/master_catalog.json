@@ -1,12 +1,28 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026.09.24",
+  "catalogVersion": "2026.09.24.2",
   "targets": {
     "pack_ielts_master": 9000,
     "pack_toefl_master": 7000,
     "pack_gre_master": 5000
   },
   "chunks": [
+    {
+      "id": "ielts-core-001",
+      "version": "1.0.0",
+      "packId": "pack_ielts_master",
+      "asset": "vocabulary/ielts/ielts_core_001.jsonl",
+      "expectedItems": 20,
+      "source": "LinguaFa Original"
+    },
+    {
+      "id": "toefl-core-001",
+      "version": "1.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_001.jsonl",
+      "expectedItems": 20,
+      "source": "LinguaFa Original"
+    },
     {
       "id": "gre-core-001",
       "version": "1.0.0",

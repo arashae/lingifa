@@ -126,7 +126,7 @@ class ExamTrackModuleTest {
         assertTrue("Downloaded master-bank word must enter IELTS track", downloaded != null)
         assertEquals("نهادینه کردن", downloaded?.persianMeaning)
         assertTrue(downloaded?.id?.startsWith("master_ielts_") == true)
-        assertTrue(downloaded?.stageNumber in 1..4)
+        assertTrue(downloaded != null && downloaded.stageNumber in 1..4)
     }
 
     @Test

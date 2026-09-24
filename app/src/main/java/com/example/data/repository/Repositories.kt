@@ -75,11 +75,20 @@ class VocabularyRepository(
         val membershipDao = packItemDao ?: return
         val affectedPackIds = membershipDao.getPackIdsForVocabularySync(vocabularyId)
         membershipDao.deleteByVocabulary(vocabularyId)
+
         for (packId in affectedPackIds) {
-            packDao.updateInstalledWordCount(
-                packId = packId,
-                count = membershipDao.getPackItemCount(packId)
-            )
+            val count = membershipDao.getPackItemCount(packId)
+            val pack = packDao.getPackById(packId)
+            if (pack?.isCorePack == true) {
+                val complete = pack.targetWordCount > 0 && count >= pack.targetWordCount
+                packDao.updateInstallState(
+                    packId = packId,
+                    count = count,
+                    isDownloaded = complete
+                )
+            } else {
+                packDao.updateInstalledWordCount(packId = packId, count = count)
+            }
         }
     }
 
@@ -115,9 +124,7 @@ class VocabularyRepository(
 
             if (existing != null) {
                 when (duplicateAction) {
-                    DuplicateAction.SKIP -> {
-                        continue
-                    }
+                    DuplicateAction.SKIP -> continue
                     DuplicateAction.UPDATE -> {
                         val updated = existing.copy(
                             persianMeaning = if (pItem.persianMeaning.isNotEmpty()) pItem.persianMeaning else existing.persianMeaning,

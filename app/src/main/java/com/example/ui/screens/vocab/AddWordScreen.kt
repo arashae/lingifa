@@ -1,6 +1,6 @@
 package com.example.ui.screens.vocab
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,15 +38,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.PersianRtlLayout
-import com.example.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,190 +60,236 @@ fun AddWordScreen(
 
     PersianRtlLayout {
         Scaffold(
-            topBar = {
-                LinguaTopAppBar(
-                    title = "افزودن لغت جدید",
-                    onBack = onBack
-                )
-            }
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = { LinguaTopAppBar(title = "افزودن واژه", onBack = onBack) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            text = "مشخصات اصلی واژه",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        text = "واژه جدید",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "فقط خود واژه اجباری است؛ بقیه اطلاعات را می‌توانی دستی یا با AI تکمیل کنی.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                        // English Word
-                        OutlinedTextField(
-                            value = wordInput,
-                            onValueChange = { wordInput = it },
-                            label = { Text("واژه انگلیسی (English Word)*") },
-                            placeholder = { Text("مثال: mitigate") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                FormCard(title = "اطلاعات اصلی") {
+                    AppTextField(
+                        value = wordInput,
+                        onValueChange = { wordInput = it },
+                        label = "واژه انگلیسی *",
+                        placeholder = "مثال: mitigate",
+                        singleLine = true
+                    )
 
-                        // Persian Meaning
-                        OutlinedTextField(
-                            value = meaningInput,
-                            onValueChange = { meaningInput = it },
-                            label = { Text("معنی فارسی (اختیاری در صورت استفاده از AI)") },
-                            placeholder = { Text("مثال: کاهش دادن، تعدیل کردن") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    AppTextField(
+                        value = meaningInput,
+                        onValueChange = { meaningInput = it },
+                        label = "معنی فارسی",
+                        placeholder = "مثال: کاهش دادن، تعدیل کردن",
+                        singleLine = true
+                    )
 
-                        // AI Auto-Complete Button
-                        Button(
-                            onClick = {
-                                if (wordInput.isNotBlank()) {
-                                    viewModel.enrichWordWithAi(wordInput, meaningInput) { enriched ->
-                                        if (enriched != null) {
-                                            meaningInput = enriched.persianMeaning
-                                            definitionInput = enriched.englishDefinition
-                                            exampleInput = enriched.example
-                                            exampleFaInput = enriched.examplePersian
-                                            selectedLevel = enriched.cefrLevel
-                                        }
+                    OutlinedButton(
+                        onClick = {
+                            if (wordInput.isNotBlank()) {
+                                viewModel.enrichWordWithAi(wordInput, meaningInput) { enriched ->
+                                    if (enriched != null) {
+                                        meaningInput = enriched.persianMeaning
+                                        definitionInput = enriched.englishDefinition
+                                        exampleInput = enriched.example
+                                        exampleFaInput = enriched.examplePersian
+                                        selectedLevel = enriched.cefrLevel
                                     }
                                 }
-                            },
-                            enabled = wordInput.isNotBlank() && !state.isAiGenerating,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF8B5CF6),
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (state.isAiGenerating) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("در حال پردازش هوش مصنوعی...", fontSize = 12.sp)
-                            } else {
-                                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("تکمیل خودکار اطلاعات با هوش مصنوعی (Gemini)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
-                        }
-                    }
-                }
-
-                // Detailed optional fields
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            text = "تعریف، مثال و سطح آموزشی",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-
-                        // English definition
-                        OutlinedTextField(
-                            value = definitionInput,
-                            onValueChange = { definitionInput = it },
-                            label = { Text("تعریف انگلیسی (Definition)") },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Example Sentence
-                        OutlinedTextField(
-                            value = exampleInput,
-                            onValueChange = { exampleInput = it },
-                            label = { Text("جمله مثال به انگلیسی") },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Example Persian translation
-                        OutlinedTextField(
-                            value = exampleFaInput,
-                            onValueChange = { exampleFaInput = it },
-                            label = { Text("ترجمه فارسی مثال") },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // CEFR Level Selector
-                        ExposedDropdownMenuBox(
-                            expanded = levelDropdownExpanded,
-                            onExpandedChange = { levelDropdownExpanded = it }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedLevel,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("سطح CEFR") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelDropdownExpanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
+                        },
+                        enabled = wordInput.isNotBlank() && !state.isAiGenerating,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                    ) {
+                        if (state.isAiGenerating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(17.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            ExposedDropdownMenu(
-                                expanded = levelDropdownExpanded,
-                                onDismissRequest = { levelDropdownExpanded = false }
-                            ) {
-                                listOf("A1", "A2", "B1", "B2", "C1", "C2").forEach { lvl ->
-                                    DropdownMenuItem(
-                                        text = { Text(lvl) },
-                                        onClick = {
-                                            selectedLevel = lvl
-                                            levelDropdownExpanded = false
-                                        }
-                                    )
-                                }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("در حال تکمیل اطلاعات…")
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(7.dp))
+                            Text("تکمیل خودکار با AI")
+                        }
+                    }
+                }
+
+                FormCard(title = "جزئیات آموزشی", subtitle = "اختیاری") {
+                    AppTextField(
+                        value = definitionInput,
+                        onValueChange = { definitionInput = it },
+                        label = "تعریف انگلیسی",
+                        placeholder = "Short, clear definition"
+                    )
+
+                    AppTextField(
+                        value = exampleInput,
+                        onValueChange = { exampleInput = it },
+                        label = "مثال انگلیسی",
+                        placeholder = "Example sentence"
+                    )
+
+                    AppTextField(
+                        value = exampleFaInput,
+                        onValueChange = { exampleFaInput = it },
+                        label = "ترجمه مثال",
+                        placeholder = "ترجمه فارسی جمله"
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = levelDropdownExpanded,
+                        onExpandedChange = { levelDropdownExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedLevel,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("سطح CEFR") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelDropdownExpanded)
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            ),
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = levelDropdownExpanded,
+                            onDismissRequest = { levelDropdownExpanded = false }
+                        ) {
+                            listOf("A1", "A2", "B1", "B2", "C1", "C2").forEach { level ->
+                                DropdownMenuItem(
+                                    text = { Text(level) },
+                                    onClick = {
+                                        selectedLevel = level
+                                        levelDropdownExpanded = false
+                                    }
+                                )
                             }
                         }
                     }
                 }
 
-                // Submit Button
                 Button(
                     onClick = {
-                        if (wordInput.isNotBlank()) {
-                            viewModel.addWordManually(
-                                word = wordInput,
-                                meaning = meaningInput.ifEmpty { "بدون ترجمه اولیه" },
-                                definition = definitionInput,
-                                example = exampleInput,
-                                exampleFa = exampleFaInput,
-                                level = selectedLevel
-                            )
-                            onBack()
-                        }
+                        viewModel.addWordManually(
+                            word = wordInput,
+                            meaning = meaningInput.ifEmpty { "بدون ترجمه اولیه" },
+                            definition = definitionInput,
+                            example = exampleInput,
+                            exampleFa = exampleFaInput,
+                            level = selectedLevel
+                        )
+                        onBack()
                     },
                     enabled = wordInput.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(13.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(19.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("ذخیره در لغات من", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("ذخیره واژه")
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(22.dp))
             }
         }
     }
+}
+
+@Composable
+private fun FormCard(
+    title: String,
+    subtitle: String? = null,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun AppTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    singleLine: Boolean = false
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        singleLine = singleLine,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
 }

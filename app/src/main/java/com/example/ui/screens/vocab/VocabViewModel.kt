@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -51,8 +51,17 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _filePreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _statusMessage = MutableStateFlow<String?>(null)
 
+    /**
+     * Pack filtering must go through the many-to-many membership table. Keeping this as a Flow
+     * also means newly imported master-bank chunks appear immediately without rebuilding UI state.
+     */
+    private val wordsForSelectedPack: Flow<List<VocabularyItem>> =
+        _selectedPackId.flatMapLatest { packId ->
+            if (packId == null) repo.allVocabularies else repo.getByPack(packId)
+        }
+
     val uiState: StateFlow<VocabLibraryUiState> = combine(
-        repo.allVocabularies,
+        wordsForSelectedPack,
         repo.allPacks,
         _searchQuery,
         _selectedLevel,
@@ -94,9 +103,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                 else -> true
             }
 
-            val matchesPack = packId == null || item.packName == packId
-
-            matchesQuery && matchesLevel && matchesStatus && matchesPack
+            matchesQuery && matchesLevel && matchesStatus
         }
 
         VocabLibraryUiState(

@@ -21,7 +21,7 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items WHERE word LIKE '%' || :query || '%' OR persianMeaning LIKE '%' || :query || '%' ORDER BY word ASC")
     fun searchVocabularies(query: String): Flow<List<VocabularyItem>>
 
-    @Query("SELECT * FROM vocabulary_items WHERE nextReview <= :currentTime ORDER BY nextReview ASC")
+    @Query("SELECT * FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND nextReview <= :currentTime ORDER BY nextReview ASC")
     fun getDueVocabularies(currentTime: Long): Flow<List<VocabularyItem>>
 
     @Query("SELECT * FROM vocabulary_items WHERE isFavorite = 1 ORDER BY word ASC")

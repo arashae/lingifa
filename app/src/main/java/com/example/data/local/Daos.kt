@@ -98,6 +98,12 @@ interface VocabularyPackDao {
     @Query("UPDATE vocabulary_packs SET installedWordCount = :count WHERE id = :packId")
     suspend fun updateInstalledWordCount(packId: String, count: Int)
 
+    @Query("UPDATE vocabulary_packs SET installedWordCount = :count, isDownloaded = :isDownloaded WHERE id = :packId")
+    suspend fun updateInstallState(packId: String, count: Int, isDownloaded: Boolean)
+
+    @Query("SELECT * FROM vocabulary_packs WHERE id = :packId LIMIT 1")
+    suspend fun getPackById(packId: String): VocabularyPack?
+
     @Query("SELECT COUNT(*) FROM vocabulary_packs")
     suspend fun getPackCount(): Int
 }
@@ -121,6 +127,9 @@ interface VocabularyPackItemDao {
 
     @Query("SELECT packId FROM vocabulary_pack_items WHERE vocabularyId = :vocabularyId ORDER BY packId")
     suspend fun getPackIdsForVocabularySync(vocabularyId: Long): List<String>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM vocabulary_pack_items WHERE packId = :packId AND vocabularyId = :vocabularyId)")
+    suspend fun hasMembership(packId: String, vocabularyId: Long): Boolean
 
     @Query("SELECT COUNT(*) FROM vocabulary_pack_items WHERE packId = :packId")
     suspend fun getPackItemCount(packId: String): Int

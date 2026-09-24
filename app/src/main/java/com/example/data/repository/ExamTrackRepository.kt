@@ -3,6 +3,7 @@ package com.example.data.repository
 import com.example.data.local.DailyStreakDao
 import com.example.data.local.ExamTrackDao
 import com.example.data.local.UserProfileDao
+import com.example.data.local.VocabularyDao
 import com.example.data.model.ExamTrackSettingsRecord
 import com.example.data.model.ExamTrackStage
 import com.example.data.model.ExamTrackState
@@ -10,7 +11,9 @@ import com.example.data.model.ExamTrackType
 import com.example.data.model.ExamWordItem
 import com.example.data.model.ExamWordProgressRecord
 import com.example.data.model.StreakUpdateResult
+import com.example.data.model.VocabularyItem
 import com.example.data.seed.ExamTrackDataSeed
+import com.example.data.seed.InitialDataSeed
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.text.SimpleDateFormat
@@ -20,7 +23,8 @@ import java.util.Locale
 class ExamTrackRepository(
     private val examTrackDao: ExamTrackDao,
     private val userProfileDao: UserProfileDao,
-    private val streakDao: DailyStreakDao
+    private val streakDao: DailyStreakDao,
+    private val vocabularyDao: VocabularyDao
 ) {
     private val streakRepository = DailyStreakRepository(streakDao, userProfileDao)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -28,32 +32,33 @@ class ExamTrackRepository(
     private fun getTodayDateString(): String = dateFormat.format(Date())
 
     /**
-     * Reactive stream of progress, stages, and daily stats for an exam track.
+     * Reactive exam-track state backed by the real many-to-many master vocabulary pack.
+     * The original hand-curated seed cards remain as rich high-yield cards at the beginning
+     * of the track; downloaded Room vocabulary fills the rest of the 9k/7k/5k target.
      */
     fun getTrackState(trackType: ExamTrackType): Flow<ExamTrackState> {
-        val allWords = ExamTrackDataSeed.getWordsForTrack(trackType.id)
+        val seedWords = ExamTrackDataSeed.getWordsForTrack(trackType.id)
+        val packId = masterPackId(trackType)
 
         return combine(
+            vocabularyDao.getByPack(packId),
             examTrackDao.getProgressForTrack(trackType.id),
             examTrackDao.getSettingsForTrack(trackType.id)
-        ) { progressList, settings ->
+        ) { downloadedVocabulary, progressList, settings ->
+            val allWords = buildTrackWords(trackType, seedWords, downloadedVocabulary)
             val progressMap = progressList.associateBy { it.wordId }
             val today = getTodayDateString()
 
             val dailyGoal = settings?.dailyGoalWords ?: trackType.defaultDailyGoal
             val currentStageNum = settings?.currentStageNumber ?: 1
-
             val wordsToday = if (settings?.lastStudyDate == today) settings.wordsStudiedToday else 0
 
-            // Decorate words with saved Room mastery status
             val decoratedWords = allWords.map { word ->
-                val p = progressMap[word.id]
-                word.copy(isMastered = p?.isMastered ?: false)
+                val progress = progressMap[word.id]
+                word.copy(isMastered = progress?.isMastered ?: false)
             }
 
-            // Group into 4 discrete stages
             val stages = buildStages(trackType, decoratedWords, currentStageNum)
-
             val totalLearned = decoratedWords.count { it.isMastered }
             val totalInTrack = decoratedWords.size
             val overallPercentage = if (totalInTrack > 0) (totalLearned * 100) / totalInTrack else 0
@@ -71,6 +76,80 @@ class ExamTrackRepository(
         }
     }
 
+    private fun buildTrackWords(
+        trackType: ExamTrackType,
+        seedWords: List<ExamWordItem>,
+        downloadedVocabulary: List<VocabularyItem>
+    ): List<ExamWordItem> {
+        val target = masterTarget(trackType)
+        val seedNormalized = seedWords.map { normalize(it.word) }.toHashSet()
+
+        val rankedDownloaded = downloadedVocabulary
+            .asSequence()
+            .filter { it.word.isNotBlank() && it.persianMeaning.isNotBlank() }
+            .filterNot { normalize(it.word) in seedNormalized }
+            .distinctBy { normalize(it.word) }
+            .sortedWith(
+                compareByDescending<VocabularyItem> { it.examPriority }
+                    .thenBy { if (it.frequencyRank > 0) it.frequencyRank else Int.MAX_VALUE }
+                    .thenBy { it.word.lowercase(Locale.US) }
+            )
+            .toList()
+
+        val dynamicSlots = (target - seedWords.size).coerceAtLeast(0)
+        val selectedDynamic = rankedDownloaded.take(dynamicSlots)
+        val dynamicCount = selectedDynamic.size.coerceAtLeast(1)
+
+        val dynamicExamWords = selectedDynamic.mapIndexed { index, item ->
+            val stage = (1 + (index * 4 / dynamicCount)).coerceIn(1, 4)
+            item.toExamWordItem(trackType, stage)
+        }
+
+        return (seedWords + dynamicExamWords).take(target)
+    }
+
+    private fun VocabularyItem.toExamWordItem(
+        trackType: ExamTrackType,
+        stageNumber: Int
+    ): ExamWordItem {
+        val priorityText = if (examPriority > 0) {
+            "اولویت این واژه در بانک ${trackType.id}: $examPriority از ۱۰۰."
+        } else {
+            "این واژه از بانک جامع ${trackType.id} انتخاب شده است."
+        }
+
+        return ExamWordItem(
+            id = "master_${trackType.id.lowercase(Locale.US)}_$id",
+            word = word,
+            phonetic = ipa,
+            partOfSpeech = partOfSpeech,
+            persianMeaning = persianMeaning,
+            englishDefinition = englishDefinition,
+            exampleEn = example,
+            exampleFa = examplePersian,
+            collocations = collocations,
+            synonyms = synonyms,
+            examTipFa = priorityText,
+            iranianMistakeFa = commonMistakes,
+            stageNumber = stageNumber,
+            examTrack = trackType.id
+        )
+    }
+
+    private fun masterPackId(trackType: ExamTrackType): String = when (trackType) {
+        ExamTrackType.IELTS -> InitialDataSeed.IELTS_MASTER_PACK_ID
+        ExamTrackType.TOEFL -> InitialDataSeed.TOEFL_MASTER_PACK_ID
+        ExamTrackType.GRE -> InitialDataSeed.GRE_MASTER_PACK_ID
+    }
+
+    private fun masterTarget(trackType: ExamTrackType): Int = when (trackType) {
+        ExamTrackType.IELTS -> 9000
+        ExamTrackType.TOEFL -> 7000
+        ExamTrackType.GRE -> 5000
+    }
+
+    private fun normalize(word: String): String = word.trim().lowercase(Locale.US)
+
     private fun buildStages(
         trackType: ExamTrackType,
         words: List<ExamWordItem>,
@@ -80,20 +159,20 @@ class ExamTrackRepository(
             ExamTrackType.IELTS -> listOf(
                 StageMeta(1, "Foundation Academic Core", "مرحله ۱: پایه آکادمیک و ضروریات", "واژگان با بالاترین بسامد تکرار در مقالات دانشگاهی و نمودارها", "Band 6.0 - 6.5"),
                 StageMeta(2, "Advanced Lexical Resource", "مرحله ۲: واژگان پیشرفته و هم‌آیندها", "کلمات امتیازآور برای راه‌حل‌ها، استدلال و تحلیل عمیق", "Band 7.0 - 7.5"),
-                StageMeta(3, "Academic Mastery", "مرحله ۳: تسلط علمی و کلمات نمره بالا", "واژگان فاخر و دقیق برای متون دشوار ریدینگ و رایتینگ", "Band 8.0 - 8.5"),
-                StageMeta(4, "Idiomatic & Collocation Power", "مرحله ۴: اصطلاحات طلایی و تسلط کامل", "کالوکیشن‌های طبیعی، استعاره‌های آکادمیک و نمره ۹", "Band 9.0")
+                StageMeta(3, "Academic Mastery", "مرحله ۳: تسلط علمی و کلمات نمره بالا", "واژگان دقیق برای متون دشوار ریدینگ و رایتینگ", "Band 8.0 - 8.5"),
+                StageMeta(4, "Idiomatic & Collocation Power", "مرحله ۴: اصطلاحات و تسلط کامل", "کالوکیشن‌های طبیعی و واژگان سطح بالا", "Band 9.0")
             )
             ExamTrackType.TOEFL -> listOf(
                 StageMeta(1, "Campus & Academic Foundation", "مرحله ۱: مکالمات و فضای دانشگاهی", "لغات پرکاربرد سرفصل‌های درسی، پروژه‌ها و ارتباط با اساتید", "TOEFL 80+"),
-                StageMeta(2, "Scientific & Empirical Lectures", "مرحله ۲: سخنرانی‌های علمی و آزمایشگاهی", "واژگان تخصصی متون زیست‌شناسی، زمین‌شناسی و فیزیک", "TOEFL 95+"),
-                StageMeta(3, "Advanced Academic Discourse", "مرحله ۳: تحلیل انتقادی و مباحثه دانشگاهی", "کلمات کلیدی برای بخش جدید Academic Discussion و ریدینگ‌های سنگین", "TOEFL 105+"),
-                StageMeta(4, "High-Yield Distinction", "مرحله ۴: لغات متمایزکننده نمره کامل", "واژگان تراز اول برای رسیدن به نمره ۱۱۵ و بالاتر", "TOEFL 115+")
+                StageMeta(2, "Scientific & Empirical Lectures", "مرحله ۲: سخنرانی‌های علمی و آزمایشگاهی", "واژگان متون زیست‌شناسی، زمین‌شناسی و علوم", "TOEFL 95+"),
+                StageMeta(3, "Advanced Academic Discourse", "مرحله ۳: تحلیل انتقادی و مباحثه دانشگاهی", "کلمات کلیدی برای Academic Discussion و ریدینگ‌های سنگین", "TOEFL 105+"),
+                StageMeta(4, "High-Yield Distinction", "مرحله ۴: لغات متمایزکننده نمره بالا", "واژگان سطح بالا برای عملکرد ممتاز", "TOEFL 115+")
             )
             ExamTrackType.GRE -> listOf(
-                StageMeta(1, "Verbal High-Frequency 333", "مرحله ۱: واژگان پرتکرار ۳۳۳ جی‌آر‌ای", "کلمات اساسی و زیربنایی بخش وربال و تکمیل جملات", "GRE 150-155"),
-                StageMeta(2, "Sentence Equivalence & Contrasts", "مرحله ۲: مترادف‌ها و تضادهای ظریف", "واژگان کلیدی برای سوالات دوگزینه‌ای و تحلیل متنی", "GRE 155-160"),
-                StageMeta(3, "Baron's & Manhattan Hard 800", "مرحله ۳: لغات سخت و استدلال عمیق", "کلمات سطح بالا برای تحلیل‌های فلسفی و انتقادی", "GRE 160-165"),
-                StageMeta(4, "Ultra-Advanced Verbal Mastery", "مرحله ۴: تسلط فوق‌العاده و نمره ممتاز", "واژگان کمیاب و ادبی برای کسب بالاترین رتبه وربال", "GRE 165+")
+                StageMeta(1, "Verbal High-Frequency Core", "مرحله ۱: هسته پرتکرار جی‌آر‌ای", "کلمات اساسی بخش وربال و تکمیل جملات", "GRE 150-155"),
+                StageMeta(2, "Sentence Equivalence & Contrasts", "مرحله ۲: مترادف‌ها و تضادهای ظریف", "واژگان کلیدی برای Sentence Equivalence و تحلیل متن", "GRE 155-160"),
+                StageMeta(3, "Advanced Verbal Vocabulary", "مرحله ۳: لغات سخت و استدلال عمیق", "کلمات سطح بالا برای تحلیل‌های انتقادی", "GRE 160-165"),
+                StageMeta(4, "Ultra-Advanced Verbal Mastery", "مرحله ۴: تسلط پیشرفته وربال", "واژگان دشوار برای بالاترین بازه‌های وربال", "GRE 165+")
             )
         }
 
@@ -105,7 +184,6 @@ class ExamTrackRepository(
             val totalCount = stageWords.size
             val isUnlocked = meta.stageNumber == 1 || previousStageCompleted || meta.stageNumber <= currentStageNumber
 
-            // Track if this stage qualifies to unlock next (>= 60% completion)
             previousStageCompleted = totalCount > 0 && (masteredCount * 100 / totalCount) >= 60
 
             ExamTrackStage(
@@ -132,17 +210,12 @@ class ExamTrackRepository(
         val targetScoreFa: String
     )
 
-    /**
-     * Mark a word as mastered or needs review in Room.
-     * Updates daily progress count and records Daily Streak activity (+15 XP).
-     */
     suspend fun updateWordMastery(
         trackType: ExamTrackType,
         wordId: String,
         stageNumber: Int,
         isMastered: Boolean
     ): StreakUpdateResult {
-        // 1. Update word progress in Room
         val existing = examTrackDao.getWordProgress(trackType.id, wordId)
         val updated = existing?.copy(
             isMastered = isMastered,
@@ -158,7 +231,6 @@ class ExamTrackRepository(
         )
         examTrackDao.insertOrUpdateWordProgress(updated)
 
-        // 2. Update track settings & today's study count in Room
         val today = getTodayDateString()
         val currentSettings = examTrackDao.getSettingsForTrackSync(trackType.id)
         val wordsToday = if (currentSettings?.lastStudyDate == today) {
@@ -182,7 +254,6 @@ class ExamTrackRepository(
         )
         examTrackDao.insertOrUpdateSettings(newSettings)
 
-        // 3. Record daily streak practice and XP
         return streakRepository.recordPracticeActivity(
             itemsCount = 1,
             minutesSpent = 2,

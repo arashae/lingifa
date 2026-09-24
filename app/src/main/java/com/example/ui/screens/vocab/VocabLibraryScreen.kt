@@ -1,5 +1,6 @@
 package com.example.ui.screens.vocab
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -23,8 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.School
@@ -33,9 +33,9 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -49,6 +49,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,18 +57,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
-import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
 @Composable
@@ -87,153 +89,100 @@ fun VocabLibraryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.statusMessage) {
-        state.statusMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
+        state.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
             viewModel.clearStatusMessage()
         }
     }
 
     PersianRtlLayout {
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = onNavigateToAddWord,
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "افزودن لغت")
-                }
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("افزودن واژه") }
+                )
             }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
             ) {
-                // Search Box
-                OutlinedTextField(
-                    value = state.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    placeholder = { Text("جستجوی لغت انگلیسی یا معنی فارسی...") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "جستجو")
-                    },
-                    trailingIcon = {
-                        if (state.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                                Icon(imageVector = Icons.Default.Clear, contentDescription = "پاک کردن")
+                Column(
+                    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    LibraryHeader(totalCount = state.totalCount)
+
+                    OutlinedTextField(
+                        value = state.searchQuery,
+                        onValueChange = viewModel::onSearchQueryChanged,
+                        placeholder = { Text("واژه یا معنی فارسی را جستجو کنید") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "جستجو") },
+                        trailingIcon = {
+                            if (state.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "پاک کردن جستجو")
+                                }
                             }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    QuickActions(
+                        onNavigateToExamTracks = onNavigateToExamTracks,
+                        onNavigateToPacks = onNavigateToPacks,
+                        onNavigateToImportCenter = onNavigateToImportCenter,
+                        onNavigateToAiVocabCard = onNavigateToAiVocabCard
+                    )
+
+                    FilterStrip(
+                        selectedLevel = state.selectedLevel,
+                        selectedStatus = state.selectedStatus,
+                        onLevelSelected = viewModel::onLevelFilterChanged,
+                        onStatusSelected = { status ->
+                            viewModel.onStatusFilterChanged(if (state.selectedStatus == status) "همه" else status)
                         }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                    )
 
-                // Action Bar with Prominent Entry Points
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    QuickActionChip(
-                        icon = Icons.Default.School,
-                        label = "مسیرهای مرحله‌ای (IELTS / TOEFL / GRE)",
-                        color = Color(0xFF2563EB),
-                        onClick = onNavigateToExamTracks
-                    )
-                    QuickActionChip(
-                        icon = Icons.Default.AutoAwesome,
-                        label = "کارت واژه هوشمند AI (صوتی)",
-                        color = Color(0xFF8B5CF6),
-                        onClick = onNavigateToAiVocabCard
-                    )
-                    QuickActionChip(
-                        icon = Icons.Default.FileUpload,
-                        label = "ورود لغات (Import)",
-                        color = PrimaryBlue,
-                        onClick = onNavigateToImportCenter
-                    )
-                    QuickActionChip(
-                        icon = Icons.Default.AutoAwesome,
-                        label = "ساخت بسته با هوش مصنوعی",
-                        color = Color(0xFF6366F1),
-                        onClick = onNavigateToAiGenerate
-                    )
-                    QuickActionChip(
-                        icon = Icons.Default.Inventory2,
-                        label = "بسته‌های لغت",
-                        color = Color(0xFF0D9488),
-                        onClick = onNavigateToPacks
-                    )
-                }
-
-                // Level Filter Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val levels = listOf("همه", "B1", "B2", "C1", "C2")
-                    levels.forEach { lvl ->
-                        FilterChip(
-                            selected = state.selectedLevel == lvl,
-                            onClick = { viewModel.onLevelFilterChanged(lvl) },
-                            label = { Text(lvl, fontSize = 12.sp) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "کتابخانه واژگان",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
-
-                    // Status Filters
-                    val statuses = listOf("مرور امروز", "یاد گرفته شده", "در حال یادگیری", "نشان‌شده‌ها")
-                    statuses.forEach { st ->
-                        FilterChip(
-                            selected = state.selectedStatus == st,
-                            onClick = {
-                                viewModel.onStatusFilterChanged(if (state.selectedStatus == st) "همه" else st)
-                            },
-                            label = { Text(st, fontSize = 12.sp) }
+                        Text(
+                            text = "${state.words.size} از ${state.totalCount}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // List Header with Total Count
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "نمایش ${state.words.size} از ${state.totalCount} لغت",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Word List
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(state.words, key = { it.id }) { item ->
@@ -245,8 +194,7 @@ fun VocabLibraryScreen(
                             onClick = { onNavigateToDetail(item.id) }
                         )
                     }
-
-                    item { Spacer(modifier = Modifier.height(72.dp)) }
+                    item { Spacer(modifier = Modifier.height(92.dp)) }
                 }
             }
         }
@@ -254,33 +202,176 @@ fun VocabLibraryScreen(
 }
 
 @Composable
-private fun QuickActionChip(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    color: Color,
-    onClick: () -> Unit
+private fun LibraryHeader(totalCount: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                text = "واژگان",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "مرور، جستجو و مدیریت بانک شخصی شما",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = "$totalCount واژه",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickActions(
+    onNavigateToExamTracks: () -> Unit,
+    onNavigateToPacks: () -> Unit,
+    onNavigateToImportCenter: () -> Unit,
+    onNavigateToAiVocabCard: () -> Unit
 ) {
-    Surface(
-        color = color.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.clickable(onClick = onClick)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            QuickActionCard(
+                icon = Icons.Default.School,
+                title = "مسیر آزمون",
+                subtitle = "IELTS · TOEFL · GRE",
+                onClick = onNavigateToExamTracks,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = Icons.Default.Inventory2,
+                title = "بانک واژگان",
+                subtitle = "بسته‌ها و دانلودها",
+                onClick = onNavigateToPacks,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            QuickActionCard(
+                icon = Icons.Default.FileUpload,
+                title = "ورود واژه",
+                subtitle = "Import فایل و داده",
+                onClick = onNavigateToImportCenter,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = Icons.Default.AutoAwesome,
+                title = "کارت هوشمند",
+                subtitle = "AI و تلفظ",
+                onClick = onNavigateToAiVocabCard,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color,
-                modifier = Modifier.size(16.dp)
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(19.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterStrip(
+    selectedLevel: String,
+    selectedStatus: String,
+    onLevelSelected: (String) -> Unit,
+    onStatusSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        listOf("همه", "B1", "B2", "C1", "C2").forEach { level ->
+            FilterChip(
+                selected = selectedLevel == level,
+                onClick = { onLevelSelected(level) },
+                label = { Text(level) },
+                shape = RoundedCornerShape(10.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = label,
-                color = color,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
+        }
+        listOf("مرور امروز", "یاد گرفته شده", "در حال یادگیری", "نشان‌شده‌ها").forEach { status ->
+            FilterChip(
+                selected = selectedStatus == status,
+                onClick = { onStatusSelected(status) },
+                label = { Text(status) },
+                shape = RoundedCornerShape(10.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
             )
         }
     }
@@ -298,112 +389,117 @@ fun WordLibraryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(15.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = item.word,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (item.ipa.isNotEmpty()) {
-                        Text(
-                            text = item.ipa,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(modifier = Modifier.weight(1f)) {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = item.word,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                            if (item.ipa.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = item.ipa,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
-                    AudioSpeakerButton(onClick = onPlayAudio, size = 30)
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Text(
+                        text = item.persianMeaning,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
+                Spacer(modifier = Modifier.width(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CefrBadge(level = item.cefrLevel)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    IconButton(onClick = onToggleFavorite, modifier = Modifier.size(28.dp)) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(onClick = onToggleFavorite, modifier = Modifier.size(34.dp)) {
                         Icon(
                             imageVector = if (item.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
                             contentDescription = "نشان‌کردن",
                             tint = if (item.isFavorite) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Persian meaning
-            Text(
-                text = item.persianMeaning,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            )
-
-            // Example snippet if present
             if (item.example.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = item.example,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    maxLines = 1
-                )
+                Spacer(modifier = Modifier.height(9.dp))
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = item.example,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Mastery bar & Spaced repetition interval
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                AudioSpeakerButton(onClick = onPlayAudio, size = 34)
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "تسلط ${item.mastery}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (item.intervalDays > 0) {
+                            Text(
+                                text = "مرور بعدی: ${item.intervalDays} روز",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(5.dp))
                     LinearProgressIndicator(
                         progress = { (item.mastery / 100f).coerceIn(0f, 1f) },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(CircleShape),
                         color = if (item.mastery >= 70) SuccessGreen else MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "تسلط: ${item.mastery}%",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
                 }
-
-                if (item.intervalDays > 0) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "دوره مرور: ${item.intervalDays} روز",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.secondary,
-                            fontWeight = FontWeight.Medium
-                        )
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(34.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteOutline,
+                        contentDescription = "حذف واژه",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

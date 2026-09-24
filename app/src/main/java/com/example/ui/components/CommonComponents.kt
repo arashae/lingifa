@@ -1,7 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,14 +34,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SecondaryTeal
-import com.example.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +49,8 @@ fun LinguaTopAppBar(
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         navigationIcon = {
@@ -70,8 +65,11 @@ fun LinguaTopAppBar(
         },
         actions = { actions() },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     )
 }
@@ -79,12 +77,12 @@ fun LinguaTopAppBar(
 @Composable
 fun CefrBadge(level: String, modifier: Modifier = Modifier) {
     val (bgColor, textColor) = when (level.uppercase()) {
-        "A1", "A2" -> Color(0xFFE0F2FE) to Color(0xFF0369A1)
-        "B1" -> Color(0xFFDCFCE7) to Color(0xFF15803D)
-        "B2" -> Color(0xFFDBEAFE) to Color(0xFF1D4ED8)
-        "C1" -> Color(0xFFF3E8FF) to Color(0xFF7E22CE)
-        "C2" -> Color(0xFFFEF3C7) to Color(0xFFB45309)
-        else -> Color(0xFFF1F5F9) to Color(0xFF475569)
+        "A1", "A2" -> Color(0xFFEAF4F1) to Color(0xFF365D50)
+        "B1" -> Color(0xFFE3F5EA) to Color(0xFF216A46)
+        "B2" -> Color(0xFFDDF4EB) to Color(0xFF00684A)
+        "C1" -> Color(0xFFEAEFEA) to Color(0xFF385149)
+        "C2" -> Color(0xFFFFF2D8) to Color(0xFF7A5600)
+        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Surface(
@@ -95,9 +93,9 @@ fun CefrBadge(level: String, modifier: Modifier = Modifier) {
         Text(
             text = level.uppercase(),
             color = textColor,
-            fontSize = 11.sp,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
 }
@@ -112,7 +110,7 @@ fun AudioSpeakerButton(
         modifier = modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -120,7 +118,7 @@ fun AudioSpeakerButton(
             imageVector = Icons.Default.VolumeUp,
             contentDescription = "پخش تلفظ انگلیسی",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size((size * 0.58).dp)
+            modifier = Modifier.size((size * 0.52).dp)
         )
     }
 }
@@ -135,46 +133,42 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(color.copy(alpha = 0.12f)),
+                    .background(color.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
                     tint = color,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = value,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -192,39 +186,42 @@ fun PersianSectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+
         if (actionText != null && onActionClick != null) {
-            Text(
-                text = actionText,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = onActionClick)
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.clickable(onClick = onActionClick)
+            ) {
+                Text(
+                    text = actionText,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                )
+            }
         }
     }
 }

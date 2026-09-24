@@ -77,7 +77,8 @@ import com.example.ui.theme.SuccessGreen
 @Composable
 fun AiVocabCardScreen(onBack: () -> Unit, viewModel: AiVocabCardViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsState()
-    val tts = remember { TtsManager(LocalContext.current) }
+    val context = LocalContext.current
+    val tts = remember { TtsManager(context) }
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.statusMessage) { state.statusMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearStatusMessage() } }
 

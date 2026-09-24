@@ -8,16 +8,28 @@ import org.junit.Test
 class InitialDataSeedTest {
 
     @Test
-    fun masterBanksExposeRequestedTargets() {
+    fun masterBanksExposeBundledTargets() {
         val packs = InitialDataSeed.getDefaultPacks().associateBy { it.id }
 
-        assertEquals(9000, packs.getValue(InitialDataSeed.IELTS_MASTER_PACK_ID).targetWordCount)
-        assertEquals(7000, packs.getValue(InitialDataSeed.TOEFL_MASTER_PACK_ID).targetWordCount)
-        assertEquals(5000, packs.getValue(InitialDataSeed.GRE_MASTER_PACK_ID).targetWordCount)
+        val ielts = packs.getValue(InitialDataSeed.IELTS_MASTER_PACK_ID)
+        val toefl = packs.getValue(InitialDataSeed.TOEFL_MASTER_PACK_ID)
+        val gre = packs.getValue(InitialDataSeed.GRE_MASTER_PACK_ID)
 
-        assertTrue(packs.getValue(InitialDataSeed.IELTS_MASTER_PACK_ID).isCorePack)
-        assertTrue(packs.getValue(InitialDataSeed.TOEFL_MASTER_PACK_ID).isCorePack)
-        assertTrue(packs.getValue(InitialDataSeed.GRE_MASTER_PACK_ID).isCorePack)
+        assertEquals(5040, ielts.targetWordCount)
+        assertEquals(6974, toefl.targetWordCount)
+        assertEquals(7504, gre.targetWordCount)
+
+        assertEquals(ielts.targetWordCount, ielts.wordCount)
+        assertEquals(toefl.targetWordCount, toefl.wordCount)
+        assertEquals(gre.targetWordCount, gre.wordCount)
+
+        assertTrue(ielts.version >= 3)
+        assertTrue(toefl.version >= 3)
+        assertTrue(gre.version >= 3)
+
+        assertTrue(ielts.isCorePack)
+        assertTrue(toefl.isCorePack)
+        assertTrue(gre.isCorePack)
     }
 
     @Test

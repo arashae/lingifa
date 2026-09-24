@@ -106,7 +106,6 @@ fun ExamTrackScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val trackState by viewModel.currentTrackState.collectAsState()
-    val streakInfo by viewModel.streakInfo.collectAsState()
 
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
@@ -167,14 +166,8 @@ fun ExamTrackScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // Minimal Streak Card
-                    MinimalStreakCard(
-                        streakInfo = streakInfo,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
                     // Track Switcher Tabs (IELTS, TOEFL, GRE)
                     ExamTrackSelector(
                         selectedTrack = uiState.selectedTrack,

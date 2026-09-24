@@ -9,6 +9,7 @@ import androidx.room.PrimaryKey
     tableName = "vocabulary_items",
     indices = [
         Index(value = ["normalizedWord"]),
+        Index(value = ["word"]),
         Index(value = ["nextReview"]),
         Index(value = ["cefrLevel"]),
         Index(value = ["mastery"]),

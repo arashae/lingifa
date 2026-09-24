@@ -249,103 +249,97 @@ private fun QuickActions(
     onNavigateToAiVocabCard: () -> Unit,
     onNavigateToReview: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            QuickActionCard(
-                icon = Icons.Default.School,
-                title = "مسیر آزمون",
-                subtitle = "IELTS · TOEFL · GRE",
-                onClick = onNavigateToExamTracks,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                icon = Icons.Default.Inventory2,
-                title = "بانک واژگان",
-                subtitle = "بسته‌ها و دانلودها",
-                onClick = onNavigateToPacks,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            QuickActionCard(
-                icon = Icons.Default.FileUpload,
-                title = "ورود واژه",
-                subtitle = "Import فایل و داده",
-                onClick = onNavigateToImportCenter,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                icon = Icons.Default.AutoAwesome,
-                title = "کارت هوشمند",
-                subtitle = "AI و تلفظ",
-                onClick = onNavigateToAiVocabCard,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        QuickActionCard(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        QuickActionChip(
+            icon = Icons.Default.School,
+            label = "مسیر آزمون‌ها",
+            badge = "IELTS / TOEFL",
+            onClick = onNavigateToExamTracks,
+            highlight = true
+        )
+        QuickActionChip(
             icon = Icons.Default.Timer,
-            title = "مرور لغات",
-            subtitle = "کلمات آمادهٔ مرور و تثبیت حافظه",
+            label = "مرور هوشمند",
+            badge = null,
             onClick = onNavigateToReview,
-            modifier = Modifier.fillMaxWidth()
+            highlight = false
+        )
+        QuickActionChip(
+            icon = Icons.Default.Inventory2,
+            label = "بانک بسته‌ها",
+            badge = null,
+            onClick = onNavigateToPacks,
+            highlight = false
+        )
+        QuickActionChip(
+            icon = Icons.Default.AutoAwesome,
+            label = "کارت AI",
+            badge = null,
+            onClick = onNavigateToAiVocabCard,
+            highlight = false
+        )
+        QuickActionChip(
+            icon = Icons.Default.FileUpload,
+            label = "ورود واژه",
+            badge = null,
+            onClick = onNavigateToImportCenter,
+            highlight = false
         )
     }
 }
 
 @Composable
-private fun QuickActionCard(
+private fun QuickActionChip(
     icon: ImageVector,
-    title: String,
-    subtitle: String,
+    label: String,
+    badge: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    highlight: Boolean
 ) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = if (highlight) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            if (highlight) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+        )
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(11.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(19.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (highlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            )
+            if (badge != null) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = badge,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
             }
         }
     }

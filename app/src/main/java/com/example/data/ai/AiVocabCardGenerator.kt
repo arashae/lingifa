@@ -188,31 +188,25 @@ object AiVocabCardGenerator {
             }
         }
 
-        // 3. Smart Linguistic Heuristic Fallback
+        // 3. Fallback: Return unverified status instead of synthetic fake data
         val capitalized = cleanWord.replaceFirstChar { it.uppercase() }
-        val guessPos = when {
-            cleanWord.endsWith("tion") || cleanWord.endsWith("ment") || cleanWord.endsWith("ity") || cleanWord.endsWith("ness") -> "noun"
-            cleanWord.endsWith("ate") || cleanWord.endsWith("ify") || cleanWord.endsWith("ize") || cleanWord.endsWith("ise") -> "verb"
-            cleanWord.endsWith("ful") || cleanWord.endsWith("ous") || cleanWord.endsWith("able") || cleanWord.endsWith("ive") || cleanWord.endsWith("ic") -> "adjective"
-            cleanWord.endsWith("ly") -> "adverb"
-            else -> "noun / verb"
-        }
-
-        AiVocabCardData(
+        return AiVocabCardData(
             word = capitalized,
-            phonetic = "/ˈ${cleanWord.take(3)}.../",
-            partOfSpeech = guessPos,
-            persianTranslation = "معنی واژه «$capitalized» در بافت آموزشی",
-            englishDefinition = "An essential academic vocabulary term expressing key conceptual nuances.",
-            exampleSentenceEn = "Students should understand how '$capitalized' functions in formal academic context.",
-            exampleSentenceFa = "زبان‌آموزان باید بدانند چگونه واژه «$capitalized» در زمینه آکادمیک رسمی به کار می‌رود.",
-            collocations = listOf("deep $cleanWord", "broad $cleanWord", "apply $cleanWord"),
-            synonyms = listOf("concept", "term", "aspect"),
+            phonetic = "",
+            partOfSpeech = "",
+            persianTranslation = "",
+            englishDefinition = "",
+            exampleSentenceEn = "",
+            exampleSentenceFa = "",
+            collocations = emptyList(),
+            synonyms = emptyList(),
             antonyms = emptyList(),
             cefrLevel = "B2",
-            ieltsTipFa = "این واژه را با کالوکیشن‌های رایج در جملات خود به کار ببرید تا نمره واژگان شما ارتقا یابد.",
-            persianCommonMistake = "به تطابق نوع کلمه (اسم، صفت، قید) در ساختار جمله دقت کنید.",
-            isGeneratedByAi = false
+            ieltsTipFa = "",
+            persianCommonMistake = "",
+            isGeneratedByAi = false,
+            isValid = false,
+            errorMessage = "اطلاعات موثقی برای واژه «$capitalized» در منابع آفلاین یا آنلاین یافت نشد. لطفاً املای واژه را بررسی کنید یا اتصال اینترنت را چک کنید."
         )
     }
 

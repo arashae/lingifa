@@ -39,7 +39,8 @@ class AiVocabCardViewModel(application: Application) : AndroidViewModel(applicat
     private val database = AppDatabase.getDatabase(application, viewModelScope)
     private val vocabRepository = VocabularyRepository(
         database.vocabularyDao(),
-        database.vocabularyPackDao()
+        database.vocabularyPackDao(),
+        database.vocabularyPackItemDao()
     )
     private val ieltsRepository = IeltsFlashcardRepository(database.ieltsFlashcardDao())
     val streakRepository = DailyStreakRepository(
@@ -112,6 +113,7 @@ class AiVocabCardViewModel(application: Application) : AndroidViewModel(applicat
 
     fun saveCardToLibrary() {
         val card = _uiState.value.currentCard ?: return
+        if (!card.isValid) return
         viewModelScope.launch {
             // 1. Save to main vocabulary repository
             val vocabItem = VocabularyItem(
@@ -131,9 +133,18 @@ class AiVocabCardViewModel(application: Application) : AndroidViewModel(applicat
                 ieltsRelevance = card.ieltsTipFa,
                 source = "AI Generator"
             )
-            vocabRepository.insert(vocabItem)
+            val insertedId = vocabRepository.insert(vocabItem)
 
-            // 2. Also insert as IELTS Flashcard into deck 1 (or general deck)
+            // Attach membership to the corresponding CEFR pack
+            val cefrPackId = "pack_cefr_${card.cefrLevel.lowercase(java.util.Locale.US)}"
+            database.vocabularyPackItemDao().insert(
+                com.example.data.model.VocabularyPackItem(
+                    packId = cefrPackId,
+                    vocabularyId = insertedId
+                )
+            )
+
+            // 2. Also insert as IELTS Flashcard into deck 1 if available
             val ieltsCard = IeltsFlashcard(
                 deckId = 1L,
                 word = card.word,

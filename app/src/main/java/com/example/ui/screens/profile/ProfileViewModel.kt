@@ -102,6 +102,13 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun markMistakeReviewed(id: Long, isReviewed: Boolean = true) {
+        viewModelScope.launch {
+            mistakeRepo.markReviewed(id, isReviewed)
+            _statusMessage.value = if (isReviewed) "اشتباه به عنوان مرور شده و حل‌شده ثبت شد." else "اشتباه نیازمند مرور مجدد است."
+        }
+    }
+
     fun exportVocabulary(format: String) {
         viewModelScope.launch {
             val words = vocabRepo.allVocabularies.first()

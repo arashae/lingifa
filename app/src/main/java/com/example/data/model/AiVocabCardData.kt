@@ -14,5 +14,7 @@ data class AiVocabCardData(
     val cefrLevel: String = "B2",
     val ieltsTipFa: String = "",
     val persianCommonMistake: String = "",
-    val isGeneratedByAi: Boolean = true
+    val isGeneratedByAi: Boolean = true,
+    val isValid: Boolean = true,
+    val errorMessage: String? = null
 )

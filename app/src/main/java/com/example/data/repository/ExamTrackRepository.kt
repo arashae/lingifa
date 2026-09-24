@@ -73,7 +73,16 @@ class ExamTrackRepository(
                 currentStageNumber = currentStageNum,
                 stages = stages
             )
-        }
+        }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+    }
+
+    private val cachedTrackWords = java.util.concurrent.ConcurrentHashMap<ExamTrackType, List<ExamWordItem>>()
+    private val cachedDownloadedSize = java.util.concurrent.ConcurrentHashMap<ExamTrackType, Int>()
+
+    private fun masterTarget(trackType: ExamTrackType): Int = when (trackType) {
+        ExamTrackType.IELTS -> 5040
+        ExamTrackType.TOEFL -> 6974
+        ExamTrackType.GRE -> 7504
     }
 
     private fun buildTrackWords(
@@ -81,6 +90,11 @@ class ExamTrackRepository(
         seedWords: List<ExamWordItem>,
         downloadedVocabulary: List<VocabularyItem>
     ): List<ExamWordItem> {
+        val cached = cachedTrackWords[trackType]
+        if (cached != null && cachedDownloadedSize[trackType] == downloadedVocabulary.size) {
+            return cached
+        }
+
         val target = masterTarget(trackType)
         val seedNormalized = seedWords.map { normalize(it.word) }.toHashSet()
 
@@ -90,7 +104,8 @@ class ExamTrackRepository(
             .filterNot { normalize(it.word) in seedNormalized }
             .distinctBy { normalize(it.word) }
             .sortedWith(
-                compareByDescending<VocabularyItem> { it.examPriority }
+                compareBy<VocabularyItem> { if (it.learningOrder > 0) it.learningOrder else Int.MAX_VALUE }
+                    .thenByDescending { it.examPriority }
                     .thenBy { if (it.frequencyRank > 0) it.frequencyRank else Int.MAX_VALUE }
                     .thenBy { it.word.lowercase(Locale.US) }
             )
@@ -105,7 +120,10 @@ class ExamTrackRepository(
             item.toExamWordItem(trackType, stage)
         }
 
-        return (seedWords + dynamicExamWords).take(target)
+        val result = (seedWords + dynamicExamWords).take(target)
+        cachedTrackWords[trackType] = result
+        cachedDownloadedSize[trackType] = downloadedVocabulary.size
+        return result
     }
 
     private fun VocabularyItem.toExamWordItem(
@@ -142,12 +160,6 @@ class ExamTrackRepository(
         ExamTrackType.GRE -> InitialDataSeed.GRE_MASTER_PACK_ID
     }
 
-    private fun masterTarget(trackType: ExamTrackType): Int = when (trackType) {
-        ExamTrackType.IELTS -> 9000
-        ExamTrackType.TOEFL -> 7000
-        ExamTrackType.GRE -> 5000
-    }
-
     private fun normalize(word: String): String = word.trim().lowercase(Locale.US)
 
     private fun buildStages(
@@ -182,7 +194,8 @@ class ExamTrackRepository(
             val stageWords = words.filter { it.stageNumber == meta.stageNumber }
             val masteredCount = stageWords.count { it.isMastered }
             val totalCount = stageWords.size
-            val isUnlocked = meta.stageNumber == 1 || previousStageCompleted || meta.stageNumber <= currentStageNumber
+            // Learners can freely start at any band / stage based on their current proficiency
+            val isUnlocked = true
 
             previousStageCompleted = totalCount > 0 && (masteredCount * 100 / totalCount) >= 60
 
@@ -239,6 +252,36 @@ class ExamTrackRepository(
             1
         }
         val totalLearnedCount = examTrackDao.getMasteredCountForTrackSync(trackType.id)
+
+        // Synchronize with core Spaced Repetition System (VocabularyItem) so words studied here enter the SRS queue
+        try {
+            val vocabItem = if (wordId.startsWith("master_")) {
+                val dbId = wordId.substringAfterLast("_").toIntOrNull()
+                if (dbId != null) vocabularyDao.getByIdSync(dbId) else null
+            } else {
+                val wordName = ExamTrackDataSeed.getWordsForTrack(trackType.id).firstOrNull { it.id == wordId }?.word
+                if (wordName != null) vocabularyDao.getByExactWord(wordName) else null
+            }
+
+            if (vocabItem != null) {
+                val rating = if (isMastered) com.example.srs.ReviewRating.GOOD else com.example.srs.ReviewRating.AGAIN
+                val srsResult = com.example.srs.SpacedRepetitionSystem.calculateNextReview(vocabItem, rating)
+                val updatedItem = vocabItem.copy(
+                    nextReview = srsResult.nextReviewTimestamp,
+                    intervalDays = srsResult.intervalDays,
+                    difficulty = srsResult.newDifficulty,
+                    stability = srsResult.newStability,
+                    mastery = srsResult.newMastery,
+                    correctCount = srsResult.correctCount,
+                    incorrectCount = srsResult.incorrectCount,
+                    lastReview = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                vocabularyDao.update(updatedItem)
+            }
+        } catch (_: Exception) {
+            // Best effort sync to prevent breaking track progress
+        }
 
         val newSettings = currentSettings?.copy(
             lastStudyDate = today,

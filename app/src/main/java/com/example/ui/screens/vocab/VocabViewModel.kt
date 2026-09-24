@@ -77,13 +77,29 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeMasterSyncPackId = MutableStateFlow<String?>(null)
     val packSyncStates: StateFlow<Map<String, PackSyncUiState>> = _packSyncStates.asStateFlow()
 
-    private val wordsForSelectedPack: Flow<List<VocabularyItem>> =
-        _selectedPackId.flatMapLatest { packId ->
-            if (packId == null) repo.allVocabularies else repo.getByPack(packId)
-        }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val filteredWordsFlow: Flow<List<VocabularyItem>> =
+        combine(_searchQuery, _selectedLevel, _selectedStatus, _selectedPackId) { query, level, status, packId ->
+            FilterParams(query, level, status, packId)
+        }.flatMapLatest { params ->
+            repo.getFilteredVocabularies(
+                query = params.query,
+                level = params.level,
+                status = params.status,
+                packId = params.packId,
+                limit = 250
+            )
+        }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+
+    private data class FilterParams(
+        val query: String,
+        val level: String,
+        val status: String,
+        val packId: String?
+    )
 
     val uiState: StateFlow<VocabLibraryUiState> = combine(
-        wordsForSelectedPack,
+        filteredWordsFlow,
         repo.allPacks,
         _searchQuery,
         _selectedLevel,
@@ -93,10 +109,12 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         _aiPreview,
         _filePreview,
         _statusMessage,
+        repo.totalCount,
+        repo.learnedCount,
         db.userProfileDao().getProfile()
     ) { params ->
         @Suppress("UNCHECKED_CAST")
-        val allWords = params[0] as List<VocabularyItem>
+        val words = params[0] as List<VocabularyItem>
         @Suppress("UNCHECKED_CAST")
         val packs = params[1] as List<VocabularyPack>
         val query = params[2] as String
@@ -109,38 +127,14 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         @Suppress("UNCHECKED_CAST")
         val filePreview = params[8] as List<ParsedImportItem>
         val statusMsg = params[9] as String?
-        val profile = params[10] as UserProfile?
-
-        val filtered = allWords.filter { item ->
-            val matchesQuery = query.isEmpty() ||
-                    item.word.contains(query, ignoreCase = true) ||
-                    item.persianMeaning.contains(query, ignoreCase = true)
-
-            val matchesLevel = level == "همه" || item.cefrLevel.equals(level, ignoreCase = true)
-
-            val matchesStatus = when (status) {
-                "مرور امروز" -> item.nextReview <= System.currentTimeMillis()
-                "یاد گرفته شده" -> item.mastery >= 70
-                "در حال یادگیری" -> item.mastery in 1..69
-                "جدید" -> item.mastery == 0
-                "نشان‌شده‌ها" -> item.isFavorite
-                else -> true
-            }
-
-            matchesQuery && matchesLevel && matchesStatus
-        }
-
-        val curriculumWords = filtered.sortedWith(
-            compareBy<VocabularyItem> { curriculumLevelRank(it.cefrLevel) }
-                .thenBy { if (it.learningOrder > 0) it.learningOrder else Int.MAX_VALUE }
-                .thenBy { if (it.frequencyRank > 0) it.frequencyRank else Int.MAX_VALUE }
-                .thenBy { it.word.lowercase() }
-        )
+        val totalCount = params[10] as Int
+        val learnedCount = params[11] as Int
+        val profile = params[12] as UserProfile?
 
         VocabLibraryUiState(
-            words = curriculumWords,
-            totalCount = allWords.size,
-            learnedCount = allWords.count { it.mastery >= 70 },
+            words = words,
+            totalCount = totalCount,
+            learnedCount = learnedCount,
             packs = packs,
             searchQuery = query,
             selectedLevel = level,
@@ -152,7 +146,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             fileImportPreview = filePreview,
             statusMessage = statusMsg
         )
-    }.stateIn(
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+    .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = VocabLibraryUiState()

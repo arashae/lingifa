@@ -1,7 +1,9 @@
 package com.example.ui.screens.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,17 +17,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +37,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,10 +51,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.model.StreakInfo
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.MinimalStreakCard
 import com.example.ui.components.PersianRtlLayout
-import com.example.ui.components.PersianSectionHeader
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -78,76 +82,80 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 1. Streamlined Header with Name, Level, and Streak Pill
             item {
                 HomeHeader(
                     name = state.userProfile.userName,
                     goal = state.userProfile.targetGoal,
-                    level = state.userProfile.currentLevel
+                    level = state.userProfile.currentLevel,
+                    streakInfo = streakInfo
                 )
             }
 
+            // 2. Focused Daily Hero Card (Today's SRS Review CTA)
             item {
-                FocusCard(
+                ModernFocusHeroCard(
                     dueCount = state.dueWordsCount,
-                    onReviewClick = onNavigateToReview,
-                    onTutorClick = onNavigateToTutor
+                    totalWords = state.totalWordsCount,
+                    onStartReview = onNavigateToReview,
+                    onOpenTutor = onNavigateToTutor
                 )
             }
 
+            // 3. Compact 3-Column Stats Row
             item {
-                StatsRow(
+                MinimalStatsBar(
                     words = state.totalWordsCount,
                     learned = state.learnedWordsCount,
                     xp = state.userProfile.xp
                 )
             }
 
+            // 4. Primary Learning Hub (2x2 Grid)
             item {
-                MinimalStreakCard(
-                    streakInfo = streakInfo,
-                    onLogPracticeClick = onNavigateToReview
+                Text(
+                    text = "بخش‌های اصلی یادگیری",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             item {
-                TodayPlanCard(
-                    state = state,
-                    onNavigateToLearn = onNavigateToLearn,
-                    onNavigateToVocab = onNavigateToVocab
-                )
-            }
-
-            item {
-                PersianSectionHeader(
-                    title = "ابزارهای یادگیری",
-                    subtitle = "هر ابزار برای یک مرحله از مسیر یادگیری"
-                )
-            }
-
-            item {
-                ActionGrid(
-                    onNavigateToTutor = onNavigateToTutor,
+                PrimaryActionGrid(
+                    onNavigateToExamTracks = onNavigateToExamTracks,
                     onNavigateToSpeaking = onNavigateToSpeaking,
                     onNavigateToWriting = onNavigateToWriting,
                     onNavigateToMistakes = onNavigateToMistakes
                 )
             }
 
+            // 5. Daily Plan Progress Bar
             item {
-                CompactTools(
-                    onNavigateToAiVocabCard = onNavigateToAiVocabCard,
-                    onNavigateToExamTracks = onNavigateToExamTracks,
-                    onNavigateToDiagnostic = onNavigateToDiagnostic
+                CompactDailyPlanBar(
+                    completedMinutes = state.dailyMinutesCompleted,
+                    plannedMinutes = state.dailyMinutesPlanned,
+                    onOpenVocab = onNavigateToVocab,
+                    onOpenLearn = onNavigateToLearn
+                )
+            }
+
+            // 6. Auxiliary Quick Tools Strip
+            item {
+                Text(
+                    text = "ابزارهای کمکی",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             item {
-                WeakSkillCard(
-                    weakestSkill = state.userProfile.weakestSkill,
-                    onClick = onNavigateToDiagnostic
+                QuickToolsHorizontalStrip(
+                    onNavigateToTutor = onNavigateToTutor,
+                    onNavigateToAiVocabCard = onNavigateToAiVocabCard,
+                    onNavigateToDiagnostic = onNavigateToDiagnostic
                 )
             }
         }
@@ -158,95 +166,156 @@ fun HomeScreen(
 private fun HomeHeader(
     name: String,
     goal: String,
-    level: String
+    level: String,
+    streakInfo: StreakInfo
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = "سلام، $name",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "مسیر $goal را امروز هم جلو ببر",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "مسیر هدف: $goal",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        CefrBadge(level = level)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // Streak Pill
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = AccentGold.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, AccentGold.copy(alpha = 0.35f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = "${streakInfo.currentStreak} روز",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFB45309)
+                    )
+                }
+            }
+
+            CefrBadge(level = level)
+        }
     }
 }
 
 @Composable
-private fun FocusCard(
+private fun ModernFocusHeroCard(
     dueCount: Int,
-    onReviewClick: () -> Unit,
-    onTutorClick: () -> Unit
+    totalWords: Int,
+    onStartReview: () -> Unit,
+    onOpenTutor: () -> Unit
 ) {
+    val hasDue = dueCount > 0
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        colors = CardDefaults.cardColors(
+            containerColor = if (hasDue) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (hasDue) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
-                        text = if (dueCount > 0) "نوبت مرور امروز" else "آماده‌ای برای یک مرور کوتاه؟",
-                        style = MaterialTheme.typography.titleLarge
+                        text = if (hasDue) "مرور هوشمند امروز (SRS)" else "برنامه امروز تکمیل است! 🎉",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (dueCount > 0) "$dueCount واژه برای تثبیت در حافظه آماده است." else "یک جلسه سبک، حتی وقتی مرور امروز خالی است.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
+                        text = if (hasDue) "$dueCount واژه برای تثبیت حافظه آماده مرور است."
+                        else "تمام واژه‌های موعد امروز را مرور کرده‌اید. آماده کلمات جدید هستید؟",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(28.dp)
-                )
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (hasDue) MaterialTheme.colorScheme.primary else SuccessGreen,
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = if (hasDue) "$dueCount واژه" else "انجام شد",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
+                    )
+                }
             }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = onReviewClick,
-                    modifier = Modifier.weight(1f),
+                    onClick = onStartReview,
+                    modifier = Modifier.weight(1.3f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = if (hasDue) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surface,
+                        contentColor = if (hasDue) Color.White else MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("شروع مرور", fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (hasDue) "شروع مرور هوشمند" else "تمرین آزاد واژگان",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
                 }
-                Button(
-                    onClick = onTutorClick,
-                    modifier = Modifier.weight(1f),
+
+                OutlinedButton(
+                    onClick = onOpenTutor,
+                    modifier = Modifier.weight(0.9f),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 ) {
-                    Text("پرسش از AI", fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("معلم AI", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -254,7 +323,7 @@ private fun FocusCard(
 }
 
 @Composable
-private fun StatsRow(
+private fun MinimalStatsBar(
     words: Int,
     learned: Int,
     xp: Int
@@ -263,21 +332,24 @@ private fun StatsRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        StatTile(
+        CompactStatPill(
+            icon = Icons.Default.AutoStories,
             value = words.toString(),
-            label = "کل لغات",
+            label = "بانک واژگان",
             color = PrimaryBlue,
             modifier = Modifier.weight(1f)
         )
-        StatTile(
+        CompactStatPill(
+            icon = Icons.Default.School,
             value = learned.toString(),
-            label = "یادگرفته",
+            label = "مسلط شده",
             color = SuccessGreen,
             modifier = Modifier.weight(1f)
         )
-        StatTile(
-            value = "$xp XP",
-            label = "امتیاز",
+        CompactStatPill(
+            icon = Icons.Default.FitnessCenter,
+            value = "$xp",
+            label = "امتیاز XP",
             color = AccentGold,
             modifier = Modifier.weight(1f)
         )
@@ -285,33 +357,40 @@ private fun StatsRow(
 }
 
 @Composable
-private fun StatTile(
+private fun CompactStatPill(
+    icon: ImageVector,
     value: String,
     label: String,
     color: Color,
     modifier: Modifier
 ) {
-    Card(
+    Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 14.dp, horizontal = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = color,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -321,97 +400,8 @@ private fun StatTile(
 }
 
 @Composable
-private fun TodayPlanCard(
-    state: HomeUiState,
-    onNavigateToLearn: () -> Unit,
-    onNavigateToVocab: () -> Unit
-) {
-    val progress = (state.dailyMinutesCompleted.toFloat() / state.dailyMinutesPlanned.coerceAtLeast(1)).coerceIn(0f, 1f)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("برنامه امروز", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        text = "${state.dailyMinutesCompleted} از ${state.dailyMinutesPlanned} دقیقه",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Text(
-                    text = "${(progress * 100).toInt()}٪",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                PlanAction(
-                    icon = Icons.Default.AutoStories,
-                    title = "مرور واژگان",
-                    onClick = onNavigateToVocab,
-                    modifier = Modifier.weight(1f)
-                )
-                PlanAction(
-                    icon = Icons.Default.School,
-                    title = "درس کوتاه",
-                    onClick = onNavigateToLearn,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PlanAction(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier
-) {
-    Surface(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 11.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-            Text(title, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-@Composable
-private fun ActionGrid(
-    onNavigateToTutor: () -> Unit,
+private fun PrimaryActionGrid(
+    onNavigateToExamTracks: () -> Unit,
     onNavigateToSpeaking: () -> Unit,
     onNavigateToWriting: () -> Unit,
     onNavigateToMistakes: () -> Unit
@@ -421,17 +411,19 @@ private fun ActionGrid(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ActionTile(
-                icon = Icons.Default.Psychology,
-                title = "معلم هوشمند",
-                subtitle = "پاسخ سریع و دقیق",
-                onClick = onNavigateToTutor,
+            ModernActionTile(
+                icon = Icons.Default.School,
+                title = "مسیر آزمون‌ها",
+                subtitle = "IELTS · TOEFL · GRE",
+                accentColor = PrimaryBlue,
+                onClick = onNavigateToExamTracks,
                 modifier = Modifier.weight(1f)
             )
-            ActionTile(
+            ModernActionTile(
                 icon = Icons.Default.RecordVoiceOver,
-                title = "Speaking",
-                subtitle = "تمرین مکالمه",
+                title = "اسپیکینگ & مکالمه",
+                subtitle = "شبیه‌ساز هوشمند صوتی",
+                accentColor = SuccessGreen,
                 onClick = onNavigateToSpeaking,
                 modifier = Modifier.weight(1f)
             )
@@ -440,17 +432,19 @@ private fun ActionGrid(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ActionTile(
+            ModernActionTile(
                 icon = Icons.Default.EditNote,
-                title = "Writing",
-                subtitle = "تصحیح مقاله",
+                title = "رایتینگ & نگارش",
+                subtitle = "تصحیح و نمره‌دهی فوری",
+                accentColor = Color(0xFF8B5CF6),
                 onClick = onNavigateToWriting,
                 modifier = Modifier.weight(1f)
             )
-            ActionTile(
+            ModernActionTile(
                 icon = Icons.Default.Warning,
-                title = "اشتباهات",
-                subtitle = "نقاط ضعف",
+                title = "دفترچه اشتباهات",
+                subtitle = "مرور و حل خطاهای قبلی",
+                accentColor = ErrorRed,
                 onClick = onNavigateToMistakes,
                 modifier = Modifier.weight(1f)
             )
@@ -459,17 +453,19 @@ private fun ActionGrid(
 }
 
 @Composable
-private fun ActionTile(
+private fun ModernActionTile(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    accentColor: Color,
     onClick: () -> Unit,
     modifier: Modifier
 ) {
     Card(
         modifier = modifier.clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -480,112 +476,168 @@ private fun ActionTile(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(accentColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                Icon(icon, contentDescription = null, tint = accentColor, modifier = Modifier.size(19.dp))
             }
-            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun CompactTools(
+private fun CompactDailyPlanBar(
+    completedMinutes: Int,
+    plannedMinutes: Int,
+    onOpenVocab: () -> Unit,
+    onOpenLearn: () -> Unit
+) {
+    val target = plannedMinutes.coerceAtLeast(1)
+    val progress = (completedMinutes.toFloat() / target).coerceIn(0f, 1f)
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "برنامه روزانه: $completedMinutes از $plannedMinutes دقیقه",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "${(progress * 100).toInt()}٪",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Surface(
+                    onClick = onOpenVocab,
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Default.AutoStories, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
+                        Text("کتابخانه واژگان", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+
+                Surface(
+                    onClick = onOpenLearn,
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Default.School, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
+                        Text("درس‌های مهارت", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickToolsHorizontalStrip(
+    onNavigateToTutor: () -> Unit,
     onNavigateToAiVocabCard: () -> Unit,
-    onNavigateToExamTracks: () -> Unit,
     onNavigateToDiagnostic: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ToolRow(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        QuickToolChip(
+            icon = Icons.Default.Psychology,
+            title = "معلم AI",
+            onClick = onNavigateToTutor
+        )
+        QuickToolChip(
             icon = Icons.Default.AutoAwesome,
             title = "کارت واژه هوشمند",
-            subtitle = "تلفظ، ترجمه و ثبت سریع",
             onClick = onNavigateToAiVocabCard
         )
-        ToolRow(
-            icon = Icons.Default.LibraryBooks,
-            title = "مسیرهای آزمون",
-            subtitle = "IELTS · TOEFL · GRE",
-            onClick = onNavigateToExamTracks
-        )
-        ToolRow(
+        QuickToolChip(
             icon = Icons.Default.FitnessCenter,
-            title = "تعیین سطح هوشمند",
-            subtitle = "برنامه مناسب سطح تو",
+            title = "آزمون تعیین سطح",
             onClick = onNavigateToDiagnostic
         )
     }
 }
 
 @Composable
-private fun ToolRow(
+private fun QuickToolChip(
     icon: ImageVector,
     title: String,
-    subtitle: String,
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(11.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text("باز کردن", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        }
-    }
-}
-
-@Composable
-private fun WeakSkillCard(
-    weakestSkill: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(11.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(11.dp))
-                    .background(ErrorRed.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Warning, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(20.dp))
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("نقطه قابل بهبود: $weakestSkill", style = MaterialTheme.typography.titleSmall)
-                Text("با آزمون کوتاه، تمرین بعدی را دقیق‌تر انتخاب کن.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text("شروع", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+            Text(title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

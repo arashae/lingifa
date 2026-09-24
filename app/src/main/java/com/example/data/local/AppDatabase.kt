@@ -44,7 +44,7 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -139,6 +139,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_items_word ON vocabulary_items(word)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_exam_word_progress_track_mastered ON exam_word_progress(examTrack, isMastered)")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -147,7 +154,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()
@@ -186,14 +193,17 @@ abstract class AppDatabase : RoomDatabase() {
                             }
                         }
 
-                        BundledVocabularyImporter.importBundledCatalog(
+                        val summary = BundledVocabularyImporter.importBundledCatalog(
                             context = appContext,
                             vocabularyDao = database.vocabularyDao(),
                             packItemDao = database.vocabularyPackItemDao(),
                             chunkDao = database.vocabularyDatasetChunkDao()
                         )
-                        ensureCefrMemberships(database)
-                        refreshInstalledCounts(database)
+                        val needsCefrBackfill = database.vocabularyPackItemDao().getPackItemCount("pack_cefr_b2") == 0
+                        if (summary.insertedWords > 0 || summary.updatedWords > 0 || needsCefrBackfill) {
+                            ensureCefrMemberships(database)
+                            refreshInstalledCounts(database)
+                        }
                     }
                 }
             }

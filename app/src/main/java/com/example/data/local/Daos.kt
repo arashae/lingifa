@@ -48,7 +48,9 @@ interface VocabularyDao {
         INNER JOIN vocabulary_pack_items AS membership
             ON membership.vocabularyId = v.id
         WHERE membership.packId = :packId
-        ORDER BY v.word ASC
+        ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
+                 CASE WHEN v.frequencyRank > 0 THEN v.frequencyRank ELSE 2147483647 END,
+                 v.word ASC
         """
     )
     fun getByPack(packId: String): Flow<List<VocabularyItem>>
@@ -56,11 +58,81 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items WHERE id = :id")
     fun getById(id: Long): Flow<VocabularyItem?>
 
+    @Query("SELECT * FROM vocabulary_items WHERE id = :id LIMIT 1")
+    suspend fun getByIdSync(id: Long): VocabularyItem?
+
     @Query("SELECT * FROM vocabulary_items WHERE normalizedWord = :normalizedWord LIMIT 1")
     suspend fun getByNormalizedWord(normalizedWord: String): VocabularyItem?
 
     @Query("SELECT * FROM vocabulary_items WHERE word = :word LIMIT 1")
     suspend fun getByExactWord(word: String): VocabularyItem?
+
+    @Query("SELECT * FROM vocabulary_items WHERE correctCount = 0 AND incorrectCount = 0 AND (:level = 'ALL' OR cefrLevel = :level) ORDER BY CASE WHEN learningOrder > 0 THEN learningOrder ELSE 2147483647 END, CASE WHEN frequencyRank > 0 THEN frequencyRank ELSE 2147483647 END, id ASC LIMIT :limit")
+    suspend fun getNewVocabulariesForLearning(level: String, limit: Int): List<VocabularyItem>
+
+    @Query("SELECT * FROM vocabulary_items WHERE cefrLevel = :level AND partOfSpeech = :partOfSpeech AND word != :excludeWord LIMIT :limit")
+    suspend fun getDistractors(level: String, partOfSpeech: String, excludeWord: String, limit: Int): List<VocabularyItem>
+
+    @Query("SELECT * FROM vocabulary_items WHERE cefrLevel = :level AND word != :excludeWord LIMIT :limit")
+    suspend fun getDistractorsByLevel(level: String, excludeWord: String, limit: Int): List<VocabularyItem>
+
+    @Query(
+        """
+        SELECT v.* FROM vocabulary_items AS v
+        WHERE (:query = '' OR v.word LIKE '%' || :query || '%' OR v.persianMeaning LIKE '%' || :query || '%')
+          AND (:level = 'همه' OR v.cefrLevel = :level)
+          AND (
+              :status = 'همه'
+              OR (:status = 'مرور امروز' AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
+              OR (:status = 'یاد گرفته شده' AND v.mastery >= 70)
+              OR (:status = 'در حال یادگیری' AND v.mastery BETWEEN 1 AND 69)
+              OR (:status = 'جدید' AND v.mastery = 0)
+              OR (:status = 'نشان‌شده‌ها' AND v.isFavorite = 1)
+          )
+        ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
+                 CASE WHEN v.frequencyRank > 0 THEN v.frequencyRank ELSE 2147483647 END,
+                 v.word ASC
+        LIMIT :limit
+        """
+    )
+    fun getFilteredVocabularies(
+        query: String,
+        level: String,
+        status: String,
+        currentTime: Long,
+        limit: Int = 300
+    ): Flow<List<VocabularyItem>>
+
+    @Query(
+        """
+        SELECT v.* FROM vocabulary_items AS v
+        INNER JOIN vocabulary_pack_items AS membership
+            ON membership.vocabularyId = v.id
+        WHERE membership.packId = :packId
+          AND (:query = '' OR v.word LIKE '%' || :query || '%' OR v.persianMeaning LIKE '%' || :query || '%')
+          AND (:level = 'همه' OR v.cefrLevel = :level)
+          AND (
+              :status = 'همه'
+              OR (:status = 'مرور امروز' AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
+              OR (:status = 'یاد گرفته شده' AND v.mastery >= 70)
+              OR (:status = 'در حال یادگیری' AND v.mastery BETWEEN 1 AND 69)
+              OR (:status = 'جدید' AND v.mastery = 0)
+              OR (:status = 'نشان‌شده‌ها' AND v.isFavorite = 1)
+          )
+        ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
+                 CASE WHEN v.frequencyRank > 0 THEN v.frequencyRank ELSE 2147483647 END,
+                 v.word ASC
+        LIMIT :limit
+        """
+    )
+    fun getFilteredVocabulariesByPack(
+        packId: String,
+        query: String,
+        level: String,
+        status: String,
+        currentTime: Long,
+        limit: Int = 300
+    ): Flow<List<VocabularyItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: VocabularyItem): Long
@@ -169,6 +241,12 @@ interface MistakeDao {
 
     @Update
     suspend fun update(mistake: MistakeRecord)
+
+    @Query("UPDATE mistake_records SET isReviewed = :isReviewed WHERE id = :id")
+    suspend fun updateReviewedStatus(id: Long, isReviewed: Boolean)
+
+    @Query("SELECT * FROM mistake_records WHERE isReviewed = 0 ORDER BY createdAt DESC")
+    fun getUnreviewedMistakes(): Flow<List<MistakeRecord>>
 }
 
 @Dao

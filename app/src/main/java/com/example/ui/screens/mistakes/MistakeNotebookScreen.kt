@@ -57,11 +57,19 @@ fun MistakeNotebookScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     var selectedSkillFilter by remember { mutableStateOf("همه") }
+    var selectedStatusFilter by remember { mutableStateOf("همه") }
 
     val skills = listOf("همه", "VOCABULARY", "GRAMMAR", "READING", "LISTENING", "SPEAKING", "WRITING")
+    val statuses = listOf("همه", "در انتظار مرور", "حل شده")
 
-    val filteredMistakes = state.mistakes.filter {
-        selectedSkillFilter == "همه" || it.skillType.equals(selectedSkillFilter, ignoreCase = true)
+    val filteredMistakes = state.mistakes.filter { mistake ->
+        val matchesSkill = selectedSkillFilter == "همه" || mistake.skillType.equals(selectedSkillFilter, ignoreCase = true)
+        val matchesStatus = when (selectedStatusFilter) {
+            "در انتظار مرور" -> !mistake.isReviewed
+            "حل شده" -> mistake.isReviewed
+            else -> true
+        }
+        matchesSkill && matchesStatus
     }
 
     PersianRtlLayout {
@@ -132,6 +140,24 @@ fun MistakeNotebookScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Review Status Filters
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    statuses.forEach { st ->
+                        FilterChip(
+                            selected = selectedStatusFilter == st,
+                            onClick = { selectedStatusFilter = st },
+                            label = { Text(st, fontSize = 11.sp) }
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Mistakes List
@@ -161,7 +187,8 @@ fun MistakeNotebookScreen(
                         items(filteredMistakes, key = { it.id }) { mistake ->
                             MistakeCard(
                                 mistake = mistake,
-                                onDelete = { viewModel.deleteMistake(mistake.id) }
+                                onDelete = { viewModel.deleteMistake(mistake.id) },
+                                onToggleReviewed = { viewModel.markMistakeReviewed(mistake.id, !mistake.isReviewed) }
                             )
                         }
                     }
@@ -174,12 +201,15 @@ fun MistakeNotebookScreen(
 @Composable
 private fun MistakeCard(
     mistake: MistakeRecord,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onToggleReviewed: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (mistake.isReviewed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -188,19 +218,55 @@ private fun MistakeCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = mistake.skillType,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = mistake.skillType,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    if (mistake.isReviewed) {
+                        Surface(
+                            color = Color(0xFFDCFCE7),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "حل شده ✓",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    } else {
+                        Surface(
+                            color = Color(0xFFFEF3C7),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "نیازمند مرور",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706)),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
 
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "حذف خطا", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onToggleReviewed, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = if (mistake.isReviewed) "علامت به عنوان در انتظار مرور" else "علامت به عنوان حل شده",
+                            tint = if (mistake.isReviewed) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "حذف خطا", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
 

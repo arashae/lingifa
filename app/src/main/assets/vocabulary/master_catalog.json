@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026.09.24.3",
+  "catalogVersion": "2026.09.25.1",
   "targets": {
     "pack_ielts_master": 5040,
     "pack_toefl_master": 6974,
@@ -15,7 +15,7 @@
   "chunks": [
     {
       "id": "ielts-core-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_001.jsonl",
       "expectedItems": 500,
@@ -23,7 +23,7 @@
     },
     {
       "id": "ielts-core-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_002.jsonl",
       "expectedItems": 500,
@@ -31,7 +31,7 @@
     },
     {
       "id": "ielts-core-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_003.jsonl",
       "expectedItems": 500,
@@ -39,7 +39,7 @@
     },
     {
       "id": "ielts-core-004",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_004.jsonl",
       "expectedItems": 500,
@@ -47,7 +47,7 @@
     },
     {
       "id": "ielts-core-005",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_005.jsonl",
       "expectedItems": 500,
@@ -55,7 +55,7 @@
     },
     {
       "id": "ielts-core-006",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_006.jsonl",
       "expectedItems": 500,
@@ -63,7 +63,7 @@
     },
     {
       "id": "ielts-core-007",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_007.jsonl",
       "expectedItems": 500,
@@ -71,7 +71,7 @@
     },
     {
       "id": "ielts-core-008",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_008.jsonl",
       "expectedItems": 500,
@@ -79,7 +79,7 @@
     },
     {
       "id": "ielts-core-009",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_009.jsonl",
       "expectedItems": 500,
@@ -87,7 +87,7 @@
     },
     {
       "id": "ielts-core-010",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_010.jsonl",
       "expectedItems": 500,
@@ -95,7 +95,7 @@
     },
     {
       "id": "ielts-core-011",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_011.jsonl",
       "expectedItems": 40,
@@ -103,7 +103,7 @@
     },
     {
       "id": "toefl-core-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_001.jsonl",
       "expectedItems": 500,
@@ -111,7 +111,7 @@
     },
     {
       "id": "toefl-core-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_002.jsonl",
       "expectedItems": 500,
@@ -119,7 +119,7 @@
     },
     {
       "id": "toefl-core-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_003.jsonl",
       "expectedItems": 500,
@@ -127,7 +127,7 @@
     },
     {
       "id": "toefl-core-004",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_004.jsonl",
       "expectedItems": 500,
@@ -135,7 +135,7 @@
     },
     {
       "id": "toefl-core-005",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_005.jsonl",
       "expectedItems": 500,
@@ -143,7 +143,7 @@
     },
     {
       "id": "toefl-core-006",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_006.jsonl",
       "expectedItems": 500,
@@ -151,7 +151,7 @@
     },
     {
       "id": "toefl-core-007",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_007.jsonl",
       "expectedItems": 500,
@@ -159,7 +159,7 @@
     },
     {
       "id": "toefl-core-008",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_008.jsonl",
       "expectedItems": 500,
@@ -167,7 +167,7 @@
     },
     {
       "id": "toefl-core-009",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_009.jsonl",
       "expectedItems": 500,
@@ -175,7 +175,7 @@
     },
     {
       "id": "toefl-core-010",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_010.jsonl",
       "expectedItems": 500,
@@ -183,7 +183,7 @@
     },
     {
       "id": "toefl-core-011",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_011.jsonl",
       "expectedItems": 500,
@@ -191,7 +191,7 @@
     },
     {
       "id": "toefl-core-012",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_012.jsonl",
       "expectedItems": 500,
@@ -199,7 +199,7 @@
     },
     {
       "id": "toefl-core-013",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_013.jsonl",
       "expectedItems": 500,
@@ -207,7 +207,7 @@
     },
     {
       "id": "toefl-core-014",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_014.jsonl",
       "expectedItems": 474,
@@ -215,7 +215,7 @@
     },
     {
       "id": "gre-core-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_001.jsonl",
       "expectedItems": 500,
@@ -223,7 +223,7 @@
     },
     {
       "id": "gre-core-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_002.jsonl",
       "expectedItems": 500,
@@ -231,7 +231,7 @@
     },
     {
       "id": "gre-core-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_003.jsonl",
       "expectedItems": 500,
@@ -239,7 +239,7 @@
     },
     {
       "id": "gre-core-004",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_004.jsonl",
       "expectedItems": 500,
@@ -247,7 +247,7 @@
     },
     {
       "id": "gre-core-005",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_005.jsonl",
       "expectedItems": 500,
@@ -255,7 +255,7 @@
     },
     {
       "id": "gre-core-006",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_006.jsonl",
       "expectedItems": 500,
@@ -263,7 +263,7 @@
     },
     {
       "id": "gre-core-007",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_007.jsonl",
       "expectedItems": 500,
@@ -271,7 +271,7 @@
     },
     {
       "id": "gre-core-008",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_008.jsonl",
       "expectedItems": 500,
@@ -279,7 +279,7 @@
     },
     {
       "id": "gre-core-009",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_009.jsonl",
       "expectedItems": 500,
@@ -287,7 +287,7 @@
     },
     {
       "id": "gre-core-010",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_010.jsonl",
       "expectedItems": 500,
@@ -295,7 +295,7 @@
     },
     {
       "id": "gre-core-011",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_011.jsonl",
       "expectedItems": 500,
@@ -303,7 +303,7 @@
     },
     {
       "id": "gre-core-012",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_012.jsonl",
       "expectedItems": 500,
@@ -311,7 +311,7 @@
     },
     {
       "id": "gre-core-013",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_013.jsonl",
       "expectedItems": 500,
@@ -319,7 +319,7 @@
     },
     {
       "id": "gre-core-014",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_014.jsonl",
       "expectedItems": 500,
@@ -327,7 +327,7 @@
     },
     {
       "id": "gre-core-015",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_015.jsonl",
       "expectedItems": 500,
@@ -335,7 +335,7 @@
     },
     {
       "id": "gre-core-016",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_gre_master",
       "asset": "vocabulary/gre/gre_core_016.jsonl",
       "expectedItems": 4,
@@ -343,7 +343,7 @@
     },
     {
       "id": "cefr-a1-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_a1",
       "asset": "vocabulary/cefr/a1/a1_core_001.jsonl",
       "expectedItems": 292,
@@ -351,7 +351,7 @@
     },
     {
       "id": "cefr-a2-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_a2",
       "asset": "vocabulary/cefr/a2/a2_core_001.jsonl",
       "expectedItems": 500,
@@ -359,7 +359,7 @@
     },
     {
       "id": "cefr-a2-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_a2",
       "asset": "vocabulary/cefr/a2/a2_core_002.jsonl",
       "expectedItems": 207,
@@ -367,7 +367,7 @@
     },
     {
       "id": "cefr-b1-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_b1",
       "asset": "vocabulary/cefr/b1/b1_core_001.jsonl",
       "expectedItems": 500,
@@ -375,7 +375,7 @@
     },
     {
       "id": "cefr-b1-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_b1",
       "asset": "vocabulary/cefr/b1/b1_core_002.jsonl",
       "expectedItems": 468,
@@ -383,7 +383,7 @@
     },
     {
       "id": "cefr-b2-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_b2",
       "asset": "vocabulary/cefr/b2/b2_core_001.jsonl",
       "expectedItems": 500,
@@ -391,7 +391,7 @@
     },
     {
       "id": "cefr-b2-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_b2",
       "asset": "vocabulary/cefr/b2/b2_core_002.jsonl",
       "expectedItems": 500,
@@ -399,7 +399,7 @@
     },
     {
       "id": "cefr-b2-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_b2",
       "asset": "vocabulary/cefr/b2/b2_core_003.jsonl",
       "expectedItems": 209,
@@ -407,7 +407,7 @@
     },
     {
       "id": "cefr-c1-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c1",
       "asset": "vocabulary/cefr/c1/c1_core_001.jsonl",
       "expectedItems": 500,
@@ -415,7 +415,7 @@
     },
     {
       "id": "cefr-c1-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c1",
       "asset": "vocabulary/cefr/c1/c1_core_002.jsonl",
       "expectedItems": 500,
@@ -423,7 +423,7 @@
     },
     {
       "id": "cefr-c1-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c1",
       "asset": "vocabulary/cefr/c1/c1_core_003.jsonl",
       "expectedItems": 105,
@@ -431,7 +431,7 @@
     },
     {
       "id": "cefr-c2-001",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_001.jsonl",
       "expectedItems": 500,
@@ -439,7 +439,7 @@
     },
     {
       "id": "cefr-c2-002",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_002.jsonl",
       "expectedItems": 500,
@@ -447,7 +447,7 @@
     },
     {
       "id": "cefr-c2-003",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_003.jsonl",
       "expectedItems": 500,
@@ -455,7 +455,7 @@
     },
     {
       "id": "cefr-c2-004",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_004.jsonl",
       "expectedItems": 500,
@@ -463,7 +463,7 @@
     },
     {
       "id": "cefr-c2-005",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_005.jsonl",
       "expectedItems": 500,
@@ -471,7 +471,7 @@
     },
     {
       "id": "cefr-c2-006",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_006.jsonl",
       "expectedItems": 500,
@@ -479,7 +479,7 @@
     },
     {
       "id": "cefr-c2-007",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_007.jsonl",
       "expectedItems": 500,
@@ -487,7 +487,7 @@
     },
     {
       "id": "cefr-c2-008",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_008.jsonl",
       "expectedItems": 500,
@@ -495,7 +495,7 @@
     },
     {
       "id": "cefr-c2-009",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_009.jsonl",
       "expectedItems": 500,
@@ -503,7 +503,7 @@
     },
     {
       "id": "cefr-c2-010",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_010.jsonl",
       "expectedItems": 500,
@@ -511,7 +511,7 @@
     },
     {
       "id": "cefr-c2-011",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_011.jsonl",
       "expectedItems": 500,
@@ -519,7 +519,7 @@
     },
     {
       "id": "cefr-c2-012",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_012.jsonl",
       "expectedItems": 500,
@@ -527,7 +527,7 @@
     },
     {
       "id": "cefr-c2-013",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_013.jsonl",
       "expectedItems": 500,
@@ -535,7 +535,7 @@
     },
     {
       "id": "cefr-c2-014",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_014.jsonl",
       "expectedItems": 500,
@@ -543,7 +543,7 @@
     },
     {
       "id": "cefr-c2-015",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_015.jsonl",
       "expectedItems": 500,
@@ -551,7 +551,7 @@
     },
     {
       "id": "cefr-c2-016",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_016.jsonl",
       "expectedItems": 500,
@@ -559,7 +559,7 @@
     },
     {
       "id": "cefr-c2-017",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_017.jsonl",
       "expectedItems": 500,
@@ -567,7 +567,7 @@
     },
     {
       "id": "cefr-c2-018",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_018.jsonl",
       "expectedItems": 500,
@@ -575,7 +575,7 @@
     },
     {
       "id": "cefr-c2-019",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_019.jsonl",
       "expectedItems": 500,
@@ -583,7 +583,7 @@
     },
     {
       "id": "cefr-c2-020",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_020.jsonl",
       "expectedItems": 500,
@@ -591,7 +591,7 @@
     },
     {
       "id": "cefr-c2-021",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_021.jsonl",
       "expectedItems": 500,
@@ -599,7 +599,7 @@
     },
     {
       "id": "cefr-c2-022",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_022.jsonl",
       "expectedItems": 500,
@@ -607,7 +607,7 @@
     },
     {
       "id": "cefr-c2-023",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_023.jsonl",
       "expectedItems": 500,
@@ -615,7 +615,7 @@
     },
     {
       "id": "cefr-c2-024",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_024.jsonl",
       "expectedItems": 500,
@@ -623,7 +623,7 @@
     },
     {
       "id": "cefr-c2-025",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_025.jsonl",
       "expectedItems": 500,
@@ -631,7 +631,7 @@
     },
     {
       "id": "cefr-c2-026",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_026.jsonl",
       "expectedItems": 500,
@@ -639,7 +639,7 @@
     },
     {
       "id": "cefr-c2-027",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_027.jsonl",
       "expectedItems": 500,
@@ -647,7 +647,7 @@
     },
     {
       "id": "cefr-c2-028",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_028.jsonl",
       "expectedItems": 500,
@@ -655,7 +655,7 @@
     },
     {
       "id": "cefr-c2-029",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_029.jsonl",
       "expectedItems": 500,
@@ -663,7 +663,7 @@
     },
     {
       "id": "cefr-c2-030",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_030.jsonl",
       "expectedItems": 500,
@@ -671,7 +671,7 @@
     },
     {
       "id": "cefr-c2-031",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_031.jsonl",
       "expectedItems": 500,
@@ -679,7 +679,7 @@
     },
     {
       "id": "cefr-c2-032",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_032.jsonl",
       "expectedItems": 500,
@@ -687,7 +687,7 @@
     },
     {
       "id": "cefr-c2-033",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "packId": "pack_cefr_c2",
       "asset": "vocabulary/cefr/c2/c2_core_033.jsonl",
       "expectedItems": 321,

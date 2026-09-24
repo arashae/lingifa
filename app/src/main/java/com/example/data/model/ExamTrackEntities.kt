@@ -44,7 +44,13 @@ enum class ExamTrackType(
 /**
  * Persists individual word mastery status for each exam track.
  */
-@Entity(tableName = "exam_word_progress", primaryKeys = ["examTrack", "wordId"])
+@Entity(
+    tableName = "exam_word_progress",
+    primaryKeys = ["examTrack", "wordId"],
+    indices = [
+        androidx.room.Index(value = ["examTrack", "isMastered"])
+    ]
+)
 data class ExamWordProgressRecord(
     val examTrack: String, // "IELTS", "TOEFL", "GRE"
     val wordId: String,

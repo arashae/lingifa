@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.srs.ReviewRating
+import com.example.srs.SpacedRepetitionSystem
 import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.LinguaTopAppBar
@@ -319,9 +320,8 @@ private fun FlashcardExercise(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 if (item.example.isNotEmpty()) {
-                    val blankedSentence = item.example.replace(Regex("(?i)\\b${item.word}\\b"), "_______")
                     Text(
-                        text = "\"$blankedSentence\"",
+                        text = "\"${item.example}\"",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface
@@ -379,35 +379,35 @@ private fun FlashcardExercise(
                 Text("نمایش پاسخ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         } else {
-            // 4 SRS Response Buttons (دوباره، سخت بود، خوب بود، آسان بود)
+            // 4 SRS Response Buttons with dynamic calculated intervals
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ResponseRatingButton(
                     label = "دوباره",
-                    sub = "< ۱ ساعت",
+                    sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.AGAIN),
                     color = ErrorRed,
                     onClick = { onRate(ReviewRating.AGAIN) },
                     modifier = Modifier.weight(1f)
                 )
                 ResponseRatingButton(
                     label = "سخت",
-                    sub = "۱ روز",
+                    sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD),
                     color = Color(0xFFD97706),
                     onClick = { onRate(ReviewRating.HARD) },
                     modifier = Modifier.weight(1f)
                 )
                 ResponseRatingButton(
                     label = "خوب",
-                    sub = "۳ روز",
+                    sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD),
                     color = PrimaryBlue,
                     onClick = { onRate(ReviewRating.GOOD) },
                     modifier = Modifier.weight(1f)
                 )
                 ResponseRatingButton(
                     label = "آسان",
-                    sub = "۶ روز",
+                    sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY),
                     color = SuccessGreen,
                     onClick = { onRate(ReviewRating.EASY) },
                     modifier = Modifier.weight(1f)

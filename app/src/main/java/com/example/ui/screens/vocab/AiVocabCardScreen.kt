@@ -102,8 +102,12 @@ fun AiVocabCardScreen(onBack: () -> Unit, viewModel: AiVocabCardViewModel = view
                 WordSearchBar(state.query, state.isLoading, viewModel::onQueryChange) { viewModel.generateCard() }
                 SuggestedWords(viewModel::generateCard)
                 state.currentCard?.let { card ->
-                    VocabularyFocusCard(card, state.isPlayingAudio, state.isUkAccent, { viewModel.speakWord(tts) }, { viewModel.speakExample(tts) }, viewModel::toggleAccent, Modifier.weight(1f).padding(top = 20.dp))
-                    SaveCardButton(state.isSaved, viewModel::saveCardToLibrary)
+                    if (!card.isValid) {
+                        InvalidCardNotice(card.errorMessage ?: "اطلاعاتی یافت نشد", Modifier.weight(1f).padding(top = 20.dp))
+                    } else {
+                        VocabularyFocusCard(card, state.isPlayingAudio, state.isUkAccent, { viewModel.speakWord(tts) }, { viewModel.speakExample(tts) }, viewModel::toggleAccent, Modifier.weight(1f).padding(top = 20.dp))
+                        SaveCardButton(state.isSaved, viewModel::saveCardToLibrary)
+                    }
                 } ?: Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryBlue) }
             }
         }
@@ -194,5 +198,50 @@ private fun SaveCardButton(saved: Boolean, onSave: () -> Unit) {
         Icon(if (saved) Icons.Default.Check else Icons.Default.Bookmark, null)
         Spacer(Modifier.width(8.dp))
         Text(if (saved) "در لغات ذخیره شد" else "ذخیره در لغات", fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun InvalidCardNotice(message: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.errorContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "واژه تاییدنشده",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

@@ -61,8 +61,43 @@ class VocabularyRepository(
         return vocabDao.getFavoriteVocabularies()
     }
 
+    suspend fun getNewVocabulariesForLearning(level: String, limit: Int = 10): List<VocabularyItem> {
+        return vocabDao.getNewVocabulariesForLearning(level, limit)
+    }
+
+    suspend fun getDistractors(level: String, partOfSpeech: String, excludeWord: String, limit: Int = 3): List<VocabularyItem> {
+        val targeted = vocabDao.getDistractors(level, partOfSpeech, excludeWord, limit = 20).shuffled()
+        if (targeted.size >= limit) return targeted.take(limit)
+        val byLevel = vocabDao.getDistractorsByLevel(level, excludeWord, limit = 20).shuffled()
+        val combined = (targeted + byLevel).distinctBy { it.word }.filter { it.word != excludeWord }
+        if (combined.size >= limit) return combined.take(limit)
+        return (combined + vocabDao.getRandomVocabularies(limit * 2))
+            .filter { it.word != excludeWord }
+            .distinctBy { it.word }
+            .take(limit)
+    }
+
+    fun getFilteredVocabularies(
+        query: String,
+        level: String,
+        status: String,
+        packId: String? = null,
+        currentTime: Long = System.currentTimeMillis(),
+        limit: Int = 300
+    ): Flow<List<VocabularyItem>> {
+        return if (packId == null) {
+            vocabDao.getFilteredVocabularies(query.trim(), level, status, currentTime, limit)
+        } else {
+            vocabDao.getFilteredVocabulariesByPack(packId, query.trim(), level, status, currentTime, limit)
+        }
+    }
+
     fun getById(id: Long): Flow<VocabularyItem?> {
         return vocabDao.getById(id)
+    }
+
+    suspend fun getByIdSync(id: Long): VocabularyItem? {
+        return vocabDao.getByIdSync(id)
     }
 
     suspend fun insert(item: VocabularyItem): Long {
@@ -233,6 +268,12 @@ class MistakeRepository(private val mistakeDao: MistakeDao) {
                 skillType = skillType
             )
         )
+    }
+
+    val unreviewedMistakes: Flow<List<MistakeRecord>> = mistakeDao.getUnreviewedMistakes()
+
+    suspend fun markReviewed(id: Long, isReviewed: Boolean = true) {
+        mistakeDao.updateReviewedStatus(id, isReviewed)
     }
 
     suspend fun deleteMistake(id: Long) {

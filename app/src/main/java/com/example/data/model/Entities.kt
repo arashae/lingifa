@@ -1,9 +1,8 @@
 package com.example.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import com.example.data.local.Converters
 
 @Entity(tableName = "vocabulary_items")
 data class VocabularyItem(
@@ -23,10 +22,15 @@ data class VocabularyItem(
     val collocations: List<String> = emptyList(),
     val wordFamily: List<String> = emptyList(),
     val commonMistakes: String = "",
-    val ieltsRelevance: String = "High",
-    val toeflRelevance: String = "High",
+    val ieltsRelevance: String = "Medium",
+    val toeflRelevance: String = "Medium",
+    val greRelevance: String = "Medium",
     val tags: List<String> = emptyList(),
     val source: String = "Default",
+    val sourceLicense: String = "",
+    val datasetVersion: String = "1",
+    val frequencyRank: Int = 0,
+    val examPriority: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val mastery: Int = 0, // 0 to 100
@@ -38,6 +42,10 @@ data class VocabularyItem(
     val correctCount: Int = 0,
     val incorrectCount: Int = 0,
     val isFavorite: Boolean = false,
+    /**
+     * Legacy single-pack field kept temporarily for backward compatibility with older seed/import code.
+     * New code should use VocabularyPackItem so one word can belong to many packs.
+     */
     val packName: String = ""
 )
 
@@ -53,7 +61,29 @@ data class VocabularyPack(
     val wordCount: Int,
     val isDownloaded: Boolean = true,
     val category: String,
-    val iconName: String
+    val iconName: String,
+    val version: Int = 1,
+    val source: String = "LinguaFa",
+    val targetWordCount: Int = wordCount,
+    val installedWordCount: Int = 0,
+    val isCorePack: Boolean = false
+)
+
+/**
+ * Many-to-many membership between vocabulary items and vocabulary packs.
+ *
+ * A word such as "allocate" can simultaneously belong to IELTS, TOEFL,
+ * GRE, Academic English and a user-created pack without duplicating the word row.
+ */
+@Entity(
+    tableName = "vocabulary_pack_items",
+    primaryKeys = ["packId", "vocabularyId"],
+    indices = [Index(value = ["vocabularyId"])]
+)
+data class VocabularyPackItem(
+    val packId: String,
+    val vocabularyId: Long,
+    val addedAt: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "mistake_records")

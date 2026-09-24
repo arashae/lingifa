@@ -176,7 +176,7 @@ fun SrsReviewScreen(
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
                             .padding(paddingValues)
-                            .padding(16.dp)
+                            .padding(horizontal = 20.dp, vertical = 12.dp)
                     ) {
                         // Progress Bar Header
                         Row(
@@ -185,12 +185,12 @@ fun SrsReviewScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "واژه ${state.currentIndex + 1} از ${state.queue.size}",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                text = "مرور امروز  •  ${state.currentIndex + 1} از ${state.queue.size}",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "تسلط فعلی: ${currentWord.mastery}%",
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                text = "${currentWord.mastery}% تسلط",
+                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
 
@@ -206,7 +206,7 @@ fun SrsReviewScreen(
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         // Exercise Mode Dispatcher
                         when (state.currentExerciseType) {
@@ -269,20 +269,26 @@ private fun FlashcardExercise(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // English Word & Audio
+                Text(
+                    text = if (isRevealed) "پاسخ را مرور کن" else "معنی این واژه را به خاطر بیاور",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(10.dp))
                 CefrBadge(level = item.cefrLevel)
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = item.word,
@@ -300,10 +306,10 @@ private fun FlashcardExercise(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 AudioSpeakerButton(onClick = onPlayAudio, size = 44)
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 if (item.example.isNotEmpty()) {
                     val blankedSentence = item.example.replace(Regex("(?i)\\b${item.word}\\b"), "_______")
@@ -318,20 +324,20 @@ private fun FlashcardExercise(
                 }
 
                 if (isRevealed) {
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
                             .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     Text(
                         text = item.persianMeaning,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
                         textAlign = TextAlign.Center
                     )
@@ -414,13 +420,17 @@ private fun ResponseRatingButton(
 ) {
     Button(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        modifier = modifier.height(52.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color.copy(alpha = 0.10f),
+            contentColor = color
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.32f)),
+        modifier = modifier.height(56.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = label, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            Text(text = sub, fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f))
+            Text(text = sub, fontSize = 9.sp, color = color.copy(alpha = 0.78f))
         }
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -50,6 +51,7 @@ fun VocabPacksScreen(
     viewModel: VocabViewModel,
     onBack: () -> Unit,
     onFilterByPack: (String) -> Unit,
+    onStartCefrLevel: () -> Unit,
     onNavigateToExamTracks: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -86,6 +88,16 @@ fun VocabPacksScreen(
                     }
                 }
 
+                item {
+                    CefrLearningPathCard(
+                        selectedLevel = state.learningLevel,
+                        onSelectLevel = { level ->
+                            viewModel.selectLearningLevel(level)
+                            onStartCefrLevel()
+                        }
+                    )
+                }
+
                 item { ExamTracksEntryCard(onClick = onNavigateToExamTracks) }
 
                 item {
@@ -118,6 +130,86 @@ fun VocabPacksScreen(
                 }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CefrLearningPathCard(
+    selectedLevel: String,
+    onSelectLevel: (String) -> Unit
+) {
+    val levels = listOf(
+        "A1" to "شروع از پایه",
+        "A2" to "مکالمه روزمره",
+        "B1" to "مستقل",
+        "B2" to "میان‌بالا",
+        "C1" to "پیشرفته",
+        "C2" to "تسلط کامل"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "مسیر عمومی واژگان",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = "از هر سطحی که می‌خواهی شروع کن؛ داخل هر سطح، کلمات بر اساس اولویت یادگیری مرتب‌اند.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+            )
+            levels.chunked(2).forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    row.forEach { (level, title) ->
+                        val isSelected = level == selectedLevel
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onSelectLevel(level) },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                            border = if (isSelected) null else BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(1.dp)
+                            ) {
+                                Text(
+                                    text = level,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f)
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
     }

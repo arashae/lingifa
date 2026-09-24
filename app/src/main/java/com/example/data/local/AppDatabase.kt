@@ -196,7 +196,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
 
             private suspend fun ensureVocabularyCatalog(database: AppDatabase) {
-                database.vocabularyPackDao().insertAllIfMissing(InitialDataSeed.getDefaultPacks())
+                val packDao = database.vocabularyPackDao()
+                val packs = InitialDataSeed.getDefaultPacks()
+                packDao.insertAllIfMissing(packs)
+                // CEFR bundles are generated from a versioned catalog; refresh their
+                // visible counts without discarding a user's installed-word progress.
+                packs.filter { it.category == "CEFR Curriculum" }.forEach { fresh ->
+                    val existing = packDao.getPackById(fresh.id) ?: return@forEach
+                    packDao.update(
+                        fresh.copy(
+                            installedWordCount = existing.installedWordCount,
+                            isDownloaded = existing.isDownloaded
+                        )
+                    )
+                }
             }
 
             private suspend fun populateDatabase(database: AppDatabase) {

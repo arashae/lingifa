@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -77,7 +78,8 @@ fun VocabLibraryScreen(
     onNavigateToAiGenerate: () -> Unit,
     onNavigateToImportCenter: () -> Unit,
     onNavigateToPacks: () -> Unit,
-    onNavigateToAiVocabCard: () -> Unit = {}
+    onNavigateToAiVocabCard: () -> Unit = {},
+    onNavigateToExamTracks: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -144,6 +146,12 @@ fun VocabLibraryScreen(
                         .padding(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    QuickActionChip(
+                        icon = Icons.Default.School,
+                        label = "مسیرهای مرحله‌ای (IELTS / TOEFL / GRE)",
+                        color = Color(0xFF2563EB),
+                        onClick = onNavigateToExamTracks
+                    )
                     QuickActionChip(
                         icon = Icons.Default.AutoAwesome,
                         label = "کارت واژه هوشمند AI (صوتی)",

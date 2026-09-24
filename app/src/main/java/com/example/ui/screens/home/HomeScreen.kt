@@ -75,7 +75,8 @@ fun HomeScreen(
     onNavigateToWriting: () -> Unit,
     onNavigateToDiagnostic: () -> Unit,
     onNavigateToMistakes: () -> Unit,
-    onNavigateToAiVocabCard: () -> Unit = {}
+    onNavigateToAiVocabCard: () -> Unit = {},
+    onNavigateToExamTracks: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val streakInfo by viewModel.streakInfo.collectAsState()
@@ -207,6 +208,99 @@ fun HomeScreen(
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text("تولید لغت", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Exam Tracks Stage-by-Stage Card (IELTS / TOEFL / GRE)
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToExamTracks() },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        PrimaryBlue.copy(alpha = 0.25f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(Color(0xFF2563EB), Color(0xFF0D9488))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "مسیرهای مرحله‌ای آزمون‌ها",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = PrimaryBlue.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            text = "آیلتس • تافل • GRE",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PrimaryBlue,
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "پیشرفت روزانه مستقل، درصد یادگیری هر مرحله و مرور صوتی",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = onNavigateToExamTracks,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryBlue,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("مشاهده", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

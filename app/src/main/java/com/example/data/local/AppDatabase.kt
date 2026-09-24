@@ -7,6 +7,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.DailyStreakRecord
+import com.example.data.model.ExamTrackSettingsRecord
+import com.example.data.model.ExamWordProgressRecord
 import com.example.data.model.IeltsFlashcard
 import com.example.data.model.IeltsSpeakingSessionRecord
 import com.example.data.model.IeltsVocabularyDeck
@@ -33,9 +35,11 @@ import java.util.Locale
         IeltsVocabularyDeck::class,
         IeltsFlashcard::class,
         DailyStreakRecord::class,
-        IeltsSpeakingSessionRecord::class
+        IeltsSpeakingSessionRecord::class,
+        ExamWordProgressRecord::class,
+        ExamTrackSettingsRecord::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -47,6 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun ieltsFlashcardDao(): IeltsFlashcardDao
     abstract fun dailyStreakDao(): DailyStreakDao
     abstract fun ieltsSpeakingDao(): IeltsSpeakingDao
+    abstract fun examTrackDao(): ExamTrackDao
 
     companion object {
         @Volatile

@@ -50,6 +50,7 @@ import com.example.ui.screens.tutor.TutorViewModel
 import com.example.ui.screens.vocab.AddWordScreen
 import com.example.ui.screens.vocab.AiGenerateVocabScreen
 import com.example.ui.screens.vocab.AiVocabCardScreen
+import com.example.ui.screens.vocab.ExamTrackScreen
 import com.example.ui.screens.vocab.ImportCenterScreen
 import com.example.ui.screens.vocab.VocabLibraryScreen
 import com.example.ui.screens.vocab.VocabPacksScreen
@@ -138,7 +139,8 @@ fun AppNavGraph(
                         onNavigateToWriting = { navController.navigate(Screen.WritingGrader.route) },
                         onNavigateToDiagnostic = { navController.navigate(Screen.DiagnosticTest.route) },
                         onNavigateToMistakes = { navController.navigate(Screen.MistakeNotebook.route) },
-                        onNavigateToAiVocabCard = { navController.navigate(Screen.AiVocabCard.route) }
+                        onNavigateToAiVocabCard = { navController.navigate(Screen.AiVocabCard.route) },
+                        onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) }
                     )
                 }
 
@@ -152,7 +154,8 @@ fun AppNavGraph(
                         onNavigateToAiGenerate = { navController.navigate(Screen.AiGenerateVocab.route) },
                         onNavigateToImportCenter = { navController.navigate(Screen.ImportCenter.route) },
                         onNavigateToPacks = { navController.navigate(Screen.VocabPacks.route) },
-                        onNavigateToAiVocabCard = { navController.navigate(Screen.AiVocabCard.route) }
+                        onNavigateToAiVocabCard = { navController.navigate(Screen.AiVocabCard.route) },
+                        onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) }
                     )
                 }
 
@@ -241,7 +244,14 @@ fun AppNavGraph(
                         onBack = { navController.popBackStack() },
                         onFilterByPack = {
                             navController.popBackStack()
-                        }
+                        },
+                        onNavigateToExamTracks = { navController.navigate(Screen.ExamTracks.route) }
+                    )
+                }
+
+                composable(Screen.ExamTracks.route) {
+                    ExamTrackScreen(
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

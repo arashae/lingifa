@@ -1,6 +1,7 @@
 package com.example.ui.screens.vocab
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,7 +59,8 @@ import com.example.ui.theme.SuccessGreen
 fun VocabPacksScreen(
     viewModel: VocabViewModel,
     onBack: () -> Unit,
-    onFilterByPack: (String) -> Unit
+    onFilterByPack: (String) -> Unit,
+    onNavigateToExamTracks: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -80,8 +82,50 @@ fun VocabPacksScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToExamTracks() },
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.3f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "مسیرهای مرحله‌به‌مرحله آزمون‌ها 🎯",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = PrimaryBlue
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "آموزش گام‌به‌گام و روزانه لغات آیلتس، تافل و GRE با محاسبه درصد تسلط",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Button(
+                                onClick = onNavigateToExamTracks,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                            ) {
+                                Text("ورود به مسیرها", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                item {
                     Text(
-                        text = "بسته‌های واژگان تخصصی آیلتس، تافل و انگلیسی پیشرفته:",
+                        text = "سایر بسته‌های واژگان تخصصی:",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

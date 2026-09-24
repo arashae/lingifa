@@ -17,6 +17,7 @@ sealed class Screen(val route: String) {
     object AiVocabCard : Screen("ai_vocab_card")
     object ImportCenter : Screen("import_center")
     object VocabPacks : Screen("vocab_packs")
+    object ExamTracks : Screen("exam_tracks")
     object SrsReview : Screen("srs_review")
     object Flashcards : Screen("flashcards")
     object AiTutor : Screen("ai_tutor")

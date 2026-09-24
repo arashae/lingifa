@@ -57,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -148,8 +147,7 @@ fun VocabLibraryScreen(
                         onNavigateToExamTracks = onNavigateToExamTracks,
                         onNavigateToPacks = onNavigateToPacks,
                         onNavigateToImportCenter = onNavigateToImportCenter,
-                        onNavigateToAiVocabCard = onNavigateToAiVocabCard,
-                        onNavigateToAiGenerate = onNavigateToAiGenerate
+                        onNavigateToAiVocabCard = onNavigateToAiVocabCard
                     )
 
                     FilterStrip(
@@ -241,8 +239,7 @@ private fun QuickActions(
     onNavigateToExamTracks: () -> Unit,
     onNavigateToPacks: () -> Unit,
     onNavigateToImportCenter: () -> Unit,
-    onNavigateToAiVocabCard: () -> Unit,
-    onNavigateToAiGenerate: () -> Unit
+    onNavigateToAiVocabCard: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -280,8 +277,7 @@ private fun QuickActions(
                 title = "کارت هوشمند",
                 subtitle = "AI و تلفظ",
                 onClick = onNavigateToAiVocabCard,
-                modifier = Modifier.weight(1f),
-                onLongClickHint = onNavigateToAiGenerate
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -293,8 +289,7 @@ private fun QuickActionCard(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    onLongClickHint: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.clickable(onClick = onClick),
@@ -364,12 +359,6 @@ private fun FilterStrip(
                     containerColor = MaterialTheme.colorScheme.surface,
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = selectedLevel == level,
-                    borderColor = MaterialTheme.colorScheme.outlineVariant,
-                    selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
                 )
             )
         }

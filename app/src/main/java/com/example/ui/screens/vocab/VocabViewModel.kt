@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.exporter.VocabularyExporter
 import com.example.data.importer.DuplicateAction
 import com.example.data.importer.ParsedImportItem
+import com.example.data.importer.RemoteMasterVocabularySync
 import com.example.data.importer.VocabularyFileParser
 import com.example.data.local.AppDatabase
 import com.example.data.model.VocabularyItem
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -38,6 +40,18 @@ data class VocabLibraryUiState(
     val statusMessage: String? = null
 )
 
+data class PackSyncUiState(
+    val isRunning: Boolean = false,
+    val installed: Int = 0,
+    val target: Int = 0,
+    val stage: String = "",
+    val message: String = "",
+    val warningCount: Int = 0
+) {
+    val progress: Float
+        get() = if (target <= 0) 0f else (installed.toFloat() / target).coerceIn(0f, 1f)
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -56,6 +70,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _aiPreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _filePreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _statusMessage = MutableStateFlow<String?>(null)
+    private val _packSyncStates = MutableStateFlow<Map<String, PackSyncUiState>>(emptyMap())
+    val packSyncStates: StateFlow<Map<String, PackSyncUiState>> = _packSyncStates.asStateFlow()
 
     private val wordsForSelectedPack: Flow<List<VocabularyItem>> =
         _selectedPackId.flatMapLatest { packId ->
@@ -146,6 +162,82 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearStatusMessage() {
         _statusMessage.value = null
+    }
+
+    fun syncMasterPack(packId: String) {
+        if (_packSyncStates.value[packId]?.isRunning == true) return
+
+        val pack = uiState.value.packs.firstOrNull { it.id == packId }
+        updatePackSyncState(
+            packId,
+            PackSyncUiState(
+                isRunning = true,
+                installed = pack?.installedWordCount ?: 0,
+                target = pack?.targetWordCount ?: 0,
+                stage = "starting",
+                message = "شروع آماده‌سازی بانک واژگان…"
+            )
+        )
+
+        viewModelScope.launch {
+            try {
+                val result = RemoteMasterVocabularySync.syncMasterPack(
+                    packId = packId,
+                    vocabularyDao = db.vocabularyDao(),
+                    packDao = db.vocabularyPackDao(),
+                    packItemDao = db.vocabularyPackItemDao()
+                ) { progress ->
+                    updatePackSyncState(
+                        packId,
+                        PackSyncUiState(
+                            isRunning = progress.stage != "complete" && progress.stage != "partial",
+                            installed = progress.installed,
+                            target = progress.target,
+                            stage = progress.stage,
+                            message = progress.message
+                        )
+                    )
+                }
+
+                updatePackSyncState(
+                    packId,
+                    PackSyncUiState(
+                        isRunning = false,
+                        installed = result.installed,
+                        target = result.target,
+                        stage = if (result.complete) "complete" else "partial",
+                        message = if (result.complete) {
+                            "بانک کامل شد و برای استفاده آفلاین آماده است."
+                        } else {
+                            "دانلود تا ${result.installed} واژه پیش رفت؛ برای ادامه دوباره بزن."
+                        },
+                        warningCount = result.warnings.size
+                    )
+                )
+                _statusMessage.value = if (result.complete) {
+                    "بانک واژگان با ${result.installed} واژه تکمیل شد."
+                } else {
+                    "${result.installed} از ${result.target} واژه ذخیره شد؛ دانلود قابل ادامه است."
+                }
+            } catch (t: Throwable) {
+                val current = _packSyncStates.value[packId] ?: PackSyncUiState()
+                updatePackSyncState(
+                    packId,
+                    current.copy(
+                        isRunning = false,
+                        stage = "error",
+                        message = "دانلود متوقف شد: ${t.message ?: "خطای شبکه"}"
+                    )
+                )
+                _statusMessage.value = "خطا در دانلود بانک واژگان: ${t.message ?: "ارتباط شبکه"}"
+            }
+        }
+    }
+
+    private fun updatePackSyncState(packId: String, state: PackSyncUiState) {
+        _packSyncStates.value = _packSyncStates.value.toMutableMap().apply {
+            put(packId, state)
+        }
     }
 
     fun getWordById(id: Long): Flow<VocabularyItem?> {

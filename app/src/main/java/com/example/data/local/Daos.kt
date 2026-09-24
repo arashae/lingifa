@@ -119,6 +119,9 @@ interface VocabularyPackItemDao {
     @Query("SELECT packId FROM vocabulary_pack_items WHERE vocabularyId = :vocabularyId ORDER BY packId")
     fun getPackIdsForVocabulary(vocabularyId: Long): Flow<List<String>>
 
+    @Query("SELECT packId FROM vocabulary_pack_items WHERE vocabularyId = :vocabularyId ORDER BY packId")
+    suspend fun getPackIdsForVocabularySync(vocabularyId: Long): List<String>
+
     @Query("SELECT COUNT(*) FROM vocabulary_pack_items WHERE packId = :packId")
     suspend fun getPackItemCount(packId: String): Int
 }

@@ -128,10 +128,11 @@ object BundledVocabularyImporter {
         var memberships = 0
         var processed = 0
 
-        context.assets.open(assetPath).bufferedReader().useLines { lines ->
-            lines.forEach { rawLine ->
+        context.assets.open(assetPath).bufferedReader().use { reader ->
+            while (true) {
+                val rawLine = reader.readLine() ?: break
                 val line = rawLine.trim()
-                if (line.isEmpty() || line.startsWith("#")) return@forEach
+                if (line.isEmpty() || line.startsWith("#")) continue
 
                 val json = JSONObject(line)
                 val word = json.getString("word").trim()

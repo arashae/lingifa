@@ -6,6 +6,7 @@ on:
     paths:
       - scripts/build_vocabulary_assets.py
       - scripts/postprocess_vocabulary_meanings.py
+      - scripts/curate_vocabulary_sources.py
       - scripts/sanitize_vocabulary_assets.py
       - scripts/validate_vocabulary_quality.py
       - .github/workflows/vocabulary-bundle.yml
@@ -41,6 +42,9 @@ jobs:
 
       - name: Remove synthetic collocations and down-rank C2 names
         run: python scripts/sanitize_vocabulary_assets.py
+
+      - name: Curate general and academic Core bank
+        run: python scripts/curate_vocabulary_sources.py
 
       - name: Validate vocabulary quality
         run: python scripts/validate_vocabulary_quality.py

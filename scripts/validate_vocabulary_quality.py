@@ -368,6 +368,21 @@ def priority_sense_review_risk(word: str, definition: str, persian_meaning: str,
         meaning_ok = any(marker in persian_meaning for marker in ("توانستن", "اجازه", "ممکن"))
         if meaning_ok:
             return None
+    if normalized_word == "metabolism":
+        if any(marker in definition.lower() for marker in ("chemical process", "break down substances")) and any(marker in persian_meaning for marker in ("متابولیسم", "متابولیک", "فرایندهای شیمیایی")):
+            return None
+    if normalized_word == "orient":
+        if any(marker in definition.lower() for marker in ("give someone directions", "make them aware", "turn to face", "familiar with a new situation")) and any(marker in persian_meaning for marker in ("جهت‌دهی", "جهت دهی", "جهت‌یابی", "آشنا کردن", "روبه‌رو")):
+            return None
+    if normalized_word == "replicate":
+        if any(marker in definition.lower() for marker in ("exact copy", "repeat a study", "produce a copy")) and any(marker in persian_meaning for marker in ("تکثیر", "بازتولید", "تکرار نتیجه")):
+            return None
+    if normalized_word == "chess":
+        if "board game" in definition.lower() and "شطرنج" in persian_meaning:
+            return None
+    if normalized_word == "corpus":
+        if any(marker in definition.lower() for marker in ("collection of written texts", "body of texts")) and any(marker in persian_meaning for marker in ("مجموعه متون", "پیکره متنی")):
+            return None
     if normalized_word == "novice":
         definition_ok = any(marker in definition.lower() for marker in ("new to", "little experience", "beginner"))
         meaning_ok = any(marker in persian_meaning for marker in ("تازه‌کار", "مبتدی", "تجربه کم"))

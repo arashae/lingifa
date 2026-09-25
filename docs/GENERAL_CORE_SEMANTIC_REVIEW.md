@@ -73,6 +73,13 @@
 - Strict validation reports zero findings and zero errors across all 2,000 cards with 100% example and collocation coverage.
 - Existing source, license, and frequency fields were preserved; revised learner content is editorial and is not attributed to external sources.
 
+## TOEFL priority review: cards 4,001–6,000
+
+- Reviewed `toefl_core_009.jsonl` through `toefl_core_012.jsonl` card by card, with independent strict validation before acceptance.
+- Corrected POS/sense conflicts, WordNet-style definitions, Persian script defects, missing examples, and example/translation mismatches.
+- The priority-sense checklist is now sense-aware, so correctly curated `metabolism`, `orient`, `replicate`, `can`, and `novice` cards are accepted while their historical wrong senses are still flagged.
+- Strict validation reports zero findings and zero errors across all 2,000 cards with 100% example and collocation coverage.
+
 ## Batch 7: `general_core_002` cards 1–50
 
 - Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.

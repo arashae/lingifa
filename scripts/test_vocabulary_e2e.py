@@ -317,6 +317,26 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
             "noun",
         ))
 
+    def test_corrected_editorial_traps_do_not_trigger_priority_flag(self) -> None:
+        cases = [
+            ("metabolism", "the chemical processes that break down substances in the body", "متابولیسم؛ فرایندهای شیمیایی بدن", "noun"),
+            ("orient", "to give someone directions or to make them aware of something", "جهت‌دهی؛ آگاه کردن", "verb"),
+            ("replicate", "to produce an exact copy of something or to repeat a study", "تکثیر؛ بازتولید کردن", "verb"),
+            ("chess", "a board game played by two people with pieces", "شطرنج", "noun"),
+            ("corpus", "a large collection of written texts used for analysis", "مجموعه متون", "noun"),
+            ("metabolism", "the sum of the chemical processes by which an organism builds up and breaks down substances", "مجموعه فرایندهای شیمیایی که موجود زنده نیاز دارد", "noun"),
+            ("orient", "to make someone familiar with a new situation or place", "جهت‌یابی کردن، خود را با شرایط تازه آشنا کردن", "verb"),
+        ]
+        for word, definition, meaning, pos in cases:
+            with self.subTest(word=word):
+                self.assertIsNone(priority_sense_review_risk(word, definition, meaning, pos))
+        self.assertIsNotNone(priority_sense_review_risk(
+            "metabolism",
+            "the process by which an insect changes form",
+            "دگردیسی",
+            "noun",
+        ))
+
     def test_definition_persian_pos_alignment_heuristic(self) -> None:
         self.assertEqual(
             definition_meaning_alignment_risk("noun", "رسیدن به؛ به دست آوردن", "to arrive at a place or goal"),

@@ -53,6 +53,23 @@ def load_jsonl(path: Path) -> list[dict]:
     return rows
 
 
+def load_drops(override_dir: Path) -> set[str]:
+    """Headwords removed from a bank by explicit editorial decision.
+
+    Inflected or redundant entries (e.g. a bare plural whose lemma is already a
+    reviewed card) are dropped here instead of being silently re-added by
+    regeneration. Removal must be deliberate and auditable, never inferred.
+    """
+    path = override_dir / "_dropped.json"
+    if not path.is_file():
+        return set()
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    headwords = payload.get("headwords", [])
+    if not isinstance(headwords, list):
+        raise SystemExit(f"{path}: 'headwords' must be a list")
+    return {str(word).strip().lower() for word in headwords if str(word).strip()}
+
+
 def apply_bank(bank: str, cfg: dict) -> tuple[int, int]:
     prefix = cfg["prefix"]
     target_dir = VOCAB_ROOT / bank
@@ -75,12 +92,21 @@ def apply_bank(bank: str, cfg: dict) -> tuple[int, int]:
             overrides[word] = row
 
     expected = int(cfg["expected"])
-    if len(overrides) != expected:
+    dropped = load_drops(override_dir)
+    if len(overrides) + len(dropped) != expected:
         raise SystemExit(
-            f"Reviewed {bank.upper()} source-of-truth has {len(overrides)} rows; expected {expected}."
+            f"Reviewed {bank.upper()} source-of-truth has {len(overrides)} rows "
+            f"+ {len(dropped)} dropped headwords; expected {expected} in total. "
+            "Update BANKS['expected'] deliberately when membership changes."
+        )
+    if dropped & set(overrides):
+        both = sorted(dropped & set(overrides))
+        raise SystemExit(
+            f"Reviewed {bank.upper()} headwords are both kept and dropped: {both[:20]}"
         )
 
     replaced: set[str] = set()
+    removed: set[str] = set()
     changed_files = 0
     final_fixes: dict[str, dict] = cfg.get("final_fixes", {})
     for path in target_files:
@@ -89,6 +115,10 @@ def apply_bank(bank: str, cfg: dict) -> tuple[int, int]:
         changed = False
         for generated in generated_rows:
             word = str(generated.get("word", "")).strip().lower()
+            if word in dropped:
+                removed.add(word)
+                changed = True
+                continue
             reviewed = overrides.get(word)
             output = dict(reviewed) if reviewed is not None else generated
             if reviewed is not None:
@@ -116,6 +146,13 @@ def apply_bank(bank: str, cfg: dict) -> tuple[int, int]:
         raise SystemExit(
             f"Generated {bank.upper()} membership lost {len(missing)} reviewed words; "
             f"refusing silent data loss. First entries: {preview}"
+        )
+    unmatched_drops = sorted(dropped - removed)
+    if unmatched_drops:
+        preview = ", ".join(unmatched_drops[:20])
+        raise SystemExit(
+            f"{len(unmatched_drops)} dropped {bank.upper()} headword(s) were not present in the "
+            f"generated data (typo or already removed?): {preview}"
         )
     return len(replaced), changed_files
 

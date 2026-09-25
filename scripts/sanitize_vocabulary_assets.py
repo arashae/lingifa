@@ -9,6 +9,7 @@ It never invents lexical data: when a collocation is doubtful, an empty list is 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,6 +96,12 @@ PROPER_NOUN_DEFINITION_PATTERNS = (
     "family name",
 )
 
+# Matched on a word boundary so ordinary words ending in a place name fragment do
+# not trip the rule (e.g. "electricity in electronics" is not "city in ").
+_PROPER_NOUN_DEFINITION_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(pattern) for pattern in PROPER_NOUN_DEFINITION_PATTERNS) + r")"
+)
+
 
 def looks_like_c2_proper_noun(row: dict) -> bool:
     if norm(row.get("cefrLevel", "")) != "c2":
@@ -103,7 +110,7 @@ def looks_like_c2_proper_noun(row: dict) -> bool:
     if any(any(marker in tag for marker in ("proper", "place", "name")) for tag in tags):
         return True
     definition = norm(row.get("englishDefinition", ""))
-    return any(pattern in definition for pattern in PROPER_NOUN_DEFINITION_PATTERNS)
+    return bool(_PROPER_NOUN_DEFINITION_RE.search(definition))
 
 
 def sanitize_row(row: dict) -> tuple[dict, int, bool]:

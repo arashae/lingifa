@@ -271,6 +271,21 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
         }
         self.assertFalse(is_generated_family(curated_row))
 
+    def test_c2_proper_noun_rule_ignores_words_ending_in_place_fragment(self) -> None:
+        # "electricity in ..." contains the substring "city in " but is not a place name.
+        false_positive = {
+            "cefrLevel": "C2",
+            "tags": [],
+            "englishDefinition": "A small semiconductor used to control electricity in a circuit.",
+        }
+        self.assertFalse(looks_like_c2_proper_noun(false_positive))
+        genuine = {
+            "cefrLevel": "C2",
+            "tags": [],
+            "englishDefinition": "A city in northern France known for its cathedral.",
+        }
+        self.assertTrue(looks_like_c2_proper_noun(genuine))
+
     def test_c2_proper_noun_downranking_rule(self) -> None:
         """Verify looks_like_c2_proper_noun correctly identifies proper names/places."""
         proper_row = {

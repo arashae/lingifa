@@ -505,6 +505,24 @@ class Tier4RealWorldApplicationScenariosTests(unittest.TestCase):
             self.assertLessEqual(len(card.get("collocations", [])), 4, f"Card {index} ({word}): too many collocations")
             self.assertGreater(card.get("frequencyRank", 0), 0, f"Card {index} ({word}): invalid frequency rank")
 
+    def test_learner_flashcard_usability_curated_batch_6(self) -> None:
+        pack_file = VOCAB_ROOT / "general" / "general_core_001.jsonl"
+        lines = pack_file.read_text(encoding="utf-8").splitlines()[450:500]
+        self.assertEqual(len(lines), 50)
+        for index, line in enumerate(lines, start=451):
+            card = json.loads(line)
+            word = card["word"]
+            self.assertIn(card["partOfSpeech"], POS_OK, f"Card {index} ({word}): invalid POS")
+            self.assertTrue(card.get("example"), f"Card {index} ({word}): missing example")
+            self.assertTrue(card.get("examplePersian"), f"Card {index} ({word}): missing example translation")
+            self.assertTrue(target_present(word, card["example"]), f"Card {index} ({word}): target missing from example")
+            self.assertIsNone(detect_script_or_encoding_defect(card["persianMeaning"]), f"Card {index} ({word}): bad Persian script")
+            self.assertIsNone(detect_script_or_encoding_defect(card["examplePersian"]), f"Card {index} ({word}): bad translation script")
+            self.assertNotIn("needs-collocation", card.get("tags", []), f"Card {index} ({word}): stale collocation tag")
+            self.assertGreaterEqual(len(card.get("collocations", [])), 2, f"Card {index} ({word}): too few collocations")
+            self.assertLessEqual(len(card.get("collocations", [])), 4, f"Card {index} ({word}): too many collocations")
+            self.assertGreater(card.get("frequencyRank", 0), 0, f"Card {index} ({word}): invalid frequency rank")
+
     def test_e2e_cli_execution_via_subprocess(self) -> None:
         """Verify CLI execution of scripts/validate_vocabulary_quality.py via subprocess."""
         cmd = [

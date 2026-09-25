@@ -38,3 +38,10 @@
 - Corrected POS/sense conflicts, WordNet-style fragments, empty closed-class cards, Persian gloss drift, and non-aligned bilingual examples.
 - Added only high-confidence collocations and removed stale `needs-collocation` tags.
 - Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.
+
+## Batch 6: cards 451–500
+
+- Reviewed every card in source order and selected dominant learner senses over rare gaming, anatomy, technical, or positional senses.
+- Corrected POS/sense conflicts, empty reflexive-pronoun cards, dictionary fragments, Persian gloss drift, and non-aligned bilingual examples.
+- Added only high-confidence collocations and removed stale `needs-collocation` tags.
+- Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.

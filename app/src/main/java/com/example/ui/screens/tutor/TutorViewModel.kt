@@ -75,7 +75,7 @@ class TutorViewModel(application: Application) : AndroidViewModel(application) {
             }.onFailure { error ->
                 val errorMsg = ChatMessage(
                     sender = "AI",
-                    text = "هوش مصنوعی در دسترس نیست: ${error.message ?: "کلید DeepSeek را در پروفایل بررسی کنید."}"
+                    text = "AI is unavailable: ${error.message ?: "check your DeepSeek key in Profile."}"
                 )
                 _uiState.value = _uiState.value.copy(messages = _uiState.value.messages + errorMsg)
             }

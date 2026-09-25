@@ -29,15 +29,15 @@ data class StreakInfo(
     val totalDaysPracticed: Int = 0,
     val totalXp: Int = 0,
     val weeklyDays: List<StreakDayItem> = emptyList(),
-    val motivationalMessageFa: String = "",
-    val streakLevelFa: String = "آغازگر",
+    val motivationalMessage: String = "",
+    val streakLevel: String = "Starter",
     val nextMilestone: StreakMilestone? = null,
     val unlockedMilestones: List<StreakMilestone> = emptyList()
 )
 
 data class StreakDayItem(
     val date: String,
-    val dayNameFa: String, // "ش", "ی", "د", "س", "چ", "پ", "ج"
+    val dayName: String, // "S", "M", "T", "W", "T", "F", "S"
     val dayNumber: String,
     val isCompleted: Boolean,
     val isToday: Boolean,
@@ -46,8 +46,8 @@ data class StreakDayItem(
 
 data class StreakMilestone(
     val requiredDays: Int,
-    val titleFa: String,
-    val descriptionFa: String,
+    val title: String,
+    val description: String,
     val badgeIcon: String,
     val isUnlocked: Boolean
 )
@@ -57,6 +57,6 @@ data class StreakUpdateResult(
     val newStreak: Int,
     val xpEarned: Int,
     val isNewMilestoneReached: Boolean,
-    val milestoneTitleFa: String? = null,
-    val messageFa: String
+    val milestoneTitle: String? = null,
+    val message: String
 )

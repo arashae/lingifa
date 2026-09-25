@@ -103,7 +103,7 @@ class IeltsSpeakingViewModel(application: Application) : AndroidViewModel(applic
 
     fun generateAiPrompt(topic: String = "Artificial Intelligence") {
         viewModelScope.launch {
-            _uiState.update { it.copy(statusMessage = "در حال تولید سوال و Cue Card جدید با هوش مصنوعی...") }
+            _uiState.update { it.copy(statusMessage = "Generating a new question and cue card with AI...") }
             val newPrompt = speakingRepository.generatePrompt(_uiState.value.selectedPart, topic)
             stopAllTimers()
             _uiState.update {
@@ -113,7 +113,7 @@ class IeltsSpeakingViewModel(application: Application) : AndroidViewModel(applic
                     feedback = null,
                     speakingTimerSeconds = 0,
                     prepTimerSeconds = if (newPrompt.part == 2) 60 else 0,
-                    statusMessage = "سوال جدید آیلتس آماده شد!"
+                    statusMessage = "New IELTS question is ready!"
                 )
             }
         }
@@ -209,7 +209,7 @@ class IeltsSpeakingViewModel(application: Application) : AndroidViewModel(applic
     fun evaluateSpeakingResponse() {
         val transcript = _uiState.value.candidateTranscript.trim()
         if (transcript.isBlank()) {
-            _uiState.update { it.copy(statusMessage = "لطفاً ابتدا صحبت کرده یا متن پاسخ انگلیسی خود را بنویسید.") }
+            _uiState.update { it.copy(statusMessage = "Record your answer or type your English response first.") }
             return
         }
 
@@ -228,7 +228,7 @@ class IeltsSpeakingViewModel(application: Application) : AndroidViewModel(applic
                     isEvaluating = false,
                     feedback = feedback,
                     streakResult = streakResult,
-                    statusMessage = "ارزیابی اسپیکینگ با موفقیت انجام و نمره آزمون ذخیره گردید (+۳۵ XP)!"
+                    statusMessage = "Speaking evaluated and the exam score was saved (+35 XP)!"
                 )
             }
         }

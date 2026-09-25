@@ -4,14 +4,35 @@
 Hard failures are limited to defects that should never ship: malformed rows, missing required
 bilingual/English data, invalid CEFR values, duplicate headwords inside a study bank, leftover
 synthetic-collocation families, and obvious C2 names/places that were not down-ranked.
-Soft coverage metrics (examples, IPA, collocations) are written to quality_report.json.
+Soft coverage metrics (examples, IPA, collocations) and semantic review heuristics are
+written to quality_report.json.
+
+CLI Options:
+  --file <path>        Validate specific JSONL file (relative to repo root, vocabulary root, or absolute).
+  --range <start>:<end> 1-based card line range filter (e.g. 1:100 or 301:400).
+  --strict             Elevate heuristic warning flags to fatal errors (exit code 1).
+  --report <path>      Custom report output path (defaults to app/src/main/assets/vocabulary/quality_report.json).
 """
 
 from __future__ import annotations
 
+import argparse
 import json
+import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+
+# Ensure UTF-8 stdout/stderr on Windows consoles to prevent encoding errors with Persian text
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+# Ensure scripts directory is on sys.path for importing sister modules
+scripts_dir = Path(__file__).resolve().parent
+if str(scripts_dir) not in sys.path:
+    sys.path.insert(0, str(scripts_dir))
 
 from sanitize_vocabulary_assets import (
     VOCAB_ROOT,
@@ -22,11 +43,104 @@ from sanitize_vocabulary_assets import (
 
 VALID_CEFR = {"A1", "A2", "B1", "B2", "C1", "C2"}
 REPORT_PATH = VOCAB_ROOT / "quality_report.json"
-POS_OK = {"noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
-          "modal verb", "modal auxiliary", "auxiliary verb", "article", "interjection", "prefix", "suffix",
-          "be-verb", "have-verb", "do-verb", "infinitive-to"}
-RISKY_SENSES = {"it": "pronoun", "or": "conjunction", "may": "modal", "can": "modal",
-                "might": "modal", "must": "modal", "he": "pronoun"}
+POS_OK = {
+    "noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
+    "modal verb", "modal auxiliary", "auxiliary verb", "article", "interjection", "prefix", "suffix",
+    "be-verb", "have-verb", "do-verb", "infinitive-to"
+}
+RISKY_SENSES = {
+    "it": "pronoun", "or": "conjunction", "may": "modal", "can": "modal",
+    "might": "modal", "must": "modal", "he": "pronoun"
+}
+
+# High-frequency irregular forms and inflection dictionaries
+IRREGULAR_FORMS: dict[str, set[str]] = {
+    "hold": {"held", "holds", "holding"},
+    "lose": {"lost", "loses", "losing"},
+    "send": {"sent", "sends", "sending"},
+    "buy": {"bought", "buys", "buying"},
+    "sell": {"sold", "sells", "selling"},
+    "become": {"became", "becomes", "becoming"},
+    "give": {"gave", "given", "gives", "giving"},
+    "take": {"took", "taken", "takes", "taking"},
+    "stand": {"stood", "stands", "standing"},
+    "feel": {"felt", "feels", "feeling"},
+    "leave": {"left", "leaves", "leaving"},
+    "mean": {"meant", "means", "meaning"},
+    "tell": {"told", "tells", "telling"},
+    "keep": {"kept", "keeps", "keeping"},
+    "build": {"built", "builds", "building"},
+    "pay": {"paid", "pays", "paying"},
+    "meet": {"met", "meets", "meeting"},
+    "lead": {"led", "leads", "leading"},
+    "be": {"am", "is", "are", "was", "were", "been", "being"},
+    "have": {"has", "had", "having"},
+    "do": {"does", "did", "done", "doing"},
+    "go": {"goes", "went", "gone", "going"},
+    "see": {"saw", "seen", "sees", "seeing"},
+    "come": {"came", "comes", "coming"},
+    "say": {"said", "says", "saying"},
+    "get": {"got", "gotten", "gets", "getting"},
+    "make": {"made", "makes", "making"},
+    "know": {"knew", "known", "knows", "knowing"},
+    "think": {"thought", "thinks", "thinking"},
+    "find": {"found", "finds", "finding"},
+    "run": {"ran", "runs", "running"},
+    "write": {"wrote", "written", "writes", "writing"},
+    "read": {"reading", "reads"},
+    "speak": {"spoke", "spoken", "speaks", "speaking"},
+    "break": {"broke", "broken", "breaks", "breaking"},
+    "choose": {"chose", "chosen", "chooses", "choosing"},
+    "draw": {"drew", "drawn", "draws", "drawing"},
+    "drive": {"drove", "driven", "drives", "driving"},
+    "eat": {"ate", "eaten", "eats", "eating"},
+    "fall": {"fell", "fallen", "falls", "falling"},
+    "grow": {"grew", "grown", "grows", "growing"},
+    "hear": {"heard", "hears", "hearing"},
+    "hide": {"hid", "hidden", "hides", "hiding"},
+    "rise": {"rose", "risen", "rises", "rising"},
+    "seek": {"sought", "seeks", "seeking"},
+    "show": {"showed", "shown", "shows", "showing"},
+    "sit": {"sat", "sits", "sitting"},
+    "spend": {"spent", "spends", "spending"},
+    "teach": {"taught", "teaches", "teaching"},
+    "wear": {"wore", "worn", "wears", "wearing"},
+    "win": {"won", "wins", "winning"},
+    "understand": {"understood", "understands", "understanding"},
+    "bring": {"brought", "brings", "bringing"},
+    "begin": {"began", "begun", "begins", "beginning"},
+    # Irregular plurals
+    "child": {"children"},
+    "man": {"men"},
+    "woman": {"women"},
+    "person": {"people"},
+    "foot": {"feet"},
+    "tooth": {"teeth"},
+    "mouse": {"mice"},
+    "criterion": {"criteria"},
+    "phenomenon": {"phenomena"},
+    "datum": {"data"},
+    "medium": {"media"},
+    "analysis": {"analyses"},
+    "basis": {"bases"},
+    "crisis": {"crises"},
+    "hypothesis": {"hypotheses"},
+}
+
+# Bidirectional indexing: map irregular inflections back to headword lemma
+_REVERSE_IRREGULAR: dict[str, set[str]] = {}
+for _base, _forms in IRREGULAR_FORMS.items():
+    for _form in _forms:
+        _REVERSE_IRREGULAR.setdefault(_form, set()).add(_base)
+for _form, _bases in _REVERSE_IRREGULAR.items():
+    IRREGULAR_FORMS.setdefault(_form, set()).update(_bases)
+
+URDU_NON_PERSIAN_GLYPHS = {
+    "\u0688", "\u0691", "\u06ba", "\u06d2", "\u06d3",
+    "\u0679", "\u06be", "\u06c1", "\u06c2", "\u06c3",
+    "\u06bb", "\u068c", "\u068d", "\u067b", "\u0684",
+    "\u0683", "\u06a6",
+}
 
 
 def bank_key(path: Path) -> str:
@@ -48,7 +162,186 @@ def is_generated_family(row: dict) -> bool:
     return matches >= 2 and matches * 2 >= len(collocations)
 
 
-def main() -> None:
+def generate_inflections(token: str) -> set[str]:
+    t = token.lower()
+    if not t:
+        return set()
+    forms = {t, t + "s", t + "es", t + "ed", t + "d", t + "ing"}
+
+    # -e endings: live -> lived, living
+    if t.endswith("e"):
+        forms.update({t + "d", t[:-1] + "ed", t[:-1] + "ing"})
+        if t.endswith("ee"):
+            forms.update({t + "ing", t + "d"})
+        elif t.endswith("ie"):
+            forms.update({t[:-2] + "ying", t + "d"})
+
+    # -y endings: try -> tried, tries
+    if t.endswith("y"):
+        if len(t) >= 2 and t[-2] not in "aeiou":
+            stem = t[:-1]
+            forms.update({stem + "ies", stem + "ied", stem + "ier", stem + "iest", stem + "iness", stem + "ily"})
+        else:
+            forms.update({t + "s", t + "ed", t + "ing"})
+
+    # Consonant doubling: stop -> stopped, running, fitted
+    vowels = "aeiou"
+    consonants = "bcdfghjklmnpqrstvz"
+    if len(t) >= 3 and t[-1] in consonants and t[-2] in vowels and t[-3] not in vowels:
+        doubled = t + t[-1]
+        forms.update({doubled + "ed", doubled + "ing", doubled + "er", doubled + "en", doubled + "es"})
+    elif len(t) == 2 and t[-1] in consonants and t[-2] in vowels:
+        doubled = t + t[-1]
+        forms.update({doubled + "ed", doubled + "ing", doubled + "er", doubled + "en"})
+
+    # Reverse stripping of suffixes to recover potential root
+    if t.endswith("ed"):
+        forms.update({t[:-2], t[:-1]})
+    if t.endswith("ing"):
+        forms.update({t[:-3], t[:-3] + "e"})
+    if t.endswith("ies") or t.endswith("ied"):
+        forms.add(t[:-3] + "y")
+    if t.endswith("s") and not t.endswith("ss"):
+        forms.add(t[:-1])
+
+    # Irregular forms
+    if t in IRREGULAR_FORMS:
+        forms.update(IRREGULAR_FORMS[t])
+
+    return forms
+
+
+def target_present(word: str, example: str) -> bool:
+    if not word:
+        return True
+    if not example:
+        return False
+    tokens = set(re.findall(r"[a-z0-9]+", example.lower()))
+    parts = re.findall(r"[a-z0-9]+", word.lower())
+    if not parts:
+        return True
+    if len(parts) == 1:
+        forms = generate_inflections(parts[0])
+        return bool(tokens.intersection(forms))
+
+    # Multi-part / hyphenated / compound words
+    norm_word = " ".join(parts)
+    norm_ex = " ".join(re.findall(r"[a-z0-9]+", example.lower()))
+    if norm_word in norm_ex or "".join(parts) in tokens:
+        return True
+    if all(bool(tokens.intersection(generate_inflections(p))) for p in parts):
+        return True
+    return False
+
+
+def detect_script_or_encoding_defect(text: str) -> str | None:
+    if not text:
+        return None
+    if "\ufffd" in text:
+        return "replacement character \ufffd detected"
+    if any(ch in URDU_NON_PERSIAN_GLYPHS for ch in text):
+        return "Urdu-specific or non-Persian glyph detected"
+    for ch in text:
+        # Hangul (Syllables, Jamo, Compatibility Jamo)
+        if ("\uac00" <= ch <= "\ud7af") or ("\u1100" <= ch <= "\u11ff") or ("\u3130" <= ch <= "\u318f"):
+            return "Hangul script detected"
+        # CJK Ideographs and Japanese Kana
+        if ("\u4e00" <= ch <= "\u9fff") or ("\u3400" <= ch <= "\u4dbf") or ("\u3040" <= ch <= "\u30ff"):
+            return "CJK or Japanese script detected"
+        # Other unexpected foreign scripts (Cyrillic, Devanagari, Greek, Thai)
+        if ("\u0400" <= ch <= "\u04ff") or ("\u0900" <= ch <= "\u097f") or ("\u0370" <= ch <= "\u03ff") or ("\u0e00" <= ch <= "\u0e7f"):
+            return "unexpected foreign script detected"
+        # Invisible characters
+        if ch in ("\u200b", "\u200d", "\ufeff"):
+            return "unexpected zero-width/invisible character detected"
+    # Persian ZWNJ normalization checks
+    if "\u200c\u200c" in text:
+        return "consecutive ZWNJ detected"
+    if re.search(r"\s\u200c|\u200c\s", text):
+        return "ZWNJ adjacent to whitespace detected"
+    if text.startswith("\u200c") or text.endswith("\u200c"):
+        return "boundary ZWNJ detected"
+    return None
+
+
+def parse_range(range_spec: str) -> tuple[int, int]:
+    delim = ":" if ":" in range_spec else "-"
+    parts = range_spec.split(delim)
+    if len(parts) != 2:
+        raise ValueError(f"Invalid range specification '{range_spec}'. Expected format 'start:end' (e.g. '1:100').")
+    try:
+        start = int(parts[0].strip())
+        end = int(parts[1].strip())
+    except ValueError as exc:
+        raise ValueError(f"Range values must be integers: '{range_spec}'") from exc
+    if start < 1:
+        raise ValueError(f"Range start must be >= 1, got {start}")
+    if end < start:
+        raise ValueError(f"Range end ({end}) cannot be less than start ({start})")
+    return start, end
+
+
+def resolve_file(file_arg: str, vocab_root: Path = VOCAB_ROOT) -> Path:
+    p = Path(file_arg)
+    if p.is_file():
+        return p.resolve()
+    p_vocab = vocab_root / file_arg
+    if p_vocab.is_file():
+        return p_vocab.resolve()
+    matches = list(vocab_root.rglob(file_arg))
+    if len(matches) == 1 and matches[0].is_file():
+        return matches[0].resolve()
+    elif len(matches) > 1:
+        for m in matches:
+            if m.name == file_arg:
+                return m.resolve()
+        return matches[0].resolve()
+    raise FileNotFoundError(f"Vocabulary file not found: '{file_arg}'")
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Quality gate for bundled LinguaFa vocabulary assets."
+    )
+    parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="Validate specific JSONL file (path relative to repo root, vocabulary root, or absolute).",
+    )
+    parser.add_argument(
+        "--range",
+        dest="range_spec",
+        type=str,
+        default=None,
+        help="1-based card line range filter in format 'start:end' (e.g. 1:100 or 301:400).",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        default=False,
+        help="Elevate heuristic warning flags to fatal errors (exit code 1).",
+    )
+    parser.add_argument(
+        "--report",
+        type=str,
+        default=None,
+        help="Custom output path for JSON quality report. Defaults to app/src/main/assets/vocabulary/quality_report.json.",
+    )
+    return parser.parse_args(argv)
+
+
+def run_validation(
+    files: list[Path] | None = None,
+    line_range: tuple[int, int] | None = None,
+    strict: bool = False,
+    report_path: Path | None = None,
+) -> tuple[dict, list[str]]:
+    if files is None:
+        files = sorted(VOCAB_ROOT.rglob("*.jsonl"))
+    if report_path is None:
+        report_path = REPORT_PATH
+
     errors: list[str] = []
     counts = Counter()
     per_bank_words: dict[str, set[str]] = defaultdict(set)
@@ -61,34 +354,34 @@ def main() -> None:
 
     def flag(kind: str, path: Path, line_no: int, word: str, detail: str) -> None:
         semantic_counts[kind] += 1
+        rel_posix = path.relative_to(VOCAB_ROOT).as_posix()
         if len(semantic_findings) < 500:
-            semantic_findings.append({"kind": kind, "file": str(path.relative_to(VOCAB_ROOT)),
-                                      "line": line_no, "word": word, "detail": detail})
+            semantic_findings.append({
+                "kind": kind,
+                "file": rel_posix,
+                "line": line_no,
+                "word": word,
+                "detail": detail,
+            })
+        if strict:
+            errors.append(f"{rel_posix}:{line_no}: {word}: [{kind}] {detail}")
 
-    def target_present(word: str, example: str) -> bool:
-        import re
-        lemma = re.sub(r"[^a-z]", "", word.lower())
-        tokens = set(re.findall(r"[a-z]+", example.lower()))
-        if not lemma:
-            return True
-        forms = {lemma, lemma + "s", lemma + "es", lemma + "ed", lemma + "d", lemma + "ing"}
-        if lemma.endswith("e"):
-            forms.update({lemma[:-1] + "ed", lemma[:-1] + "ing"})
-        if lemma.endswith("y"):
-            forms.add(lemma[:-1] + "ies")
-        return bool(tokens.intersection(forms))
-
-    files = sorted(VOCAB_ROOT.rglob("*.jsonl"))
     for path in files:
         bank = bank_key(path)
+        rel_posix = path.relative_to(VOCAB_ROOT).as_posix()
         for line_no, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if line_range is not None:
+                start_l, end_l = line_range
+                if line_no < start_l or line_no > end_l:
+                    continue
+
             line = raw_line.strip()
             if not line or line.startswith("#"):
                 continue
             try:
                 row = json.loads(line)
             except json.JSONDecodeError as exc:
-                errors.append(f"{path}:{line_no}: malformed JSON: {exc}")
+                errors.append(f"{rel_posix}:{line_no}: malformed JSON: {exc}")
                 continue
 
             counts["rows"] += 1
@@ -100,16 +393,16 @@ def main() -> None:
             cefr = str(row.get("cefrLevel", "")).strip().upper()
 
             if not word:
-                errors.append(f"{path}:{line_no}: empty word")
+                errors.append(f"{rel_posix}:{line_no}: empty word")
                 continue
             if not meaning:
-                errors.append(f"{path}:{line_no}: {word}: missing Persian meaning")
+                errors.append(f"{rel_posix}:{line_no}: {word}: missing Persian meaning")
             if not definition:
-                errors.append(f"{path}:{line_no}: {word}: missing English definition")
+                errors.append(f"{rel_posix}:{line_no}: {word}: missing English definition")
                 if len(definition_missing_samples) < 20:
                     definition_missing_samples.append(f"{bank}:{word}")
             if cefr not in VALID_CEFR:
-                errors.append(f"{path}:{line_no}: {word}: invalid CEFR '{cefr}'")
+                errors.append(f"{rel_posix}:{line_no}: {word}: invalid CEFR '{cefr}'")
 
             pos = str(row.get("partOfSpeech", "")).strip().lower()
             if not pos or pos in {"undefined", "word", "unknown"} or pos not in POS_OK:
@@ -123,10 +416,15 @@ def main() -> None:
                 flag("zero_frequency_rank", path, line_no, word, "frequencyRank is 0")
             if bank == "general" and cefr == "C2" and int(row.get("frequencyRank") or 0) < 500:
                 flag("early_c2_outlier", path, line_no, word, "C2 card appears early in General bank")
+
             example_persian = str(row.get("examplePersian", "")).strip()
-            if any("\ufffd" in value or any("\uac00" <= ch <= "\ud7af" or "\u4e00" <= ch <= "\u9fff" for ch in value)
-                   for value in (meaning, example_persian)):
-                flag("unexpected_script_or_encoding", path, line_no, word, "inspect Persian fields")
+            # Enhanced foreign script, encoding, and ZWNJ detection
+            for field_name, value in (("persianMeaning", meaning), ("examplePersian", example_persian)):
+                defect = detect_script_or_encoding_defect(value)
+                if defect:
+                    flag("unexpected_script_or_encoding", path, line_no, word, f"{field_name}: {defect}")
+                    break
+
             if example and not example_persian:
                 flag("missing_example_translation", path, line_no, word, "English example has no translation")
             if example and not target_present(word, example):
@@ -153,14 +451,14 @@ def main() -> None:
                 counts["with_collocations"] += 1
 
             if is_generated_family(row):
-                errors.append(f"{path}:{line_no}: {word}: synthetic collocation family remains")
+                errors.append(f"{rel_posix}:{line_no}: {word}: synthetic collocation family remains")
 
             if looks_like_c2_proper_noun(row):
                 counts["c2_suspicious_names_places"] += 1
                 tags = {str(tag).strip() for tag in row.get("tags", [])}
                 order = int(row.get("learningOrder") or 0)
                 if "low-study-priority" not in tags or order < 100_000:
-                    errors.append(f"{path}:{line_no}: {word}: C2 name/place not down-ranked")
+                    errors.append(f"{rel_posix}:{line_no}: {word}: C2 name/place not down-ranked")
                 elif len(proper_noun_samples) < 20:
                     proper_noun_samples.append(word)
 
@@ -194,7 +492,32 @@ def main() -> None:
         "errorCount": len(errors),
         "errors": errors[:100],
     }
-    REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return report, errors
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+
+    files = None
+    if args.file:
+        files = [resolve_file(args.file)]
+
+    line_range = None
+    if args.range_spec:
+        line_range = parse_range(args.range_spec)
+
+    report_path = Path(args.report) if args.report else REPORT_PATH
+
+    report, errors = run_validation(
+        files=files,
+        line_range=line_range,
+        strict=args.strict,
+        report_path=report_path,
+    )
+
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
     if errors:

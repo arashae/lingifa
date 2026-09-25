@@ -80,7 +80,7 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
                         coherenceScore = "N/A",
                         lexicalScore = "N/A",
                         grammarScore = "N/A",
-                        overallFeedbackFa = "ارزیابی هوش مصنوعی در دسترس نبود: ${error.message ?: "اتصال یا کلید API را بررسی کنید."}",
+                        overallFeedbackFa = "AI evaluation was unavailable: ${error.message ?: "check your connection or API key."}",
                         strengthsFa = emptyList(),
                         mainIssuesFa = emptyList(),
                         sentenceCorrections = emptyList(),
@@ -113,21 +113,21 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
             val feedback = result.fold(
                 onSuccess = { evaluation ->
                     buildString {
-                        append("برآورد متنی: ${evaluation.estimatedBand}\n\n")
-                        if (evaluation.fluencyFeedbackFa.isNotBlank()) append("روانی/انسجام: ${evaluation.fluencyFeedbackFa}\n\n")
-                        if (evaluation.lexicalFeedbackFa.isNotBlank()) append("واژگان: ${evaluation.lexicalFeedbackFa}\n\n")
-                        if (evaluation.grammarFeedbackFa.isNotBlank()) append("گرامر: ${evaluation.grammarFeedbackFa}\n\n")
+                        append("Estimated band: ${evaluation.estimatedBand}\n\n")
+                        if (evaluation.fluencyFeedbackFa.isNotBlank()) append("Fluency & coherence: ${evaluation.fluencyFeedbackFa}\n\n")
+                        if (evaluation.lexicalFeedbackFa.isNotBlank()) append("Vocabulary: ${evaluation.lexicalFeedbackFa}\n\n")
+                        if (evaluation.grammarFeedbackFa.isNotBlank()) append("Grammar: ${evaluation.grammarFeedbackFa}\n\n")
                         append(evaluation.pronunciationHintsFa.ifBlank {
-                            "برای ارزیابی تلفظ باید صدای واقعی بررسی شود؛ متن به‌تنهایی برای نمره‌دادن تلفظ کافی نیست."
+                            "Pronunciation needs the actual audio; text alone is not enough to score it."
                         })
                         if (evaluation.betterPhrasings.isNotEmpty()) {
-                            append("\n\nعبارت‌های بهتر:\n")
+                            append("\n\nBetter phrasings:\n")
                             evaluation.betterPhrasings.forEach { append("• $it\n") }
                         }
                     }.trim()
                 },
                 onFailure = { error ->
-                    "بازخورد اسپیکینگ در دسترس نیست: ${error.message ?: "کلید DeepSeek یا اتصال اینترنت را بررسی کنید."}"
+                    "Speaking feedback is unavailable: ${error.message ?: "check your DeepSeek key or internet connection."}"
                 }
             )
 
@@ -153,11 +153,11 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             // This five-question quiz is only a rough in-app starting estimate, not a formal CEFR assessment.
             val estimated = when (newScore) {
-                5 -> "C1 (برآورد اولیه)"
-                4 -> "B2 (برآورد اولیه)"
-                3 -> "B1 (برآورد اولیه)"
-                2 -> "A2 (برآورد اولیه)"
-                else -> "A1 (برآورد اولیه)"
+                5 -> "C1 (rough estimate)"
+                4 -> "B2 (rough estimate)"
+                3 -> "B1 (rough estimate)"
+                2 -> "A2 (rough estimate)"
+                else -> "A1 (rough estimate)"
             }
             _uiState.value = _uiState.value.copy(
                 diagnosticScore = newScore,

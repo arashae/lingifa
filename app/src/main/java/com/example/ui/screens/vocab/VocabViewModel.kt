@@ -268,7 +268,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             val profileDao = db.userProfileDao()
             val current = profileDao.getProfileSync() ?: UserProfile()
             profileDao.insertOrUpdate(current.copy(currentLevel = level))
-            _statusMessage.value = "مسیر یادگیری از سطح $level انتخاب شد."
+            _statusMessage.value = "Learning path set to level $level."
         }
     }
 
@@ -282,8 +282,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         val activePackId = _activeMasterSyncPackId.value
         if (activePackId != null && activePackId != packId) {
             val activeTitle = uiState.value.packs.firstOrNull { it.id == activePackId }?.titleFa
-                ?: "بانک فعلی"
-            _statusMessage.value = "ابتدا دانلود «$activeTitle» را تمام کنید؛ برای جلوگیری از محدودیت سرور، بانک‌ها همزمان دانلود نمی‌شوند."
+                ?: "the current pack"
+            _statusMessage.value = "Finish downloading \"$activeTitle\" first; packs are downloaded one at a time to stay within server limits."
             return
         }
 
@@ -296,7 +296,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                 installed = pack?.installedWordCount ?: 0,
                 target = pack?.targetWordCount ?: 0,
                 stage = "starting",
-                message = "شروع آماده‌سازی بانک واژگان…"
+                message = "Preparing the vocabulary bank..."
             )
         )
 
@@ -328,17 +328,17 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                         target = result.target,
                         stage = if (result.complete) "complete" else "partial",
                         message = if (result.complete) {
-                            "بانک کامل شد و برای استفاده آفلاین آماده است."
+                            "Pack complete and ready for offline use."
                         } else {
-                            "دانلود تا ${result.installed} واژه پیش رفت؛ برای ادامه دوباره بزن."
+                            "Downloaded ${result.installed} words so far; tap again to continue."
                         },
                         warningCount = result.warnings.size
                     )
                 )
                 _statusMessage.value = if (result.complete) {
-                    "بانک واژگان با ${result.installed} واژه تکمیل شد."
+                    "Vocabulary pack completed with ${result.installed} words."
                 } else {
-                    "${result.installed} از ${result.target} واژه ذخیره شد؛ دانلود قابل ادامه است."
+                    "Saved ${result.installed} of ${result.target} words; the download can be resumed."
                 }
             } catch (t: Throwable) {
                 val current = _packSyncStates.value[packId] ?: PackSyncUiState()
@@ -347,10 +347,10 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                     current.copy(
                         isRunning = false,
                         stage = "error",
-                        message = "دانلود متوقف شد: ${t.message ?: "خطای شبکه"}"
+                        message = "Download stopped: ${t.message ?: "network error"}"
                     )
                 )
-                _statusMessage.value = "خطا در دانلود بانک واژگان: ${t.message ?: "ارتباط شبکه"}"
+                _statusMessage.value = "Vocabulary pack download failed: ${t.message ?: "network unavailable"}"
             } finally {
                 if (_activeMasterSyncPackId.value == packId) {
                     _activeMasterSyncPackId.value = null
@@ -401,7 +401,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteWord(item: VocabularyItem) {
         viewModelScope.launch {
             repo.delete(item)
-            _statusMessage.value = "لغت '${item.word}' حذف شد."
+            _statusMessage.value = "'${item.word}' deleted."
         }
     }
 
@@ -417,7 +417,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val existing = repo.checkDuplicate(word)
             if (existing != null) {
-                _statusMessage.value = "این لغت قبلاً در لغات شما وجود داشته است!"
+                _statusMessage.value = "This word is already in your vocabulary!"
                 return@launch
             }
 
@@ -432,7 +432,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                 source = "Manual"
             )
             repo.insert(newItem)
-            _statusMessage.value = "لغت '${word.trim()}' با موفقیت افزوده شد."
+            _statusMessage.value = "'${word.trim()}' added."
         }
     }
 
@@ -443,10 +443,10 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             _isAiGenerating.value = false
             result.onSuccess {
                 onResult(it)
-                _statusMessage.value = "اطلاعات لغت توسط هوش مصنوعی تکمیل شد."
+                _statusMessage.value = "Word details filled in by AI."
             }.onFailure { err ->
                 onResult(null)
-                _statusMessage.value = "خطا در هوش مصنوعی: ${err.message}"
+                _statusMessage.value = "AI error: ${err.message}"
             }
         }
     }
@@ -469,9 +469,9 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
                 _aiPreview.value = previewItems
-                _statusMessage.value = "${previewItems.size} لغت توسط هوش مصنوعی تولید شد. پیش‌نمایش را بررسی فرمایید."
+                _statusMessage.value = "AI generated ${previewItems.size} words. Review the preview."
             }.onFailure { err ->
-                _statusMessage.value = "خطا در تولید لغات: ${err.message}"
+                _statusMessage.value = "Word generation failed: ${err.message}"
             }
         }
     }
@@ -495,7 +495,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             val selected = _aiPreview.value.filter { it.isSelected }
             val count = repo.importItems(selected, duplicateAction)
             _aiPreview.value = emptyList()
-            _statusMessage.value = "$count لغت با موفقیت وارد لغات شما شد."
+            _statusMessage.value = "$count words imported into your vocabulary."
         }
     }
 
@@ -517,7 +517,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             _filePreview.value = parsed
-            _statusMessage.value = "${parsed.size} لغت استخراج شد. لطفاً پیش‌نمایش را بررسی کنید."
+            _statusMessage.value = "Extracted ${parsed.size} words. Please review the preview."
         }
     }
 
@@ -540,7 +540,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             val selected = _filePreview.value.filter { it.isSelected }
             val count = repo.importItems(selected, duplicateAction)
             _filePreview.value = emptyList()
-            _statusMessage.value = "$count لغت با موفقیت ذخیره گردید."
+            _statusMessage.value = "$count words saved."
         }
     }
 

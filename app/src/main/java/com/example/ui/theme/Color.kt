@@ -40,3 +40,25 @@ val DarkPrimaryContainer = Color(0xFF1B4837)
 val DarkOnBackground = Color(0xFFE5EEE9)
 val DarkMuted = Color(0xFFA7B8B0)
 val DarkBorder = Color(0xFF304039)
+
+/**
+ * Semantic accents. Replaces the ad-hoc hex values that were hardcoded in
+ * individual screens, so light/dark stays consistent everywhere.
+ */
+object Accent {
+    val danger = Color(0xFFDC2626)
+    val dangerSoft = Color(0xFFFEE2E2)
+    val dangerOnSoft = Color(0xFF991B1B)
+    val warning = Color(0xFFD97706)
+    val warningSoft = Color(0xFFFEF3C7)
+    val warningOnSoft = Color(0xFF92400E)
+    val success = Color(0xFF16A34A)
+    val successSoft = Color(0xFFDCFCE7)
+    val successOnSoft = Color(0xFF166534)
+    val info = Color(0xFF2563EB)
+    val infoSoft = Color(0xFFDBEAFE)
+    val infoOnSoft = Color(0xFF1E40AF)
+    val accent = Color(0xFF8B5CF6)
+    val accentSoft = Color(0xFFEDE9FE)
+    val streak = Color(0xFFEA580C)
+}

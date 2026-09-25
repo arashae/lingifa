@@ -1,41 +1,34 @@
 package com.example.ui.screens.vocab
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,18 +38,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
+import com.example.data.model.VocabularySense
 import com.example.srs.ReviewRating
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
+import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
+import com.example.ui.components.HairLine
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.theme.AccentGold
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.TagChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun WordDetailScreen(
@@ -70,10 +71,10 @@ fun WordDetailScreen(
     val senses by sensesFlow.collectAsState(initial = emptyList())
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
-    DisposableEffect(tts) { onDispose { tts.shutdown() } }
-
     var userSelectedTab by remember(vocabId) { mutableStateOf<Int?>(null) }
     var feedbackMessage by remember(vocabId) { mutableStateOf<String?>(null) }
+
+    DisposableEffect(tts) { onDispose { tts.shutdown() } }
 
     EnglishLtrLayout {
         Scaffold(
@@ -84,11 +85,15 @@ fun WordDetailScreen(
                     onBack = onBack,
                     actions = {
                         item?.let { current ->
-                            IconButton(onClick = { viewModel.toggleFavorite(current) }) {
+                            IconButton(
+                                onClick = { viewModel.toggleFavorite(current) },
+                                modifier = Modifier.size(Dimens.minTapTarget)
+                            ) {
                                 Icon(
                                     imageVector = if (current.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = "Favorite",
-                                    tint = if (current.isFavorite) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                    contentDescription = if (current.isFavorite) "Remove from favorites" else "Add to favorites",
+                                    tint = if (current.isFavorite) Accent.warning else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(Dimens.iconMd)
                                 )
                             }
                         }
@@ -99,10 +104,18 @@ fun WordDetailScreen(
             val currentWord = item
             if (currentWord == null) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Loading word…")
+                    Text(
+                        text = "Loading word…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 return@Scaffold
             }
@@ -115,8 +128,8 @@ fun WordDetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Dimens.screenGutter, vertical = Dimens.space10),
+                verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
             ) {
                 WordHeroCard(
                     item = currentWord,
@@ -137,57 +150,29 @@ fun WordDetailScreen(
                 } else {
                     DefinitionCard(
                         item = currentWord,
-                        englishFirst = selectedTab == 1
-                    )
-
-                    if (currentWord.example.isNotBlank()) {
-                        ExampleCard(
-                            example = currentWord.example,
-                            translation = currentWord.examplePersian,
-                            onPronounce = { tts.speak(currentWord.example) }
-                        )
-                    }
-                }
-
-                if (currentWord.collocations.isNotEmpty()) {
-                    DetailListCard(
-                        title = "Collocations",
-                        subtitle = "High-frequency natural combinations",
-                        items = currentWord.collocations
+                        englishFirst = selectedTab == 1,
+                        onPronounceExample = { tts.speak(currentWord.example) }
                     )
                 }
 
-                if (currentWord.synonyms.isNotEmpty()) {
-                    DetailListCard(
-                        title = "Synonyms",
-                        subtitle = "Related meaning words",
-                        items = currentWord.synonyms
-                    )
-                }
-
-                if (currentWord.wordFamily.isNotEmpty()) {
-                    DetailListCard(
-                        title = "Word Family",
-                        subtitle = "Related forms and derivatives",
-                        items = currentWord.wordFamily
-                    )
-                }
+                RelatedLanguageCard(
+                    collocations = currentWord.collocations,
+                    synonyms = currentWord.synonyms,
+                    wordFamily = currentWord.wordFamily
+                )
 
                 if (currentWord.commonMistakes.isNotBlank()) {
                     CommonMistakeCard(currentWord.commonMistakes)
                 }
 
-                ExamRelevanceCard(
+                StudyActionsCard(
                     ielts = currentWord.ieltsRelevance,
                     toefl = currentWord.toeflRelevance,
-                    gre = currentWord.greRelevance
-                )
-
-                ReviewActionCard(
+                    gre = currentWord.greRelevance,
                     feedbackMessage = feedbackMessage,
                     onKnown = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD)
-                        feedbackMessage = "Saved: scheduled for optimal spaced review interval."
+                        feedbackMessage = "Saved: scheduled for the optimal spaced-review interval."
                     },
                     onHard = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
@@ -195,11 +180,9 @@ fun WordDetailScreen(
                     },
                     onPractice = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN)
-                        feedbackMessage = "Saved: added to upcoming review queue."
+                        feedbackMessage = "Saved: added to the upcoming review queue."
                     }
                 )
-
-                Spacer(modifier = Modifier.height(22.dp))
             }
         }
     }
@@ -207,63 +190,63 @@ fun WordDetailScreen(
 
 @Composable
 private fun WordHeroCard(item: VocabularyItem, onPronounce: () -> Unit) {
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
+        padding = Dimens.cardPadding,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = item.word,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        if (item.ipa.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = item.ipa,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.68f)
-                            )
-                        }
-                        if (item.partOfSpeech.isNotBlank() && item.partOfSpeech != "word") {
-                            Spacer(modifier = Modifier.height(5.dp))
-                            Text(
-                                text = item.partOfSpeech,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
-                            )
-                        }
-                    }
-                    CefrBadge(level = item.cefrLevel)
-                }
-            }
-
-            Surface(
-                onClick = onPronounce,
-                color = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(12.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space10)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                verticalAlignment = Alignment.Top
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space2)
                 ) {
-                    Icon(Icons.Default.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(7.dp))
-                    Text("Pronounce", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        text = item.word,
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (item.ipa.isNotBlank()) {
+                        Text(
+                            text = item.ipa,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (item.partOfSpeech.isNotBlank() && item.partOfSpeech != "word") {
+                        Text(
+                            text = item.partOfSpeech,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.76f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
+                CefrBadge(level = item.cefrLevel)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+            ) {
+                AudioSpeakerButton(onClick = onPronounce)
+                Text(
+                    text = "Listen to pronunciation",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -287,52 +270,56 @@ private fun LanguageTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
         Tab(
             selected = selectedTab == 0,
             onClick = { onSelected(0) },
-            text = { Text("Persian", style = MaterialTheme.typography.labelLarge) }
+            text = {
+                Text(
+                    text = "Persian",
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         )
         Tab(
             selected = selectedTab == 1,
             onClick = { onSelected(1) },
-            text = { Text("English", style = MaterialTheme.typography.labelLarge) }
+            text = {
+                Text(
+                    text = "English",
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         )
     }
 }
 
 @Composable
 private fun WordSensesCard(
-    senses: List<com.example.data.model.VocabularySense>,
+    senses: List<VocabularySense>,
     englishFirst: Boolean,
     onPronounceExample: (String) -> Unit
 ) {
-    SectionCard(title = "Word Senses & Contexts (${senses.size} Meanings)") {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(
+            title = "Word Senses & Contexts",
+            subtitle = "${senses.size} meanings"
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
             senses.forEachIndexed { index, sense ->
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                AppInset(padding = Dimens.space8) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.space6)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = "Sense ${index + 1}" + if (sense.partOfSpeech.isNotBlank()) " • ${sense.partOfSpeech}" else "",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
+                            TagChip(
+                                text = "Sense ${index + 1}${sense.partOfSpeech.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""}",
+                                modifier = Modifier.weight(1f),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                             if (sense.cefrLevel.isNotBlank()) {
                                 CefrBadge(level = sense.cefrLevel)
                             }
@@ -340,106 +327,100 @@ private fun WordSensesCard(
 
                         if (englishFirst) {
                             if (sense.englishDefinition.isNotBlank()) {
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                    Text(
-                                        text = sense.englishDefinition,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Start
-                                    )
-                                }
+                                Text(
+                                    text = sense.englishDefinition,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                             if (sense.persianMeaning.isNotBlank()) {
-                                Text(
-                                    text = sense.persianMeaning,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                PersianContentRtl {
+                                    Text(
+                                        text = sense.persianMeaning,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         } else {
                             if (sense.persianMeaning.isNotBlank()) {
-                                Text(
-                                    text = sense.persianMeaning,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                            if (sense.englishDefinition.isNotBlank()) {
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                PersianContentRtl {
                                     Text(
-                                        text = sense.englishDefinition,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Start
+                                        text = sense.persianMeaning,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
+                            }
+                            if (sense.englishDefinition.isNotBlank()) {
+                                Text(
+                                    text = sense.englishDefinition,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
 
                         if (sense.exampleSentence.isNotBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.background,
-                                modifier = Modifier.fillMaxWidth()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                                verticalAlignment = Alignment.Top
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.Top,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.space4)
                                 ) {
-                                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                            Text(
-                                                text = sense.exampleSentence,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                fontWeight = FontWeight.Medium,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                textAlign = TextAlign.Start
-                                            )
-                                        }
-                                        if (sense.exampleTranslation.isNotBlank()) {
+                                    Text(
+                                        text = sense.exampleSentence,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 3,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Start
+                                    )
+                                    if (sense.exampleTranslation.isNotBlank()) {
+                                        PersianContentRtl {
                                             Text(
                                                 text = sense.exampleTranslation,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
-                                    IconButton(
-                                        onClick = { onPronounceExample(sense.exampleSentence) },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.VolumeUp,
-                                            contentDescription = "Pronounce",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
                                 }
+                                AudioSpeakerButton(
+                                    onClick = { onPronounceExample(sense.exampleSentence) },
+                                    contentDescription = "Play example"
+                                )
                             }
                         }
 
                         if (sense.collocations.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                             ) {
-                                sense.collocations.take(4).forEach { colloc ->
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                                    ) {
-                                        Text(
-                                            text = colloc,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
+                                sense.collocations.take(4).forEach { collocation ->
+                                    TagChip(
+                                        text = collocation,
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
                                 }
                             }
                         }
@@ -451,236 +432,302 @@ private fun WordSensesCard(
 }
 
 @Composable
-private fun DefinitionCard(item: VocabularyItem, englishFirst: Boolean) {
-    SectionCard(title = if (englishFirst) "English Definition" else "Meaning & Definition") {
+private fun DefinitionCard(
+    item: VocabularyItem,
+    englishFirst: Boolean,
+    onPronounceExample: () -> Unit
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(
+            title = if (englishFirst) "English Definition" else "Meaning & Definition"
+        )
         if (englishFirst) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            if (item.englishDefinition.isNotBlank()) {
                 Text(
-                    text = item.englishDefinition.ifBlank { item.persianMeaning },
+                    text = item.englishDefinition,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
-            if (item.englishDefinition.isNotBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = item.persianMeaning,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            Text(
-                text = item.persianMeaning,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            if (item.englishDefinition.isNotBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            } else {
+                PersianContentRtl {
                     Text(
-                        text = item.englishDefinition,
+                        text = item.persianMeaning,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            if (item.englishDefinition.isNotBlank()) {
+                PersianContentRtl {
+                    Text(
+                        text = item.persianMeaning,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ExampleCard(example: String, translation: String, onPronounce: () -> Unit) {
-    SectionCard(
-        title = "Example in Context",
-        trailing = {
-            IconButton(onClick = onPronounce, modifier = Modifier.size(34.dp)) {
-                Icon(
-                    Icons.Default.VolumeUp,
-                    contentDescription = "Play example",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(19.dp)
+        } else {
+            PersianContentRtl {
+                Text(
+                    text = item.persianMeaning,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (item.englishDefinition.isNotBlank()) {
+                Text(
+                    text = item.englishDefinition,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-    ) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Text(
-                text = example,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
+
+        if (item.example.isNotBlank()) {
+            HairLine()
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-        }
-        if (translation.isNotBlank()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = translation,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space4)
+                ) {
+                    FieldLabel("Example")
+                    Text(
+                        text = item.example,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Start
+                    )
+                    if (item.examplePersian.isNotBlank()) {
+                        PersianContentRtl {
+                            Text(
+                                text = item.examplePersian,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+                AudioSpeakerButton(
+                    onClick = onPronounceExample,
+                    contentDescription = "Play example"
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun DetailListCard(title: String, subtitle: String, items: List<String>) {
-    SectionCard(title = title, subtitle = subtitle) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
-                items.take(8).forEach { value ->
-                    Text(
-                        text = "• $value",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start
-                    )
+private fun RelatedLanguageCard(
+    collocations: List<String>,
+    synonyms: List<String>,
+    wordFamily: List<String>
+) {
+    if (collocations.isEmpty() && synonyms.isEmpty() && wordFamily.isEmpty()) return
+
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(
+            title = "Related Language",
+            subtitle = "Natural combinations and related forms"
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+            if (collocations.isNotEmpty()) {
+                AppInset(padding = Dimens.space8) {
+                    FieldLabel("Collocations")
+                    Spacer(modifier = Modifier.size(Dimens.space4))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.space6)
+                    ) {
+                        collocations.take(10).forEach { value ->
+                            TagChip(
+                                text = value,
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
                 }
             }
+            if (synonyms.isNotEmpty()) {
+                DetailListInset(title = "Synonyms", values = synonyms)
+            }
+            if (wordFamily.isNotEmpty()) {
+                DetailListInset(title = "Word Family", values = wordFamily)
+            }
         }
+    }
+}
+
+@Composable
+private fun DetailListInset(title: String, values: List<String>) {
+    AppInset(padding = Dimens.space8) {
+        FieldLabel(title)
+        Spacer(modifier = Modifier.size(Dimens.space4))
+        Text(
+            text = values.take(10).joinToString("  ·  "),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun CommonMistakeCard(text: String) {
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        containerColor = MaterialTheme.colorScheme.errorContainer,
+        borderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.24f)
     ) {
-        Column(
-            modifier = Modifier.padding(15.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.PriorityHigh,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(19.dp)
-                )
-                Spacer(modifier = Modifier.width(7.dp))
-                Text("Common Mistake", style = MaterialTheme.typography.titleSmall)
-            }
-            Text(text, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun ExamRelevanceCard(ielts: String, toefl: String, gre: String) {
-    SectionCard(title = "Exam Usage & Relevance") {
-        ExamRow("IELTS", ielts)
-        Spacer(modifier = Modifier.height(7.dp))
-        ExamRow("TOEFL", toefl)
-        Spacer(modifier = Modifier.height(7.dp))
-        ExamRow("GRE", gre)
-    }
-}
-
-@Composable
-private fun ExamRow(exam: String, relevance: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(11.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(exam, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(
-                relevance.ifBlank { "—" },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            Icon(
+                imageVector = Icons.Default.PriorityHigh,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(Dimens.iconMd)
             )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space4)
+            ) {
+                Text(
+                    text = "Common Mistake",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ReviewActionCard(
+private fun StudyActionsCard(
+    ielts: String,
+    toefl: String,
+    gre: String,
     feedbackMessage: String?,
     onKnown: () -> Unit,
     onHard: () -> Unit,
     onPractice: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(15.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(
+            title = "Exam & Review",
+            subtitle = "Exam relevance and spaced-repetition assessment"
+        )
+        AppInset(padding = Dimens.space8) {
+            ExamRow("IELTS", ielts)
+            ExamRow("TOEFL", toefl)
+            ExamRow("GRE", gre)
+        }
+        HairLine()
+        FieldLabel("SRS learning status")
+        Text(
+            text = "Choose the result that best matches your recall.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
         ) {
-            Text("SRS Learning Status", style = MaterialTheme.typography.titleMedium)
+            Button(
+                onClick = onKnown,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = Dimens.minTapTarget)
+            ) {
+                Text("Mastered", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            OutlinedButton(
+                onClick = onHard,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = Dimens.minTapTarget)
+            ) {
+                Text("Hard", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            OutlinedButton(
+                onClick = onPractice,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = Dimens.minTapTarget)
+            ) {
+                Text("Practice", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        feedbackMessage?.let { message ->
             Text(
-                "This assessment calibrates future spaced review intervals.",
+                text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
-            Button(onClick = onKnown, modifier = Modifier.fillMaxWidth()) {
-                Text("Mastered (Schedule Next Review)")
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = onHard, modifier = Modifier.weight(1f)) {
-                    Text("Hard")
-                }
-                OutlinedButton(onClick = onPractice, modifier = Modifier.weight(1f)) {
-                    Text("Needs Practice")
-                }
-            }
-            feedbackMessage?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun SectionCard(
-    title: String,
-    subtitle: String? = null,
-    trailing: (@Composable () -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
-    Card(
+private fun ExamRow(exam: String, relevance: String) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    subtitle?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                trailing?.invoke()
-            }
-            content()
-        }
+        Text(
+            text = exam,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = relevance.ifBlank { "—" },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

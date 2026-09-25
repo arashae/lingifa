@@ -2,14 +2,12 @@ package com.example.ui.screens.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,23 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -49,16 +42,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.StreakInfo
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.EnglishLtrLayout
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.ErrorRed
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.IconTile
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.TagChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun HomeScreen(
@@ -82,10 +77,14 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(
+                start = Dimens.screenGutter,
+                top = Dimens.space12,
+                end = Dimens.screenGutter,
+                bottom = Dimens.space12
+            ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
         ) {
-            // 1. Header with Name, Level, and Streak Pill
             item {
                 HomeHeader(
                     name = state.userProfile.userName.ifBlank { "Learner" },
@@ -95,7 +94,6 @@ fun HomeScreen(
                 )
             }
 
-            // 2. Exam Sprint Dashboard (Real 3-stage queue: Due -> Weak -> New)
             item {
                 ExamSprintDashboardCard(
                     targetExam = state.userProfile.targetGoal.ifBlank { "IELTS" },
@@ -109,57 +107,24 @@ fun HomeScreen(
                 )
             }
 
-            // 3. Compact 3-Column Stats Row
             item {
-                MinimalStatsBar(
-                    words = state.totalWordsCount,
-                    learned = state.learnedWordsCount,
-                    xp = state.userProfile.xp
-                )
-            }
-
-            // 4. Primary Learning Hub (2x2 Grid)
-            item {
-                Text(
-                    text = "Core Learning Modules",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            item {
-                PrimaryActionGrid(
+                LearningAndToolsSection(
                     onNavigateToExamTracks = onNavigateToExamTracks,
                     onNavigateToSpeaking = onNavigateToSpeaking,
                     onNavigateToWriting = onNavigateToWriting,
-                    onNavigateToMistakes = onNavigateToMistakes
+                    onNavigateToMistakes = onNavigateToMistakes,
+                    onNavigateToTutor = onNavigateToTutor,
+                    onNavigateToAiVocabCard = onNavigateToAiVocabCard,
+                    onNavigateToDiagnostic = onNavigateToDiagnostic
                 )
             }
 
-            // 5. Daily Plan Progress Bar
             item {
                 CompactDailyPlanBar(
                     completedMinutes = state.dailyMinutesCompleted,
                     plannedMinutes = state.dailyMinutesPlanned,
                     onOpenVocab = onNavigateToVocab,
                     onOpenLearn = onNavigateToLearn
-                )
-            }
-
-            // 6. Auxiliary Quick Tools Strip
-            item {
-                Text(
-                    text = "Smart AI Tools",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            item {
-                QuickToolsHorizontalStrip(
-                    onNavigateToTutor = onNavigateToTutor,
-                    onNavigateToAiVocabCard = onNavigateToAiVocabCard,
-                    onNavigateToDiagnostic = onNavigateToDiagnostic
                 )
             }
         }
@@ -178,49 +143,35 @@ private fun HomeHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Dimens.space2)
+        ) {
             Text(
                 text = "Welcome, $name",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                color = MaterialTheme.colorScheme.onBackground
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Target Goal: $goal",
+                text = "Target goal: $goal",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
         ) {
-            // Streak Pill
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = AccentGold.copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, AccentGold.copy(alpha = 0.35f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocalFireDepartment,
-                        contentDescription = null,
-                        tint = Color(0xFFD97706),
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Text(
-                        text = "${streakInfo.currentStreak} Days",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFB45309)
-                    )
-                }
-            }
-
+            TagChip(
+                text = "${streakInfo.currentStreak} day streak",
+                containerColor = Accent.warningSoft,
+                contentColor = Accent.warningOnSoft
+            )
             CefrBadge(level = level)
         }
     }
@@ -239,132 +190,140 @@ private fun ExamSprintDashboardCard(
 ) {
     val totalSprintQueue = dueCount + weakCount + newCount
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    AppCard(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            // Header Row: Exam Title + Days Remaining / Sprint Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space2)
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "$targetExam Sprint Plan",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                        ) {
-                            Text(
-                                text = "Target: $targetScore",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+                Text(
+                    text = "$targetExam Sprint Plan",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = if (daysRemaining != null) {
+                        "$daysRemaining days remaining until test day"
+                    } else {
+                        "Intensive vocabulary preparation"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.width(Dimens.space8))
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(Dimens.space6)
+            ) {
+                TagChip(
+                    text = "Target: $targetScore",
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                TagChip(
+                    text = if (dueCount > 0) "$dueCount due" else "On track",
+                    containerColor = if (dueCount > 0) {
+                        Accent.dangerSoft
+                    } else {
+                        Accent.successSoft
+                    },
+                    contentColor = if (dueCount > 0) {
+                        Accent.dangerOnSoft
+                    } else {
+                        Accent.successOnSoft
                     }
-                    Text(
-                        text = if (daysRemaining != null) "$daysRemaining days remaining until test day"
-                               else "1–2 Month Intensive Vocabulary Preparation",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (dueCount > 0) Color(0xFFDC2626) else SuccessGreen,
-                    contentColor = Color.White
-                ) {
-                    Text(
-                        text = if (dueCount > 0) "$dueCount Due" else "On Track",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
-                    )
-                }
-            }
-
-            // 3-Stage Queue Pipeline Indicator
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SprintStagePill(
-                    title = "Due Reviews",
-                    count = dueCount,
-                    accentColor = Color(0xFFDC2626),
-                    modifier = Modifier.weight(1f)
-                )
-                SprintStagePill(
-                    title = "Weak Words",
-                    count = weakCount,
-                    accentColor = Color(0xFFD97706),
-                    modifier = Modifier.weight(1f)
-                )
-                SprintStagePill(
-                    title = "New Words",
-                    count = newCount,
-                    accentColor = PrimaryBlue,
-                    modifier = Modifier.weight(1f)
                 )
             }
+        }
 
-            // CTA Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Spacer(modifier = Modifier.height(Dimens.blockGap))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+        ) {
+            SprintStagePill(
+                title = "Due",
+                count = dueCount,
+                accentColor = Accent.danger,
+                modifier = Modifier.weight(1f)
+            )
+            SprintStagePill(
+                title = "Weak",
+                count = weakCount,
+                accentColor = Accent.warning,
+                modifier = Modifier.weight(1f)
+            )
+            SprintStagePill(
+                title = "New",
+                count = newCount,
+                accentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.blockGap))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+        ) {
+            Button(
+                onClick = onStartSprint,
+                modifier = Modifier
+                    .weight(1.3f)
+                    .height(Dimens.minTapTarget),
+                shape = RoundedCornerShape(Dimens.radiusSm)
             ) {
-                Button(
-                    onClick = onStartSprint,
-                    modifier = Modifier.weight(1.3f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Start Daily Sprint ($totalSprintQueue)",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onOpenTutor,
-                    modifier = Modifier.weight(0.9f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("AI Tutor", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(Dimens.iconSm)
+                )
+                Spacer(modifier = Modifier.width(Dimens.space6))
+                Text(
+                    text = "Start Sprint ($totalSprintQueue)",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            OutlinedButton(
+                onClick = onOpenTutor,
+                modifier = Modifier
+                    .weight(0.9f)
+                    .height(Dimens.minTapTarget),
+                shape = RoundedCornerShape(Dimens.radiusSm),
+                border = BorderStroke(
+                    Dimens.hairline,
+                    MaterialTheme.colorScheme.outline
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = null,
+                    modifier = Modifier.size(Dimens.iconSm)
+                )
+                Spacer(modifier = Modifier.width(Dimens.space4))
+                Text(
+                    text = "AI Tutor",
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -377,210 +336,153 @@ private fun SprintStagePill(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    AppInset(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        padding = Dimens.space8,
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.25f))
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = count.toString(),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.ExtraBold,
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
                 color = accentColor
-            )
-            Text(
-                text = title,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun MinimalStatsBar(
-    words: Int,
-    learned: Int,
-    xp: Int
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        CompactStatPill(
-            icon = Icons.Default.AutoStories,
-            value = words.toString(),
-            label = "Total Vocab",
-            color = PrimaryBlue,
-            modifier = Modifier.weight(1f)
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
-        CompactStatPill(
-            icon = Icons.Default.School,
-            value = learned.toString(),
-            label = "Mastered",
-            color = SuccessGreen,
-            modifier = Modifier.weight(1f)
-        )
-        CompactStatPill(
-            icon = Icons.Default.FitnessCenter,
-            value = "$xp",
-            label = "XP Points",
-            color = AccentGold,
-            modifier = Modifier.weight(1f)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
 @Composable
-private fun CompactStatPill(
-    icon: ImageVector,
-    value: String,
-    label: String,
-    color: Color,
-    modifier: Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Text(
-                text = label,
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun PrimaryActionGrid(
+private fun LearningAndToolsSection(
     onNavigateToExamTracks: () -> Unit,
     onNavigateToSpeaking: () -> Unit,
     onNavigateToWriting: () -> Unit,
-    onNavigateToMistakes: () -> Unit
+    onNavigateToMistakes: () -> Unit,
+    onNavigateToTutor: () -> Unit,
+    onNavigateToAiVocabCard: () -> Unit,
+    onNavigateToDiagnostic: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ModernActionTile(
-                icon = Icons.Default.School,
-                title = "Exam Tracks",
-                subtitle = "IELTS · TOEFL · GRE",
-                accentColor = PrimaryBlue,
-                onClick = onNavigateToExamTracks,
-                modifier = Modifier.weight(1f)
-            )
-            ModernActionTile(
-                icon = Icons.Default.RecordVoiceOver,
-                title = "Speaking AI",
-                subtitle = "Fluency & Voice AI",
-                accentColor = SuccessGreen,
-                onClick = onNavigateToSpeaking,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ModernActionTile(
-                icon = Icons.Default.EditNote,
-                title = "Writing Grader",
-                subtitle = "Instant Scoring & Tips",
-                accentColor = Color(0xFF8B5CF6),
-                onClick = onNavigateToWriting,
-                modifier = Modifier.weight(1f)
-            )
-            ModernActionTile(
-                icon = Icons.Default.Warning,
-                title = "Mistake Log",
-                subtitle = "Target Weak Points",
-                accentColor = ErrorRed,
-                onClick = onNavigateToMistakes,
-                modifier = Modifier.weight(1f)
-            )
+    AppCard {
+        SectionHeader(
+            title = "Learning & AI Tools",
+            subtitle = "Core practice and smart assistance in one place"
+        )
+        Spacer(modifier = Modifier.height(Dimens.blockGap))
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
+            ) {
+                CompactActionTile(
+                    icon = Icons.Default.School,
+                    title = "Exam Tracks",
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = onNavigateToExamTracks,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactActionTile(
+                    icon = Icons.Default.RecordVoiceOver,
+                    title = "Speaking",
+                    tint = Accent.success,
+                    onClick = onNavigateToSpeaking,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactActionTile(
+                    icon = Icons.Default.EditNote,
+                    title = "Writing",
+                    tint = Accent.accent,
+                    onClick = onNavigateToWriting,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
+            ) {
+                CompactActionTile(
+                    icon = Icons.Default.Warning,
+                    title = "Mistakes",
+                    tint = Accent.danger,
+                    onClick = onNavigateToMistakes,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactActionTile(
+                    icon = Icons.Default.Psychology,
+                    title = "AI Tutor",
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = onNavigateToTutor,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactActionTile(
+                    icon = Icons.Default.AutoAwesome,
+                    title = "AI Cards",
+                    tint = Accent.accent,
+                    onClick = onNavigateToAiVocabCard,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactActionTile(
+                    icon = Icons.Default.FitnessCenter,
+                    title = "Diagnostic",
+                    tint = Accent.info,
+                    onClick = onNavigateToDiagnostic,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ModernActionTile(
+private fun CompactActionTile(
     icon: ImageVector,
     title: String,
-    subtitle: String,
-    accentColor: Color,
+    tint: Color,
     onClick: () -> Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Surface(
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(
+            minHeight = Dimens.minTapTarget + Dimens.space12
+        ),
+        shape = RoundedCornerShape(Dimens.radiusSm),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(
+            Dimens.hairline,
+            MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(
+                horizontal = Dimens.space6,
+                vertical = Dimens.blockGap
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.space6)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(accentColor.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, tint = accentColor, modifier = Modifier.size(19.dp))
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            IconTile(
+                icon = icon,
+                tint = tint,
+                size = Dimens.iconTileSm,
+                iconSize = Dimens.iconSm
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -595,133 +497,68 @@ private fun CompactDailyPlanBar(
     val target = plannedMinutes.coerceAtLeast(1)
     val progress = (completedMinutes.toFloat() / target).coerceIn(0f, 1f)
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Daily Target: $completedMinutes of $plannedMinutes mins",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "${(progress * 100).toInt()}%",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
+    AppCard {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)) {
+            SectionHeader(
+                title = "Daily Plan",
+                subtitle = "$completedMinutes of $plannedMinutes minutes complete"
+            )
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(5.dp)
-                    .clip(RoundedCornerShape(3.dp)),
+                    .height(Dimens.progressHeight)
+                    .clip(RoundedCornerShape(Dimens.radiusPill)),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
             ) {
-                Surface(
+                OutlinedButton(
                     onClick = onOpenVocab,
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Dimens.minTapTarget),
+                    shape = RoundedCornerShape(Dimens.radiusSm)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(Icons.Default.AutoStories, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
-                        Text("Vocabulary Bank", fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                    }
+                    Icon(
+                        imageVector = Icons.Default.AutoStories,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(Dimens.iconSm)
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.space6))
+                    Text(
+                        text = "Vocabulary",
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-
-                Surface(
+                OutlinedButton(
                     onClick = onOpenLearn,
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Dimens.minTapTarget),
+                    shape = RoundedCornerShape(Dimens.radiusSm)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(Icons.Default.School, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
-                        Text("Skills & Grammar", fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                    }
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(Dimens.iconSm)
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.space6))
+                    Text(
+                        text = "Skills & Grammar",
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun QuickToolsHorizontalStrip(
-    onNavigateToTutor: () -> Unit,
-    onNavigateToAiVocabCard: () -> Unit,
-    onNavigateToDiagnostic: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        QuickToolChip(
-            icon = Icons.Default.Psychology,
-            title = "AI Tutor",
-            onClick = onNavigateToTutor
-        )
-        QuickToolChip(
-            icon = Icons.Default.AutoAwesome,
-            title = "AI Vocab Card",
-            onClick = onNavigateToAiVocabCard
-        )
-        QuickToolChip(
-            icon = Icons.Default.FitnessCenter,
-            title = "Diagnostic Test",
-            onClick = onNavigateToDiagnostic
-        )
-    }
-}
-
-@Composable
-private fun QuickToolChip(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-            Text(title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

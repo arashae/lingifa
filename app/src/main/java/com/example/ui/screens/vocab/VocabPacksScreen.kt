@@ -1,16 +1,14 @@
 package com.example.ui.screens.vocab
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,14 +21,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,12 +33,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.data.model.VocabularyPack
+import com.example.ui.components.AppCard
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.EnglishLtrLayout
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.IconTile
+import com.example.ui.components.LinguaTopAppBar
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.SelectChip
+import com.example.ui.components.TagChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun VocabPacksScreen(
@@ -55,65 +58,47 @@ fun VocabPacksScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val syncStates by viewModel.packSyncStates.collectAsState()
+    val wordCounts = state.packs
+        .groupBy { it.level.trim().uppercase() }
+        .mapValues { (_, packs) -> packs.sumOf { it.wordCount } }
 
     EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = { LinguaTopAppBar(title = "Vocabulary Packs", onBack = onBack) }
+            topBar = {
+                LinguaTopAppBar(
+                    title = "Vocabulary Packs",
+                    subtitle = "Download and study curated vocabulary",
+                    onBack = onBack
+                )
+            }
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
-                    .padding(horizontal = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Dimens.screenGutter),
+                verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
             ) {
-                item {
-                    Column(
-                        modifier = Modifier.padding(top = 10.dp, bottom = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "Exam & Study Packs",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "Download once, then study and review offline anytime.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
                 item {
                     CefrLearningPathCard(
                         selectedLevel = state.learningLevel,
-                        onSelectLevel = { level ->
-                            viewModel.selectLearningLevel(level)
-                            onStartCefrLevel()
-                        }
+                        wordCounts = wordCounts,
+                        onSelectLevel = viewModel::selectLearningLevel,
+                        onStart = onStartCefrLevel
                     )
                 }
 
-                item { ExamTracksEntryCard(onClick = onNavigateToExamTracks) }
+                item {
+                    ExamTracksEntryCard(onClick = onNavigateToExamTracks)
+                }
 
                 item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("All Vocabulary Packs", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = "${state.packs.size} packs",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    SectionHeader(
+                        title = "All Vocabulary Packs",
+                        subtitle = "${state.packs.size} available",
+                        modifier = Modifier.padding(top = Dimens.space4)
+                    )
                 }
 
                 items(state.packs, key = { it.id }) { pack ->
@@ -128,7 +113,7 @@ fun VocabPacksScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                item { Spacer(modifier = Modifier.height(Dimens.space24)) }
             }
         }
     }
@@ -137,71 +122,63 @@ fun VocabPacksScreen(
 @Composable
 private fun CefrLearningPathCard(
     selectedLevel: String,
-    onSelectLevel: (String) -> Unit
+    wordCounts: Map<String, Int>,
+    onSelectLevel: (String) -> Unit,
+    onStart: () -> Unit
 ) {
-    val levels = listOf(
-        "A1" to "Beginner (Core Foundations)",
-        "A2" to "Elementary (Daily Conversation)",
-        "B1" to "Intermediate (Independent Learner)",
-        "B2" to "Upper Intermediate (Fluency)",
-        "C1" to "Advanced (Professional Proficiency)",
-        "C2" to "Mastery (Native Fluency)"
-    )
+    val levels = listOf("A1", "A2", "B1", "B2", "C1", "C2")
 
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = "General Vocabulary Track",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Text(
-                text = "Start at your target CEFR level; words are curated in learning priority order.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
-            )
-            levels.forEach { (level, title) ->
-                val isSelected = level == selectedLevel
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelectLevel(level) },
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    border = if (isSelected) null else BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant
-                    )
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.space2)) {
+                Text(
+                    text = "General Vocabulary Track",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Select your CEFR level, then start when ready.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.76f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            levels.chunked(2).forEach { rowLevels ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = level,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                    rowLevels.forEach { level ->
+                        SelectChip(
+                            text = "$level · ${wordCounts[level] ?: 0} words",
+                            selected = selectedLevel == level,
+                            onClick = { onSelectLevel(level) },
+                            modifier = Modifier.weight(1f)
                         )
                     }
+                    if (rowLevels.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
+            }
+            Button(
+                onClick = onStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTapTarget)
+            ) {
+                Text(
+                    text = "Start at $selectedLevel",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -209,50 +186,48 @@ private fun CefrLearningPathCard(
 
 @Composable
 private fun ExamTracksEntryCard(onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        padding = Dimens.cardPaddingTight,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+        onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space10)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
+            IconTile(
+                icon = Icons.Default.School,
+                tint = MaterialTheme.colorScheme.primary,
+                size = Dimens.iconTileMd,
+                iconSize = Dimens.iconMd
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space2)
             ) {
-                Icon(
-                    imageVector = Icons.Default.School,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(
                     text = "Exam Mastery Tracks",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "IELTS 9k · TOEFL 7k · GRE 5k",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.76f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(Dimens.iconMd)
             )
         }
     }
@@ -272,145 +247,159 @@ private fun VocabPackCard(
     val isComplete = pack.isCorePack && target > 0 && installed >= target
     val statusMessage = syncState?.message?.takeIf { it.isNotBlank() }
     val isC2Advanced = pack.id == "pack_cefr_c2"
-    val displayTitleFa = if (isC2Advanced) "C2 + واژگان پیشرفته" else pack.titleFa
-    val displayTitleEn = if (isC2Advanced) "C2 + Advanced Vocabulary" else pack.titleEn
-    val displayDescription = if (isC2Advanced) {
-        "Extensive advanced & general vocabulary bank; specialized and rare words are prioritized for later study."
+    val englishTitle = if (isC2Advanced) "C2 + Advanced Vocabulary" else pack.titleEn
+    val displayTitle = englishTitle.ifBlank { pack.titleFa }
+    val descriptionEn = if (isC2Advanced) {
+        "Extensive advanced and general vocabulary, with specialized and rare words prioritized for later study."
     } else {
-        pack.descriptionEn.ifBlank { pack.descriptionFa }
+        pack.descriptionEn
     }
+    val displayDescription = descriptionEn.ifBlank { pack.descriptionFa }
 
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        padding = Dimens.cardPaddingTight
     ) {
-        Column(
-            modifier = Modifier.padding(15.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(13.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                IconTile(
+                    icon = Icons.Default.MenuBook,
+                    tint = MaterialTheme.colorScheme.primary,
+                    size = Dimens.iconTileMd,
+                    iconSize = Dimens.iconMd
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space2)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    if (englishTitle.isNotBlank()) {
+                        Text(
+                            text = displayTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        PersianContentRtl {
+                            Text(
+                                text = displayTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                    TagChip(text = "${pack.wordCount} words")
                 }
-                Spacer(modifier = Modifier.width(11.dp))
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                    Text(
-                        text = displayTitleEn.ifBlank { displayTitleFa },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = displayTitleFa,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
                 CefrBadge(level = pack.level)
             }
 
             if (displayDescription.isNotBlank()) {
-                Text(
-                    text = displayDescription,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (descriptionEn.isNotBlank()) {
+                    Text(
+                        text = displayDescription,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else {
+                    PersianContentRtl {
+                        Text(
+                            text = displayDescription,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
 
             if (pack.isCorePack && target > 0) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.space6)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isComplete) "Ready for offline study" else "Download Progress",
+                            text = if (isComplete) "Ready for offline study" else "Download progress",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (isComplete) SuccessGreen else MaterialTheme.colorScheme.onSurface
+                            color = if (isComplete) Accent.success else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
                         Text(
                             text = "$installed / $target",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(5.dp)
+                            .height(Dimens.progressHeight)
                             .clip(CircleShape),
-                        color = if (isComplete) SuccessGreen else MaterialTheme.colorScheme.primary,
+                        color = if (isComplete) Accent.success else MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
-                    if (statusMessage != null) {
+                    statusMessage?.let { message ->
                         Text(
-                            text = statusMessage,
+                            text = message,
                             style = MaterialTheme.typography.labelSmall,
                             color = if (syncState?.stage == "error") {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
-                            }
+                            },
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     if ((syncState?.warningCount ?: 0) > 0) {
                         Text(
-                            text = "Some resources were unavailable; download can continue.",
+                            text = "Some resources were unavailable; the download can continue.",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = Accent.warning,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                }
-            } else if (!pack.isCorePack) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(9.dp)
-                ) {
-                    Text(
-                        text = "${pack.wordCount} words",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
-                    )
                 }
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
             ) {
                 if (pack.isCorePack && !isComplete) {
                     Button(
                         onClick = onSync,
                         enabled = !isSyncing,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(Dimens.radiusSm),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.minTapTarget)
                     ) {
                         Text(
-                            when {
+                            text = when {
                                 isSyncing -> "Downloading…"
-                                installed > 0 -> "Resume Download"
-                                else -> "Download Pack"
-                            }
+                                installed > 0 -> "Resume"
+                                else -> "Download"
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -418,11 +407,17 @@ private fun VocabPackCard(
                 OutlinedButton(
                     onClick = onViewWords,
                     enabled = !pack.isCorePack || installed > 0,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    shape = RoundedCornerShape(Dimens.radiusSm),
+                    border = BorderStroke(Dimens.hairline, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.minTapTarget)
                 ) {
-                    Text(if (pack.isCorePack) "Study Words" else "View Words")
+                    Text(
+                        text = if (pack.isCorePack) "Study" else "View Words",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

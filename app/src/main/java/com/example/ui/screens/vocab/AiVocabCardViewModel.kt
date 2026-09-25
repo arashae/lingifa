@@ -175,7 +175,7 @@ class AiVocabCardViewModel(application: Application) : AndroidViewModel(applicat
             _uiState.update {
                 it.copy(
                     isSaved = true,
-                    statusMessage = "واژه «${card.word}» در لغات و فلش‌کارت‌ها ذخیره شد! (+۲۰ XP)",
+                    statusMessage = "'${card.word}' saved to your vocabulary and flashcards! (+20 XP)",
                     streakResult = streakResult
                 )
             }

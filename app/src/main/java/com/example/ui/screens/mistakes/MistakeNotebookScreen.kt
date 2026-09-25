@@ -16,19 +16,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,17 +33,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.data.model.MistakeRecord
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
+import com.example.ui.components.EmptyState
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
 import com.example.ui.components.LinguaTopAppBar
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SelectChip
+import com.example.ui.components.TagChip
 import com.example.ui.screens.profile.ProfileViewModel
-import com.example.ui.theme.ErrorRed
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun MistakeNotebookScreen(
@@ -59,11 +58,19 @@ fun MistakeNotebookScreen(
     var selectedSkillFilter by remember { mutableStateOf("All") }
     var selectedStatusFilter by remember { mutableStateOf("All") }
 
-    val skills = listOf("All", "VOCABULARY", "GRAMMAR", "READING", "LISTENING", "SPEAKING", "WRITING")
-    val statuses = listOf("All", "Needs Review", "Resolved")
+    val skillFilters = listOf(
+        "VOCABULARY" to "Vocabulary",
+        "GRAMMAR" to "Grammar",
+        "READING" to "Reading",
+        "LISTENING" to "Listening",
+        "SPEAKING" to "Speaking",
+        "WRITING" to "Writing"
+    )
+    val statusFilters = listOf("Needs Review", "Resolved")
 
     val filteredMistakes = state.mistakes.filter { mistake ->
-        val matchesSkill = selectedSkillFilter == "All" || mistake.skillType.equals(selectedSkillFilter, ignoreCase = true)
+        val matchesSkill = selectedSkillFilter == "All" ||
+            mistake.skillType.equals(selectedSkillFilter, ignoreCase = true)
         val matchesStatus = when (selectedStatusFilter) {
             "Needs Review" -> !mistake.isReviewed
             "Resolved" -> mistake.isReviewed
@@ -77,6 +84,7 @@ fun MistakeNotebookScreen(
             topBar = {
                 LinguaTopAppBar(
                     title = "Mistake Notebook",
+                    subtitle = "Review, filter, and resolve recorded errors",
                     onBack = onBack
                 )
             }
@@ -86,81 +94,79 @@ fun MistakeNotebookScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(
+                        horizontal = Dimens.screenGutter,
+                        vertical = Dimens.space12
+                    ),
+                verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
             ) {
-                // Header Note
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f))
+                AppInset(
+                    color = Accent.dangerSoft,
+                    contentColor = Accent.dangerOnSoft
                 ) {
                     Row(
-                        modifier = Modifier.padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Accent.danger,
+                            modifier = Modifier.size(Dimens.iconLg)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.blockGap))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.space2)
+                        ) {
                             Text(
-                                text = "Smart Error Pattern Analysis",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed)
+                                text = "Error Pattern Analysis",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "Mistakes from reviews and exercises are recorded for targeted spaced repetition.",
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onErrorContainer)
+                                text = "Mistakes from reviews and exercises feed targeted spaced repetition.",
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Skill Filters
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
                 ) {
-                    skills.forEach { sk ->
-                        val label = when (sk) {
-                            "VOCABULARY" -> "Vocabulary"
-                            "GRAMMAR" -> "Grammar"
-                            "READING" -> "Reading"
-                            "LISTENING" -> "Listening"
-                            "SPEAKING" -> "Speaking"
-                            "WRITING" -> "Writing"
-                            else -> "All Skills"
+                    SelectChip(
+                        text = "All",
+                        selected = selectedSkillFilter == "All" && selectedStatusFilter == "All",
+                        onClick = {
+                            selectedSkillFilter = "All"
+                            selectedStatusFilter = "All"
                         }
-                        FilterChip(
-                            selected = selectedSkillFilter == sk,
-                            onClick = { selectedSkillFilter = sk },
-                            label = { Text(label, fontSize = 11.sp) }
+                    )
+                    statusFilters.forEach { status ->
+                        SelectChip(
+                            text = status,
+                            selected = selectedStatusFilter == status,
+                            onClick = { selectedStatusFilter = status }
+                        )
+                    }
+                    skillFilters.forEach { (value, label) ->
+                        SelectChip(
+                            text = label,
+                            selected = selectedSkillFilter == value,
+                            onClick = { selectedSkillFilter = value }
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Review Status Filters
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    statuses.forEach { st ->
-                        FilterChip(
-                            selected = selectedStatusFilter == st,
-                            onClick = { selectedStatusFilter = st },
-                            label = { Text(st, fontSize = 11.sp) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Mistakes List
                 if (filteredMistakes.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -168,27 +174,29 @@ fun MistakeNotebookScreen(
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(48.dp))
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "No errors recorded in this section!",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
+                        EmptyState(
+                            icon = Icons.Default.CheckCircle,
+                            title = "No errors in this view",
+                            message = "Choose different filters or continue learning to build your notebook."
+                        )
                     }
                 } else {
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
                     ) {
                         items(filteredMistakes, key = { it.id }) { mistake ->
                             MistakeCard(
                                 mistake = mistake,
                                 onDelete = { viewModel.deleteMistake(mistake.id) },
-                                onToggleReviewed = { viewModel.markMistakeReviewed(mistake.id, !mistake.isReviewed) }
+                                onToggleReviewed = {
+                                    viewModel.markMistakeReviewed(
+                                        mistake.id,
+                                        !mistake.isReviewed
+                                    )
+                                }
                             )
                         }
                     }
@@ -204,112 +212,142 @@ private fun MistakeCard(
     onDelete: () -> Unit,
     onToggleReviewed: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (mistake.isReviewed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    AppCard(
+        containerColor = if (mistake.isReviewed) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Text(
-                            text = mistake.skillType,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
-
-                    if (mistake.isReviewed) {
-                        Surface(
-                            color = Color(0xFFDCFCE7),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = "Resolved ✓",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
+                TagChip(text = mistake.skillType)
+                TagChip(
+                    text = if (mistake.isReviewed) "Resolved" else "Needs Review",
+                    containerColor = if (mistake.isReviewed) {
+                        Accent.successSoft
                     } else {
-                        Surface(
-                            color = Color(0xFFFEF3C7),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = "Needs Review",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706)),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
+                        Accent.warningSoft
+                    },
+                    contentColor = if (mistake.isReviewed) {
+                        Accent.successOnSoft
+                    } else {
+                        Accent.warningOnSoft
                     }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onToggleReviewed, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = if (mistake.isReviewed) "Mark as needs review" else "Mark as resolved",
-                            tint = if (mistake.isReviewed) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete error", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = mistake.question,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // My Answer vs Correct Answer
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Surface(
-                    color = Color(0xFFFEE2E2),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text("My Answer:", style = MaterialTheme.typography.labelSmall.copy(color = ErrorRed))
-                        Text(mistake.myAnswer, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed))
-                    }
-                }
-
-                Surface(
-                    color = Color(0xFFDCFCE7),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text("Correct Answer:", style = MaterialTheme.typography.labelSmall.copy(color = SuccessGreen))
-                        Text(mistake.correctAnswer, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen))
-                    }
-                }
-            }
-
-            if (mistake.explanationFa.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Explanation: ${mistake.explanationFa}",
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
+            }
+            Row {
+                IconButton(onClick = onToggleReviewed) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = if (mistake.isReviewed) {
+                            "Mark as needs review"
+                        } else {
+                            "Mark as resolved"
+                        },
+                        tint = if (mistake.isReviewed) {
+                            Accent.success
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(Dimens.iconMd)
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete error",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(Dimens.iconMd)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.blockGap))
+        Text(
+            text = mistake.question,
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(Dimens.blockGap))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                AppInset(
+                    color = Accent.dangerSoft,
+                    contentColor = Accent.dangerOnSoft
+                ) {
+                    Text(
+                        text = "MY ANSWER",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Accent.dangerOnSoft,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = mistake.myAnswer,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Accent.dangerOnSoft,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                AppInset(
+                    color = Accent.successSoft,
+                    contentColor = Accent.successOnSoft
+                ) {
+                    Text(
+                        text = "CORRECT ANSWER",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Accent.successOnSoft,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = mistake.correctAnswer,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Accent.successOnSoft,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
+        if (mistake.explanationFa.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.blockGap))
+            AppInset {
+                FieldLabel(text = "Explanation")
+                PersianContentRtl {
+                    Text(
+                        text = mistake.explanationFa,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

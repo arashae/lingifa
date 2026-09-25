@@ -112,21 +112,21 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     targetBandOrScore = targetScore
                 )
             )
-            _statusMessage.value = "پروفایل با موفقیت به‌روزرسانی شد."
+            _statusMessage.value = "Profile updated."
         }
     }
 
     fun deleteMistake(id: Long) {
         viewModelScope.launch {
             mistakeRepo.deleteMistake(id)
-            _statusMessage.value = "اشتباه از دفترچه حذف شد."
+            _statusMessage.value = "Entry removed from the notebook."
         }
     }
 
     fun markMistakeReviewed(id: Long, isReviewed: Boolean = true) {
         viewModelScope.launch {
             mistakeRepo.markReviewed(id, isReviewed)
-            _statusMessage.value = if (isReviewed) "اشتباه به عنوان مرور شده و حل‌شده ثبت شد." else "اشتباه نیازمند مرور مجدد است."
+            _statusMessage.value = if (isReviewed) "Marked as reviewed and resolved." else "Marked as still needs review."
         }
     }
 
@@ -140,7 +140,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             }
             _exportedContent.value = result
             _exportFormat.value = format
-            _statusMessage.value = "خروجی $format آماده شد."
+            _statusMessage.value = "$format export is ready."
         }
     }
 

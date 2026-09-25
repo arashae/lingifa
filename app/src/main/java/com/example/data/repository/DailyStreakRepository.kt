@@ -103,9 +103,9 @@ class DailyStreakRepository(
         // Check if a new milestone is achieved
         val milestoneReached = getMilestoneForStreak(currentStreak, previousStreak)
         val message = when {
-            milestoneReached != null -> "تبریک! مدال «${milestoneReached.titleFa}» را به دست آوردید! 🔥"
-            currentStreak > 1 -> "فوق‌العاده است! زنجیره یادگیری شما به $currentStreak روز متوالی رسید."
-            else -> "آفرین! اولین گام از زنجیره تمرین امروز با موفقیت ثبت شد."
+            milestoneReached != null -> "Congratulations! You unlocked the \"${milestoneReached.title}\" badge!"
+            currentStreak > 1 -> "Excellent! Your learning streak has reached $currentStreak days in a row."
+            else -> "Nice! Today's practice session has been logged."
         }
 
         return StreakUpdateResult(
@@ -113,8 +113,8 @@ class DailyStreakRepository(
             newStreak = currentStreak,
             xpEarned = xpEarned,
             isNewMilestoneReached = milestoneReached != null,
-            milestoneTitleFa = milestoneReached?.titleFa,
-            messageFa = message
+            milestoneTitle = milestoneReached?.title,
+            message = message
         )
     }
 
@@ -206,31 +206,31 @@ class DailyStreakRepository(
 
         // Milestones
         val allMilestones = listOf(
-            StreakMilestone(3, "جرقه یادگیری", "۳ روز تمرین مستمر زبان", "spark", currentStreak >= 3),
-            StreakMilestone(7, "قهرمان یک‌هفته‌ای", "۷ روز تمرین بدون توقف", "shield", currentStreak >= 7),
-            StreakMilestone(14, "عادت پایدار", "۱۴ روز تسلط و پیوستگی", "fire", currentStreak >= 14),
-            StreakMilestone(30, "استاد واژگان", "۳۰ روز طلایی یادگیری مستمر", "crown", currentStreak >= 30),
-            StreakMilestone(60, "ذهن دوزبانه", "۶۰ روز تعهد کامل به زبان", "diamond", currentStreak >= 60),
-            StreakMilestone(100, "اسطوره زبان‌آموزی", "۱۰۰ روز تمرین حرفه‌ای آیلتس/تافل", "trophy", currentStreak >= 100)
+            StreakMilestone(3, "Learning Spark", "3 days of consistent practice", "spark", currentStreak >= 3),
+            StreakMilestone(7, "Week Warrior", "7 days without a break", "shield", currentStreak >= 7),
+            StreakMilestone(14, "Steady Habit", "14 days of mastery and consistency", "fire", currentStreak >= 14),
+            StreakMilestone(30, "Vocabulary Master", "30 golden days of steady learning", "crown", currentStreak >= 30),
+            StreakMilestone(60, "Bilingual Mind", "60 days of full commitment", "diamond", currentStreak >= 60),
+            StreakMilestone(100, "Language Legend", "100 days of professional IELTS/TOEFL practice", "trophy", currentStreak >= 100)
         )
 
         val nextMilestone = allMilestones.firstOrNull { !it.isUnlocked }
         val unlockedMilestones = allMilestones.filter { it.isUnlocked }
 
-        val levelFa = when {
-            currentStreak >= 100 -> "اسطوره زبان‌آموزی 👑"
-            currentStreak >= 30 -> "استاد واژگان 🏆"
-            currentStreak >= 14 -> "زبان‌آموز کوشا 🥇"
-            currentStreak >= 7 -> "قهرمان هفته 🥈"
-            currentStreak >= 3 -> "یادگیرنده فعال 🥉"
-            else -> "آغازگر مصمم 🌟"
+        val level = when {
+            currentStreak >= 100 -> "Language Legend"
+            currentStreak >= 30 -> "Vocabulary Master"
+            currentStreak >= 14 -> "Diligent Learner"
+            currentStreak >= 7 -> "Week Warrior"
+            currentStreak >= 3 -> "Active Learner"
+            else -> "Determined Starter"
         }
 
-        val motivationalMessageFa = when {
-            isTodayCompleted && currentStreak >= 7 -> "فوق‌العاده است! زنجیره امروز کامل شد و رکورد $currentStreak روزه شما در اوج است!"
-            isTodayCompleted -> "آفرین! زنجیره امروز شما با موفقیت ثبت شد. فردا منتظرتان هستیم!"
-            currentStreak > 0 -> "زنجیره $currentStreak روزه شما فعال است! برای حفظ آن، فقط یک تمرین کوتاه انجام دهید."
-            else -> "امروز بهترین روز برای آغاز زنجیره یادگیری جدید است! با یک کارت یا مرور شروع کنید."
+        val motivationalMessage = when {
+            isTodayCompleted && currentStreak >= 7 -> "Outstanding! Today's streak is locked in and your $currentStreak-day record is at its peak."
+            isTodayCompleted -> "Well done! Today's streak is logged. See you tomorrow!"
+            currentStreak > 0 -> "Your $currentStreak-day streak is alive! One short session keeps it going."
+            else -> "Today is the best day to start a new streak. Begin with one card or a quick review."
         }
 
         return StreakInfo(
@@ -240,8 +240,8 @@ class DailyStreakRepository(
             totalDaysPracticed = totalDays,
             totalXp = userXp,
             weeklyDays = weeklyDays,
-            motivationalMessageFa = motivationalMessageFa,
-            streakLevelFa = levelFa,
+            motivationalMessage = motivationalMessage,
+            streakLevel = level,
             nextMilestone = nextMilestone,
             unlockedMilestones = unlockedMilestones
         )
@@ -256,27 +256,27 @@ class DailyStreakRepository(
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -6) // 6 days ago up to today
 
-        val dayNamesFa = mapOf(
-            Calendar.SATURDAY to "ش",
-            Calendar.SUNDAY to "ی",
-            Calendar.MONDAY to "د",
-            Calendar.TUESDAY to "س",
-            Calendar.WEDNESDAY to "چ",
-            Calendar.THURSDAY to "پ",
-            Calendar.FRIDAY to "ج"
+        val dayNames = mapOf(
+            Calendar.SATURDAY to "S",
+            Calendar.SUNDAY to "S",
+            Calendar.MONDAY to "M",
+            Calendar.TUESDAY to "T",
+            Calendar.WEDNESDAY to "W",
+            Calendar.THURSDAY to "T",
+            Calendar.FRIDAY to "F"
         )
 
         for (i in 0..6) {
             val dateStr = dateFormat.format(cal.time)
             val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
-            val dayName = dayNamesFa[dayOfWeek] ?: "؟"
+            val dayName = dayNames[dayOfWeek] ?: "?"
             val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH).toString()
 
             val record = recordDates[dateStr]
             items.add(
                 StreakDayItem(
                     date = dateStr,
-                    dayNameFa = dayName,
+                    dayName = dayName,
                     dayNumber = dayOfMonth,
                     isCompleted = record != null,
                     isToday = dateStr == today,

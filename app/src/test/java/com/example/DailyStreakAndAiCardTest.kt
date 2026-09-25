@@ -120,7 +120,7 @@ class DailyStreakAndAiCardTest {
         val streakInfo = repository.streakInfo.first()
         assertEquals(3, streakInfo.currentStreak)
         assertTrue(streakInfo.unlockedMilestones.any { it.requiredDays == 3 })
-        assertEquals("جرقه یادگیری", streakInfo.unlockedMilestones.first { it.requiredDays == 3 }.titleFa)
+        assertEquals("Learning Spark", streakInfo.unlockedMilestones.first { it.requiredDays == 3 }.title)
     }
 
     @Test

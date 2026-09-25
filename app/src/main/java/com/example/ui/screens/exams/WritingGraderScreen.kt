@@ -3,13 +3,12 @@ package com.example.ui.screens.exams
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,38 +17,34 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.network.WritingEvaluationResult
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
+import com.example.ui.components.HairLine
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.ErrorRed
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.SelectChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun WritingGraderScreen(
@@ -74,216 +69,227 @@ fun WritingGraderScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = Dimens.screenGutter, vertical = Dimens.space8),
+                verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
             ) {
-                // Topic Selector Chips
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    state.prompts.forEachIndexed { index, prompt ->
-                        FilterChip(
-                            selected = state.selectedPromptIndex == index,
-                            onClick = { viewModel.selectPrompt(index) },
-                            label = { Text(prompt.titleEn.take(28) + "...", fontSize = 11.sp) }
-                        )
-                    }
-                }
-
                 if (activePrompt != null) {
-                    // Prompt Details Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    AppCard(
+                        shape = RoundedCornerShape(Dimens.radiusLg),
+                        borderColor = MaterialTheme.colorScheme.outlineVariant
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = activePrompt.titleEn,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = activePrompt.promptTextEn,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                            )
-                            if (activePrompt.guideFa.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Guide: ${activePrompt.guideFa}",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                )
-                            }
-                        }
-                    }
-
-                    // Essay Text Field Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Your Essay Submission:",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Text(
-                                    text = "Word Count: ${state.wordCount} words (Min 250)",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = if (state.wordCount >= 250) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            OutlinedTextField(
-                                value = state.essayInput,
-                                onValueChange = { viewModel.onEssayInputChanged(it) },
-                                placeholder = { Text("Write your essay in English here...") },
-                                minLines = 8,
-                                maxLines = 16,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Button(
-                                onClick = { viewModel.submitEssayForGrading() },
-                                enabled = state.essayInput.isNotBlank() && !state.isEvaluatingWriting,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                if (state.isEvaluatingWriting) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Evaluating with 4 official IELTS criteria...", fontSize = 12.sp)
-                                } else {
-                                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Evaluate & Grade with AI", fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-
-                    // Evaluation Result Card
-                    state.writingResult?.let { result ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        FieldLabel("Choose a task")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
                         ) {
-                            Column(modifier = Modifier.padding(18.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "Estimated IELTS Score: Band ${result.estimatedBand}",
-                                            style = MaterialTheme.typography.titleLarge.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = PrimaryBlue
-                                            )
-                                        )
-                                        Text(
-                                            text = "⚠️ This is an AI assessment and not an official IELTS score.",
-                                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                // 4 Criteria Subscores
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    ScoreBadge("Task Response", result.taskAchievementScore, Modifier.weight(1f))
-                                    ScoreBadge("Coherence", result.coherenceScore, Modifier.weight(1f))
-                                    ScoreBadge("Lexical", result.lexicalScore, Modifier.weight(1f))
-                                    ScoreBadge("Grammar", result.grammarScore, Modifier.weight(1f))
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                // Feedback Text
-                                Text(
-                                    text = "Overall Evaluation:",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                            state.prompts.forEachIndexed { index, prompt ->
+                                SelectChip(
+                                    text = prompt.titleEn,
+                                    selected = state.selectedPromptIndex == index,
+                                    onClick = { viewModel.selectPrompt(index) }
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = result.overallFeedbackFa,
-                                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
-                                )
+                            }
+                        }
 
-                                if (result.strengthsFa.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Text(
-                                        text = "Essay Strengths:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen)
-                                    )
-                                    result.strengthsFa.forEach { s ->
-                                        Text("• $s", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 2.dp))
-                                    }
-                                }
+                        HairLine()
+                        SectionHeader(
+                            title = activePrompt.titleEn,
+                            subtitle = "Write at least 250 words",
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = activePrompt.promptTextEn,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 6,
+                            overflow = TextOverflow.Ellipsis
+                        )
 
-                                if (result.mainIssuesFa.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
+                        if (activePrompt.guideFa.isNotBlank()) {
+                            AppInset(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ) {
+                                FieldLabel("Writing guide")
+                                PersianContentRtl {
                                     Text(
-                                        text = "Areas for Improvement:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed)
+                                        text = activePrompt.guideFa,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 5,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    result.mainIssuesFa.forEach { issue ->
-                                        Text("• $issue", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 2.dp))
-                                    }
-                                }
-
-                                if (result.sentenceCorrections.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    Text(
-                                        text = "Sentence Corrections & Better Alternatives:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    result.sentenceCorrections.forEach { corr ->
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
-                                            shape = RoundedCornerShape(10.dp),
-                                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                                        ) {
-                                            Column(modifier = Modifier.padding(10.dp)) {
-                                                Text("Original: ${corr.original}", style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed))
-                                                Text("Improved: ${corr.corrected}", style = MaterialTheme.typography.bodySmall.copy(color = SuccessGreen, fontWeight = FontWeight.Bold))
-                                                if (corr.explanationFa.isNotEmpty()) {
-                                                    Text("Explanation: ${corr.explanationFa}", style = MaterialTheme.typography.labelSmall)
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
+                        }
+
+                        FieldLabel("Your essay submission")
+                        OutlinedTextField(
+                            value = state.essayInput,
+                            onValueChange = { viewModel.onEssayInputChanged(it) },
+                            placeholder = { Text("Write your essay in English here…") },
+                            minLines = 8,
+                            maxLines = 16,
+                            shape = RoundedCornerShape(Dimens.radiusMd),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Word count: ${state.wordCount} (minimum 250)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (state.wordCount >= 250) Accent.success else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "English",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Button(
+                            onClick = { viewModel.submitEssayForGrading() },
+                            enabled = state.essayInput.isNotBlank() && !state.isEvaluatingWriting,
+                            shape = RoundedCornerShape(Dimens.radiusMd),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Dimens.minTapTarget)
+                        ) {
+                            if (state.isEvaluatingWriting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(Dimens.iconMd),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = Dimens.space2
+                                )
+                                Spacer(modifier = Modifier.width(Dimens.space8))
+                                Text("Evaluating with 4 IELTS criteria…", style = MaterialTheme.typography.labelLarge)
+                            } else {
+                                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
+                                Spacer(modifier = Modifier.width(Dimens.space8))
+                                Text("Evaluate and grade with AI", style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+
+                    state.writingResult?.let { result ->
+                        WritingResultCard(result = result)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WritingResultCard(result: WritingEvaluationResult) {
+    AppCard(
+        shape = RoundedCornerShape(Dimens.radiusXl),
+        padding = Dimens.cardPaddingLoose,
+        borderColor = MaterialTheme.colorScheme.outlineVariant
+    ) {
+        SectionHeader(
+            title = "Estimated IELTS score: Band ${result.estimatedBand}",
+            subtitle = "AI assessment, not an official IELTS score",
+            modifier = Modifier.weight(1f)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space4)
+        ) {
+            ScoreBadge("Task Response", result.taskAchievementScore, Modifier.weight(1f))
+            ScoreBadge("Coherence", result.coherenceScore, Modifier.weight(1f))
+            ScoreBadge("Lexical", result.lexicalScore, Modifier.weight(1f))
+            ScoreBadge("Grammar", result.grammarScore, Modifier.weight(1f))
+        }
+
+        AppInset(
+            padding = Dimens.cardPaddingTight,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            FieldLabel("Overall evaluation")
+            PersianContentRtl {
+                Text(
+                    text = result.overallFeedbackFa,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (result.strengthsFa.isNotEmpty()) {
+                FieldLabel("Essay strengths", color = Accent.success)
+                PersianFeedbackBullets(result.strengthsFa)
+            }
+            if (result.mainIssuesFa.isNotEmpty()) {
+                FieldLabel("Areas for improvement", color = Accent.danger)
+                PersianFeedbackBullets(result.mainIssuesFa)
+            }
+        }
+
+        if (result.sentenceCorrections.isNotEmpty()) {
+            SectionHeader(
+                title = "Sentence corrections and better alternatives",
+                subtitle = "Review each suggestion before resubmitting"
+            )
+            result.sentenceCorrections.forEach { correction ->
+                AppInset(
+                    padding = Dimens.cardPaddingTight,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                ) {
+                    Text(
+                        text = "Original: ${correction.original}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Accent.danger,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "Improved: ${correction.corrected}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Accent.success,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (correction.explanationFa.isNotEmpty()) {
+                        FieldLabel("Explanation")
+                        PersianContentRtl {
+                            Text(
+                                text = correction.explanationFa,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 4,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(24.dp))
+@Composable
+private fun PersianFeedbackBullets(items: List<String>) {
+    PersianContentRtl {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space2)) {
+            items.forEach { item ->
+                Text(
+                    text = "• $item",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -295,17 +301,27 @@ private fun ScoreBadge(
     score: String,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(10.dp),
-        modifier = modifier
+    AppInset(
+        modifier = modifier,
+        padding = Dimens.space6,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        shape = RoundedCornerShape(Dimens.radiusSm)
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = score, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = PrimaryBlue))
-            Text(text = title, style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), maxLines = 1)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = score,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

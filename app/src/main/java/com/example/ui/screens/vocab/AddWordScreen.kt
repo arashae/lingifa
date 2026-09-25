@@ -1,13 +1,12 @@
 package com.example.ui.screens.vocab
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,8 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,10 +35,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.ui.components.AppCard
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
+import com.example.ui.components.HairLine
 import com.example.ui.components.LinguaTopAppBar
+import com.example.ui.components.SectionHeader
+import com.example.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,30 +64,29 @@ fun AddWordScreen(
     EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = { LinguaTopAppBar(title = "Add Vocabulary Word", onBack = onBack) }
+            topBar = {
+                LinguaTopAppBar(
+                    title = "Add Vocabulary Word",
+                    subtitle = "Create an entry manually",
+                    onBack = onBack
+                )
+            }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Dimens.screenGutter, vertical = Dimens.space10),
+                verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(
-                        text = "New Word",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    SectionHeader(
+                        title = "Word Details",
+                        subtitle = "Only the English word is required"
                     )
-                    Text(
-                        text = "Only the word is required; fill additional details manually or enrich with AI.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
 
-                FormCard(title = "Core Information") {
+                    FieldLabel("Core information")
                     AppTextField(
                         value = wordInput,
                         onValueChange = { wordInput = it },
@@ -92,15 +94,13 @@ fun AddWordScreen(
                         placeholder = "e.g., mitigate",
                         singleLine = true
                     )
-
                     AppTextField(
                         value = meaningInput,
                         onValueChange = { meaningInput = it },
                         label = "Persian Meaning",
-                        placeholder = "e.g., کاهش دادن، تعدیل کردن",
+                        placeholder = "Enter the Persian meaning",
                         singleLine = true
                     )
-
                     OutlinedButton(
                         onClick = {
                             if (wordInput.isNotBlank()) {
@@ -116,50 +116,56 @@ fun AddWordScreen(
                             }
                         },
                         enabled = wordInput.isNotBlank() && !state.isAiGenerating,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Dimens.minTapTarget)
                     ) {
                         if (state.isAiGenerating) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(17.dp),
-                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(Dimens.iconMd),
+                                strokeWidth = Dimens.hairline * 2,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Enriching with AI…")
+                            Spacer(modifier = Modifier.width(Dimens.space8))
+                            Text(
+                                text = "Enriching with AI…",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         } else {
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.iconMd)
                             )
-                            Spacer(modifier = Modifier.width(7.dp))
-                            Text("Auto-Enrich with AI")
+                            Spacer(modifier = Modifier.width(Dimens.space6))
+                            Text(
+                                text = "Auto-Enrich with AI",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
-                }
 
-                FormCard(title = "Educational Details", subtitle = "Optional") {
+                    HairLine()
+                    FieldLabel("Educational details · optional")
                     AppTextField(
                         value = definitionInput,
                         onValueChange = { definitionInput = it },
                         label = "English Definition",
                         placeholder = "Short, clear definition"
                     )
-
                     AppTextField(
                         value = exampleInput,
                         onValueChange = { exampleInput = it },
                         label = "English Example",
                         placeholder = "Example sentence"
                     )
-
                     AppTextField(
                         value = exampleFaInput,
                         onValueChange = { exampleFaInput = it },
                         label = "Example Persian Translation",
-                        placeholder = "Persian sentence translation"
+                        placeholder = "Persian translation of the example"
                     )
 
                     ExposedDropdownMenuBox(
@@ -170,11 +176,11 @@ fun AddWordScreen(
                             value = selectedLevel,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("CEFR Level") },
+                            label = { Text("CEFR Level", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelDropdownExpanded)
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(Dimens.radiusMd),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -190,86 +196,68 @@ fun AddWordScreen(
                             onDismissRequest = { levelDropdownExpanded = false }
                         ) {
                             listOf("A1", "A2", "B1", "B2", "C1", "C2").forEach { level ->
-                                DropMenuItem(level) {
-                                    selectedLevel = level
-                                    levelDropdownExpanded = false
-                                }
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = level,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedLevel = level
+                                        levelDropdownExpanded = false
+                                    }
+                                )
                             }
                         }
                     }
                 }
 
-                Button(
-                    onClick = {
-                        viewModel.addWordManually(
-                            word = wordInput,
-                            meaning = meaningInput.ifEmpty { "Manual addition" },
-                            definition = definitionInput,
-                            example = exampleInput,
-                            exampleFa = exampleFaInput,
-                            level = selectedLevel
-                        )
-                        onBack()
-                    },
-                    enabled = wordInput.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(13.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.space2),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space12),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(19.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save Word")
-                }
-
-                Spacer(modifier = Modifier.height(22.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun DropMenuItem(text: String, onClick: () -> Unit) {
-    DropdownMenuItem(
-        text = { Text(text) },
-        onClick = onClick
-    )
-}
-
-@Composable
-private fun FormCard(
-    title: String,
-    subtitle: String? = null,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(15.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (subtitle != null) {
                     Text(
-                        text = subtitle,
+                        text = "Add this entry to your vocabulary library.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
+                    Button(
+                        onClick = {
+                            viewModel.addWordManually(
+                                word = wordInput,
+                                meaning = meaningInput.ifEmpty { "Manual addition" },
+                                definition = definitionInput,
+                                example = exampleInput,
+                                exampleFa = exampleFaInput,
+                                level = selectedLevel
+                            )
+                            onBack()
+                        },
+                        enabled = wordInput.isNotBlank(),
+                        modifier = Modifier.heightIn(min = Dimens.minTapTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(Dimens.iconMd)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.space6))
+                        Text(
+                            text = "Save Word",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-            content()
         }
     }
 }
@@ -285,10 +273,22 @@ private fun AppTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
+        label = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        placeholder = {
+            Text(
+                text = placeholder,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         singleLine = singleLine,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.radiusMd),
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,

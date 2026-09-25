@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.network.AiPreferences
 import com.example.ui.navigation.AppNavGraph
-import com.example.ui.theme.LinguaFaTheme
+import com.example.ui.theme.LinguaTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         AiPreferences.init(applicationContext)
         enableEdgeToEdge()
         setContent {
-            LinguaFaTheme {
+            LinguaTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),

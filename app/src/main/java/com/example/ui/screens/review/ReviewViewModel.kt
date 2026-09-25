@@ -98,8 +98,8 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             val isSuccess = rating != ReviewRating.AGAIN
             if (!isSuccess) {
                 mistakeRepo.addMistake(
-                    question = "معنی یا کاربرد واژه '${currentItem.word}' چیست؟",
-                    myAnswer = "یادم نبود / نیاز به مرور",
+                    question = "What does the word '${currentItem.word}' mean, and how is it used?",
+                    myAnswer = "I could not recall it / needs review",
                     correctAnswer = buildString {
                         append(currentItem.englishDefinition.ifBlank { currentItem.persianMeaning })
                         if (currentItem.persianMeaning.isNotBlank()) {
@@ -107,7 +107,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                         }
                     },
                     explanationFa = currentItem.examplePersian.ifEmpty { currentItem.example },
-                    whyWrongFa = "در مرور واژگان به یاد نیامد؛ این واژه ۳۰ دقیقه بعد دوباره موعد مرور می‌شود.",
+                    whyWrongFa = "Could not recall it during vocabulary review; this word is due again in 30 minutes.",
                     concept = currentItem.word,
                     skillType = "VOCABULARY"
                 )

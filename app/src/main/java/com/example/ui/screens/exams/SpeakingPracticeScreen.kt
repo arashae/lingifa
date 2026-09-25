@@ -1,20 +1,14 @@
 package com.example.ui.screens.exams
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -23,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,48 +26,33 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -85,29 +65,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.audio.TtsManager
 import com.example.data.model.IeltsSpeakingFeedback
 import com.example.data.model.IeltsSpeakingPrompt
 import com.example.data.model.IeltsSpeakingSessionRecord
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
+import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
+import com.example.ui.components.HairLine
+import com.example.ui.components.IconTile
+import com.example.ui.components.LinguaTopAppBar
 import com.example.ui.components.MinimalStreakCard
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SecondaryTeal
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.SelectChip
+import com.example.ui.components.TagChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SpeakingPracticeScreen(
     viewModel: ExamsViewModel? = null,
@@ -118,18 +104,18 @@ fun SpeakingPracticeScreen(
     val streakInfo by ieltsViewModel.streakInfo.collectAsState()
     val pastSessions by ieltsViewModel.pastSessions.collectAsState()
     val avgBand by ieltsViewModel.averageBandScore.collectAsState()
-
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
-    DisposableEffect(tts) {
-        onDispose { tts.shutdown() }
-    }
     val snackbarHostState = remember { SnackbarHostState() }
     var showHistorySheet by remember { mutableStateOf(false) }
 
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
+
     LaunchedEffect(state.statusMessage) {
-        state.statusMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        state.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
             ieltsViewModel.clearStatusMessage()
         }
     }
@@ -138,59 +124,28 @@ fun SpeakingPracticeScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = "IELTS Speaking Simulator",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "AI Examiner with band scoring & pronunciation analysis",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
+                LinguaTopAppBar(
+                    title = "IELTS Speaking Simulator",
+                    subtitle = "AI examiner with band scoring and pronunciation analysis",
+                    onBack = onBack,
                     actions = {
-                        // Average score badge
                         avgBand?.let { score ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = PrimaryBlue.copy(alpha = 0.12f),
-                                modifier = Modifier.padding(end = 4.dp)
-                            ) {
-                                Text(
-                                    text = "Band ${String.format(Locale.US, "%.1f", score)}",
-                                    color = PrimaryBlue,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                )
-                            }
+                            TagChip(
+                                text = "Band ${String.format(Locale.US, "%.1f", score)}",
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(end = Dimens.space4)
+                            )
                         }
-
-                        // History icon
                         IconButton(onClick = { showHistorySheet = !showHistorySheet }) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "Exam History",
-                                tint = if (showHistorySheet) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
+                                contentDescription = "Exam history",
+                                tint = if (showHistorySheet) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
+                    }
                 )
             }
         ) { paddingValues ->
@@ -200,16 +155,14 @@ fun SpeakingPracticeScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = Dimens.screenGutter, vertical = Dimens.space8),
+                verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
             ) {
-                // Streak Card
                 MinimalStreakCard(
                     streakInfo = streakInfo,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // History Toggle View
                 if (showHistorySheet && pastSessions.isNotEmpty()) {
                     IeltsSpeakingHistoryCard(
                         sessions = pastSessions,
@@ -217,57 +170,38 @@ fun SpeakingPracticeScreen(
                     )
                 }
 
-                // IELTS Speaking Parts Selector
                 TabRow(
                     selectedTabIndex = state.selectedPart - 1,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = PrimaryBlue,
+                    contentColor = MaterialTheme.colorScheme.primary,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[state.selectedPart - 1]),
-                            color = PrimaryBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(Dimens.radiusLg))
                 ) {
-                    Tab(
-                        selected = state.selectedPart == 1,
-                        onClick = { ieltsViewModel.selectPart(1) },
-                        text = {
-                            Text(
-                                text = "Part 1 (Interview)",
-                                fontWeight = if (state.selectedPart == 1) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
-                    Tab(
-                        selected = state.selectedPart == 2,
-                        onClick = { ieltsViewModel.selectPart(2) },
-                        text = {
-                            Text(
-                                text = "Part 2 (Cue Card)",
-                                fontWeight = if (state.selectedPart == 2) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
-                    Tab(
-                        selected = state.selectedPart == 3,
-                        onClick = { ieltsViewModel.selectPart(3) },
-                        text = {
-                            Text(
-                                text = "Part 3 (Discussion)",
-                                fontWeight = if (state.selectedPart == 3) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
+                    listOf("Part 1 · Interview", "Part 2 · Cue Card", "Part 3 · Discussion").forEachIndexed { index, label ->
+                        val part = index + 1
+                        Tab(
+                            selected = state.selectedPart == part,
+                            onClick = { ieltsViewModel.selectPart(part) },
+                            text = {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (state.selectedPart == part) FontWeight.Bold else FontWeight.Normal,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        )
+                    }
                 }
 
-                // Examiner Question & Cue Card Container
                 IeltsCueCardView(
                     prompt = state.currentPrompt,
                     isExaminerSpeaking = state.isExaminerSpeaking,
@@ -277,7 +211,6 @@ fun SpeakingPracticeScreen(
                     onGenerateAiPrompt = { topic -> ieltsViewModel.generateAiPrompt(topic) }
                 )
 
-                // Preparation & Speaking Timers
                 IeltsTimerSection(
                     part = state.selectedPart,
                     prepSeconds = state.prepTimerSeconds,
@@ -289,113 +222,87 @@ fun SpeakingPracticeScreen(
                     onToggleRecording = { ieltsViewModel.toggleRecording() }
                 )
 
-                // Candidate Spoken Transcript & Evaluation Action
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                AppCard(
+                    shape = RoundedCornerShape(Dimens.radiusLg),
+                    borderColor = MaterialTheme.colorScheme.outlineVariant
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Your Speaking Response:",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                            )
+                    SectionHeader(
+                        title = "Your speaking response",
+                        actionText = "Sample answer",
+                        onActionClick = { ieltsViewModel.populateSampleCandidateAnswer() }
+                    )
 
-                            // Populate sample button
+                    OutlinedTextField(
+                        value = state.candidateTranscript,
+                        onValueChange = { ieltsViewModel.onTranscriptChanged(it) },
+                        placeholder = {
                             Text(
-                                text = "Sample Answer",
-                                color = PrimaryBlue,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(PrimaryBlue.copy(alpha = 0.08f))
-                                    .clickable { ieltsViewModel.populateSampleCandidateAnswer() }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                text = if (state.isRecording) "Recording your speech. Speak clearly or type your response."
+                                else "Speak your response or type here."
                             )
-                        }
-
-                        OutlinedTextField(
-                            value = state.candidateTranscript,
-                            onValueChange = { ieltsViewModel.onTranscriptChanged(it) },
-                            placeholder = {
-                                Text(
-                                    text = if (state.isRecording) "Recording your speech... Speak clearly and review text." else "Speak your response or type here..."
-                                )
-                            },
-                            minLines = 4,
-                            maxLines = 8,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                            )
+                        },
+                        minLines = 4,
+                        maxLines = 8,
+                        shape = RoundedCornerShape(Dimens.radiusMd),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
+                    )
 
-                        // Word count and pacing hint
-                        val wordCount = state.candidateTranscript.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.size
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Word count: $wordCount",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            val targetWords = if (state.selectedPart == 2) "150 - 220 words for 2 min" else "40 - 70 words"
-                            Text(
-                                text = "Target: $targetWords",
-                                fontSize = 11.sp,
-                                color = if (wordCount >= 60) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                    val wordCount = state.candidateTranscript.trim()
+                        .split(Regex("\\s+"))
+                        .count { it.isNotBlank() }
+                    val targetWords = if (state.selectedPart == 2) "150–220 words for 2 min" else "40–70 words"
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Word count: $wordCount",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Target: $targetWords",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (wordCount >= 60) Accent.success else MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
-                        // Evaluate Button
-                        Button(
-                            onClick = { ieltsViewModel.evaluateSpeakingResponse() },
-                            enabled = state.candidateTranscript.isNotBlank() && !state.isEvaluating,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryBlue,
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                        ) {
-                            if (state.isEvaluating) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Evaluating across 4 official IELTS criteria...", fontSize = 12.sp)
-                            } else {
-                                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Evaluate with AI Examiner (+35 XP)",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                            }
+                    Button(
+                        onClick = { ieltsViewModel.evaluateSpeakingResponse() },
+                        enabled = state.candidateTranscript.isNotBlank() && !state.isEvaluating,
+                        shape = RoundedCornerShape(Dimens.radiusMd),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Dimens.minTapTarget)
+                    ) {
+                        if (state.isEvaluating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(Dimens.iconMd),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = Dimens.space2
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.space8))
+                            Text("Evaluating across 4 IELTS criteria…", style = MaterialTheme.typography.labelLarge)
+                        } else {
+                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
+                            Spacer(modifier = Modifier.width(Dimens.space8))
+                            Text("Evaluate with AI examiner (+35 XP)", style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
 
-                // Real-time Comprehensive Feedback Dashboard
                 state.feedback?.let { feedback ->
                     IeltsSpeakingFeedbackDashboard(
                         feedback = feedback,
@@ -403,14 +310,11 @@ fun SpeakingPracticeScreen(
                         onPlayModelAudio = { ieltsViewModel.playModelAnswer(tts) }
                     )
                 }
-
-                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun IeltsCueCardView(
     prompt: IeltsSpeakingPrompt,
@@ -420,209 +324,153 @@ private fun IeltsCueCardView(
     onPlayAudio: () -> Unit,
     onGenerateAiPrompt: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.2f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    AppCard(
+        shape = RoundedCornerShape(Dimens.radiusXl),
+        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.blockGap),
+            verticalAlignment = Alignment.Top
         ) {
-            // Header Row: Topic, Part Badge, Examiner Audio
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space4)
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = PrimaryBlue.copy(alpha = 0.12f)
-                    ) {
-                        Text(
-                            text = "Part ${prompt.part}",
-                            color = PrimaryBlue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-
+                    TagChip(
+                        text = "Part ${prompt.part}",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                     Text(
-                        text = prompt.topicFa,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = prompt.topicEn,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Accent Toggle
-                    FilterChip(
-                        selected = isUkAccent,
-                        onClick = onToggleAccent,
-                        label = { Text(if (isUkAccent) "UK" else "US", fontSize = 10.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = PrimaryBlue,
-                            selectedLabelColor = Color.White
-                        )
+                PersianContentRtl {
+                    Text(
+                        text = prompt.topicFa,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
+                }
+            }
 
-                    // Play audio button
-                    IconButton(
-                        onClick = onPlayAudio,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(if (isExaminerSpeaking) PrimaryBlue else PrimaryBlue.copy(alpha = 0.1f))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SelectChip(
+                    text = if (isUkAccent) "UK accent" else "US accent",
+                    selected = isUkAccent,
+                    onClick = onToggleAccent
+                )
+                if (isExaminerSpeaking) {
+                    TagChip(
+                        text = "Playing",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                AudioSpeakerButton(
+                    onClick = onPlayAudio,
+                    size = Dimens.minTapTarget,
+                    contentDescription = "Play examiner prompt"
+                )
+            }
+        }
+
+        Text(
+            text = prompt.questionEn,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        PersianContentRtl {
+            Text(
+                text = prompt.questionFa,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (prompt.part == 2 && prompt.cueCardBulletPoints.isNotEmpty()) {
+            AppInset(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
+                FieldLabel("You should say", color = MaterialTheme.colorScheme.primary)
+                prompt.cueCardBulletPoints.forEach { point ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Icon(
-                            imageVector = if (isExaminerSpeaking) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = "Play examiner prompt",
-                            tint = if (isExaminerSpeaking) Color.White else PrimaryBlue,
-                            modifier = Modifier.size(20.dp)
+                        Text("•", color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            text = point,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
+        }
 
-            // Question Text
-            Text(
-                text = prompt.questionEn,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            // Persian Translation
-            Text(
-                text = prompt.questionFa,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Part 2 Cue Card Bullet Points Box
-            if (prompt.part == 2 && prompt.cueCardBulletPoints.isNotEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
-                    modifier = Modifier.fillMaxWidth()
+        if (prompt.recommendedVocab.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.space6)) {
+                FieldLabel("Recommended vocabulary and collocations")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "You should say:",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = PrimaryBlue
-                        )
-                        prompt.cueCardBulletPoints.forEach { point ->
-                            Row(
-                                verticalAlignment = Alignment.Top,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text("•", color = PrimaryBlue, fontWeight = FontWeight.Bold)
+                    prompt.recommendedVocab.forEach { vocab ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space4),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TagChip(
+                                text = vocab.word,
+                                containerColor = Accent.successSoft,
+                                contentColor = Accent.successOnSoft
+                            )
+                            PersianContentRtl {
                                 Text(
-                                    text = point,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    text = vocab.meaningFa,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
                     }
                 }
             }
+        }
 
-            // Recommended Vocab & Collocations
-            if (prompt.recommendedVocab.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "Recommended Vocab & Collocations (Band 7.5+):",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        prompt.recommendedVocab.forEach { vocab ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = SuccessGreen.copy(alpha = 0.08f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.25f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = vocab.word,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp,
-                                        color = SuccessGreen
-                                    )
-                                    Text(
-                                        text = "(${vocab.meaningFa})",
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // AI Topic Generators Pills
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space6)) {
+            FieldLabel("AI topics")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space6)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    tint = PrimaryBlue,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = "AI Topics:",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
-                )
-                listOf("Environment", "Artificial Intelligence", "Higher Education", "Urbanization", "Hometown").forEach { topic ->
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = PrimaryBlue.copy(alpha = 0.08f),
-                        modifier = Modifier.clickable { onGenerateAiPrompt(topic) }
-                    ) {
-                        Text(
+                listOf("Environment", "Artificial Intelligence", "Higher Education", "Urbanization", "Hometown")
+                    .forEach { topic ->
+                        SelectChip(
                             text = topic,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = PrimaryBlue,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            selected = false,
+                            onClick = { onGenerateAiPrompt(topic) }
                         )
                     }
-                }
             }
         }
     }
@@ -641,70 +489,53 @@ private fun IeltsTimerSection(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.blockGap)
     ) {
-        // Preparation Timer (primarily for Part 2)
         if (part == 2) {
-            Card(
+            AppCard(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    if (isPrepRunning) AccentGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                )
+                padding = Dimens.cardPaddingTight,
+                shape = RoundedCornerShape(Dimens.radiusLg),
+                borderColor = if (isPrepRunning) Accent.warning else MaterialTheme.colorScheme.outlineVariant
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                 ) {
-                    Text(
-                        text = "Prep Timer (1 min)",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
+                    Text("Prep timer (1 min)", style = MaterialTheme.typography.labelMedium)
                     Text(
                         text = String.format(Locale.US, "00:%02d", prepSeconds),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (prepSeconds <= 10) Color(0xFFEF4444) else AccentGold
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = if (prepSeconds <= 10) Accent.danger else Accent.warning
                     )
-
                     LinearProgressIndicator(
-                        progress = { prepSeconds / 60f },
+                        progress = { (prepSeconds / 60f).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = AccentGold,
-                        trackColor = AccentGold.copy(alpha = 0.2f)
+                            .height(Dimens.progressHeight)
+                            .clip(RoundedCornerShape(Dimens.radiusPill)),
+                        color = Accent.warning,
+                        trackColor = Accent.warning.copy(alpha = 0.2f)
                     )
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space6)) {
                         IconButton(
                             onClick = onTogglePrep,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(Dimens.minTapTarget)
                         ) {
                             Icon(
                                 imageVector = if (isPrepRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = "Prep Timer",
-                                tint = AccentGold
+                                contentDescription = "Start or pause preparation timer",
+                                tint = Accent.warning
                             )
                         }
                         IconButton(
                             onClick = onResetPrep,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(Dimens.minTapTarget)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Replay,
-                                contentDescription = "Reset",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
+                                contentDescription = "Reset preparation timer",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -712,76 +543,66 @@ private fun IeltsTimerSection(
             }
         }
 
-        // Speaking Duration & Live Recording Pulse
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+        val infiniteTransition = rememberInfiniteTransition(label = "recording pulse")
+        val pulseScale by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = if (isRecording) 1.25f else 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(800, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
             ),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                if (isRecording) Color(0xFFEF4444) else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-            )
+            label = "recording pulse scale"
+        )
+        AppCard(
+            modifier = Modifier.weight(1f),
+            padding = Dimens.cardPaddingTight,
+            shape = RoundedCornerShape(Dimens.radiusLg),
+            borderColor = if (isRecording) Accent.danger else MaterialTheme.colorScheme.outlineVariant
         ) {
-            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-            val pulseScale by infiniteTransition.animateFloat(
-                initialValue = 1.0f,
-                targetValue = if (isRecording) 1.25f else 1.0f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(800, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "pulseScale"
-            )
-
             Column(
-                modifier = Modifier.padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.space6)
             ) {
-                Text(
-                    text = "Speaking Duration",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
+                Text("Speaking duration", style = MaterialTheme.typography.labelMedium)
                 val mins = speakingSeconds / 60
                 val secs = speakingSeconds % 60
                 Text(
                     text = String.format(Locale.US, "%02d:%02d", mins, secs),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (isRecording) Color(0xFFEF4444) else PrimaryBlue
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (isRecording) Accent.danger else MaterialTheme.colorScheme.primary
                 )
-
-                // Recording mic button
                 IconButton(
                     onClick = onToggleRecording,
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(Dimens.minTapTarget)
                         .scale(if (isRecording) pulseScale else 1f)
                         .clip(CircleShape)
-                        .background(if (isRecording) Color(0xFFEF4444) else PrimaryBlue)
+                        .background(if (isRecording) Accent.danger else MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(
                         imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                        contentDescription = "Record Speech",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
+                        contentDescription = if (isRecording) "Stop recording" else "Record speech",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(Dimens.iconLg)
                     )
                 }
-
                 Text(
-                    text = if (isRecording) "Recording... (tap to stop)" else "Tap mic to start speaking",
-                    fontSize = 9.sp,
-                    color = if (isRecording) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant
+                    text = if (isRecording) "Recording… tap to stop" else "Tap the mic to start speaking",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isRecording) Accent.danger else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
 }
+
+private data class SpeakingCriterion(
+    val title: String,
+    val score: Float,
+    val feedback: String
+)
 
 @Composable
 private fun IeltsSpeakingFeedbackDashboard(
@@ -789,317 +610,194 @@ private fun IeltsSpeakingFeedbackDashboard(
     isModelSpeaking: Boolean,
     onPlayModelAudio: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Overall Score Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "IELTS Examiner Scorecard",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Based on Cambridge 4 Assessment Criteria",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+    val criteria = listOf(
+        SpeakingCriterion("Fluency & Coherence", feedback.fluencyScore, feedback.fluencyFeedbackFa),
+        SpeakingCriterion("Lexical Range & Variety", feedback.lexicalScore, feedback.lexicalFeedbackFa),
+        SpeakingCriterion("Grammatical Range & Accuracy", feedback.grammarScore, feedback.grammarFeedbackFa),
+        SpeakingCriterion("Pronunciation & Intonation", feedback.pronunciationScore, feedback.pronunciationHintsFa)
+    )
 
-                // Estimated Overall Band badge
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = PrimaryBlue,
-                    modifier = Modifier.padding(2.dp)
+    AppCard(
+        shape = RoundedCornerShape(Dimens.radiusXl),
+        padding = Dimens.cardPaddingLoose,
+        borderColor = MaterialTheme.colorScheme.outlineVariant
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SectionHeader(
+                title = "IELTS examiner scorecard",
+                subtitle = "Based on the four Cambridge assessment criteria",
+                modifier = Modifier.weight(1f)
+            )
+            TagChip(
+                text = "Band ${String.format(Locale.US, "%.1f", feedback.overallBand)}",
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
+        criteria.forEachIndexed { index, criterion ->
+            if (index > 0) HairLine()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.rowHeight)
+                    .padding(vertical = Dimens.space4),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+            ) {
+                IconTile(
+                    icon = Icons.Default.GraphicEq,
+                    tint = MaterialTheme.colorScheme.primary,
+                    size = Dimens.iconTileSm,
+                    iconSize = Dimens.iconSm
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space2)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Text(
+                        text = criterion.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    PersianContentRtl {
                         Text(
-                            text = "Band",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                        Text(
-                            text = String.format(Locale.US, "%.1f", feedback.overallBand),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
+                            text = criterion.feedback,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+                TagChip(
+                    text = String.format(Locale.US, "%.1f", criterion.score),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
+        }
 
-            // 4 Criteria Breakdown Grid
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IeltsCriterionScoreCard(
-                        titleEn = "Fluency & Coherence",
-                        titleFa = "روانی و پیوستگی کلام",
-                        score = feedback.fluencyScore,
-                        feedback = feedback.fluencyFeedbackFa,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IeltsCriterionScoreCard(
-                        titleEn = "Lexical Resource",
-                        titleFa = "دامنه و تنوع واژگان",
-                        score = feedback.lexicalScore,
-                        feedback = feedback.lexicalFeedbackFa,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IeltsCriterionScoreCard(
-                        titleEn = "Grammatical Range",
-                        titleFa = "تنوع و دقت گرامری",
-                        score = feedback.grammarScore,
-                        feedback = feedback.grammarFeedbackFa,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IeltsCriterionScoreCard(
-                        titleEn = "Pronunciation",
-                        titleFa = "تلفظ و آهنگ کلام",
-                        score = feedback.pronunciationScore,
-                        feedback = feedback.pronunciationHintsFa,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            // Persian-Speaker Specific Pronunciation & Pitfalls Card
-            if (feedback.persianLearnerMistakes.isNotEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFFFEF3C7),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentGold.copy(alpha = 0.35f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.WarningAmber,
-                                contentDescription = null,
-                                tint = Color(0xFFD97706),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = "Key Pitfalls & Pronunciation for Persian Speakers:",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                color = Color(0xFFB45309)
-                            )
-                        }
-
+        if (feedback.persianLearnerMistakes.isNotEmpty()) {
+            AppInset(
+                color = Accent.warningSoft,
+                contentColor = Accent.warningOnSoft
+            ) {
+                SectionHeader(
+                    title = "Pronunciation pitfalls",
+                    subtitle = "Common patterns for Persian speakers"
+                )
+                PersianContentRtl {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.space4)) {
                         feedback.persianLearnerMistakes.forEach { mistake ->
                             Text(
                                 text = "• $mistake",
-                                fontSize = 11.sp,
-                                color = Color(0xFF78350F),
-                                lineHeight = 17.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Vocabulary Upgrades
-            if (feedback.vocabUpgrades.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "Band 8+ Vocabulary Upgrades:",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    feedback.vocabUpgrades.forEach { upgrade ->
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(10.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Text(
-                                            text = upgrade.original,
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                        Text("➔", fontSize = 12.sp)
-                                        Text(
-                                            text = upgrade.upgraded,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = SuccessGreen
-                                        )
-                                    }
-                                    Text(
-                                        text = upgrade.explanationFa,
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Band 8+ Cambridge Model Answer with Audio
-            if (feedback.band8ModelResponseEn.isNotBlank()) {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue.copy(alpha = 0.05f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.2f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.School,
-                                    contentDescription = null,
-                                    tint = PrimaryBlue,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = "Band 8.5 Model Answer:",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = PrimaryBlue
-                                )
-                            }
-
-                            IconButton(
-                                onClick = onPlayModelAudio,
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isModelSpeaking) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                                    contentDescription = "Play Model Answer",
-                                    tint = PrimaryBlue,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = feedback.band8ModelResponseEn,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        if (feedback.band8ModelResponseFa.isNotBlank()) {
-                            Text(
-                                text = feedback.band8ModelResponseFa,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.sp,
-                                    lineHeight = 17.sp
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun IeltsCriterionScoreCard(
-    titleEn: String,
-    titleFa: String,
-    score: Float,
-    feedback: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = titleEn,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = String.format(Locale.US, "%.1f", score),
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp,
-                    color = PrimaryBlue
-                )
+        if (feedback.vocabUpgrades.isNotEmpty()) {
+            SectionHeader(title = "Band 8+ vocabulary upgrades")
+            feedback.vocabUpgrades.forEach { upgrade ->
+                AppInset(
+                    padding = Dimens.cardPaddingTight,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = upgrade.original,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Accent.danger,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text("→", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            text = upgrade.upgraded,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Accent.success,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    PersianContentRtl {
+                        Text(
+                            text = upgrade.explanationFa,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
-            Text(
-                text = titleFa,
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = feedback,
-                fontSize = 10.sp,
-                lineHeight = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 3
-            )
+        }
+
+        if (feedback.band8ModelResponseEn.isNotBlank()) {
+            AppInset(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconTile(
+                        icon = if (isModelSpeaking) Icons.Default.GraphicEq else Icons.Default.School,
+                        tint = MaterialTheme.colorScheme.primary,
+                        size = Dimens.iconTileSm,
+                        iconSize = Dimens.iconSm
+                    )
+                    SectionHeader(
+                        title = "Band 8+ model answer",
+                        subtitle = "Listen, then compare your response",
+                        modifier = Modifier.weight(1f)
+                    )
+                    AudioSpeakerButton(
+                        onClick = onPlayModelAudio,
+                        size = Dimens.minTapTarget,
+                        contentDescription = "Play model answer"
+                    )
+                }
+                Text(
+                    text = feedback.band8ModelResponseEn,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (feedback.band8ModelResponseFa.isNotBlank()) {
+                    PersianContentRtl {
+                        Text(
+                            text = feedback.band8ModelResponseFa,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1111,71 +809,55 @@ private fun IeltsSpeakingHistoryCard(
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.US) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    AppCard(
+        shape = RoundedCornerShape(Dimens.radiusLg),
+        borderColor = MaterialTheme.colorScheme.outlineVariant
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        SectionHeader(
+            title = "Previous speaking sessions (${sessions.size})",
+            actionText = "Close",
+            onActionClick = onClose
+        )
+        sessions.take(4).forEach { session ->
+            AppInset(
+                padding = Dimens.cardPaddingTight,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
-                Text(
-                    text = "Previous Speaking Sessions (${sessions.size}):",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = "Close ✕",
-                    fontSize = 11.sp,
-                    color = PrimaryBlue,
-                    modifier = Modifier.clickable { onClose() }
-                )
-            }
-
-            sessions.take(4).forEach { session ->
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.space2)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = session.topicEn,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        PersianContentRtl {
                             Text(
-                                text = "Part ${session.part}: ${session.topicFa}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = dateFormat.format(Date(session.timestamp)),
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = PrimaryBlue.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = "Band ${String.format(Locale.US, "%.1f", session.overallBand)}",
-                                color = PrimaryBlue,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                text = session.topicFa,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+                        Text(
+                            text = dateFormat.format(Date(session.timestamp)),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
+                    TagChip(
+                        text = "Band ${String.format(Locale.US, "%.1f", session.overallBand)}",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }

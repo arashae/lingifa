@@ -15,7 +15,6 @@ import com.example.network.DeepSeekClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -30,7 +29,7 @@ data class ProfileUiState(
     val exportFormat: String? = null,
     val statusMessage: String? = null,
     val deepSeekApiKey: String = "",
-    val deepSeekModel: String = "deepseek-chat",
+    val deepSeekModel: String = AiPreferences.DEFAULT_MODEL,
     val isTestingAi: Boolean = false,
     val aiConnectionStatus: String? = null
 )
@@ -155,9 +154,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun setDeepSeekApiKey(key: String) {
-        AiPreferences.setDeepSeekApiKey(getApplication(), key)
-        _deepSeekApiKey.value = key.trim()
-        _statusMessage.value = "DeepSeek API key saved."
+        runCatching { AiPreferences.setDeepSeekApiKey(getApplication(), key) }
+            .onSuccess {
+                _deepSeekApiKey.value = AiPreferences.getDeepSeekApiKey(getApplication())
+                _aiConnectionStatus.value = null
+                _statusMessage.value = if (_deepSeekApiKey.value.isBlank()) {
+                    "DeepSeek API key cleared."
+                } else {
+                    "DeepSeek API key saved securely on this device."
+                }
+            }
+            .onFailure { _statusMessage.value = "Could not save API key securely: ${it.message}" }
     }
 
     fun clearDeepSeekApiKey() {
@@ -169,22 +176,28 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun setDeepSeekModel(model: String) {
         AiPreferences.setDeepSeekModel(getApplication(), model)
-        _deepSeekModel.value = model
+        _deepSeekModel.value = AiPreferences.getDeepSeekModel(getApplication())
+        _aiConnectionStatus.value = null
     }
 
     fun testDeepSeekConnection(key: String = _deepSeekApiKey.value) {
         viewModelScope.launch {
+            val effectiveKey = key.trim().ifBlank { AiPreferences.getDeepSeekApiKey(getApplication()) }
+            if (effectiveKey.isBlank()) {
+                _aiConnectionStatus.value = "Add your DeepSeek API key first."
+                return@launch
+            }
             _isTestingAi.value = true
             _aiConnectionStatus.value = "Testing connection..."
-            val result = DeepSeekClient.testConnection(key, _deepSeekModel.value)
+            val result = DeepSeekClient.testConnection(effectiveKey, _deepSeekModel.value)
             _isTestingAi.value = false
-            if (result.isSuccess) {
-                _aiConnectionStatus.value = "Connected successfully (${result.getOrNull()})"
-                _statusMessage.value = "DeepSeek connected!"
-            } else {
-                val err = result.exceptionOrNull()?.message ?: "Unknown error"
-                _aiConnectionStatus.value = "Error: $err"
-                _statusMessage.value = "Connection failed: $err"
+            result.onSuccess { status ->
+                _aiConnectionStatus.value = "Connected · $status"
+                _statusMessage.value = "DeepSeek connection verified."
+            }.onFailure { error ->
+                val message = error.message ?: "Unknown error"
+                _aiConnectionStatus.value = "Error: $message"
+                _statusMessage.value = "Connection failed: $message"
             }
         }
     }

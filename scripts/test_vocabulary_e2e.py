@@ -303,6 +303,20 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
             "عضو تازهوارد صومعه",
         ))
 
+    def test_corrected_can_modal_sense_does_not_trigger_priority_flag(self) -> None:
+        self.assertIsNone(priority_sense_review_risk(
+            "can",
+            "be able to do something or be allowed to do something",
+            "توانستن؛ اجازه داشتن",
+            "modal verb",
+        ))
+        self.assertIsNotNone(priority_sense_review_risk(
+            "can",
+            "a metal container",
+            "قوطی",
+            "noun",
+        ))
+
     def test_definition_persian_pos_alignment_heuristic(self) -> None:
         self.assertEqual(
             definition_meaning_alignment_risk("noun", "رسیدن به؛ به دست آوردن", "to arrive at a place or goal"),

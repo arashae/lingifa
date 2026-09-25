@@ -359,11 +359,15 @@ def placeholder_definition_risk(definition: str) -> str | None:
     return None
 
 
-def priority_sense_review_risk(word: str, definition: str, persian_meaning: str) -> str | None:
+def priority_sense_review_risk(word: str, definition: str, persian_meaning: str, part_of_speech: str = "") -> str | None:
     normalized_word = word.lower()
     priority_words = {"it", "or", "may", "can", "might", "must", "chess", "metabolism", "replicate", "orient", "corpus", "novice"}
     if normalized_word not in priority_words:
         return None
+    if normalized_word == "can" and "modal" in part_of_speech.lower():
+        meaning_ok = any(marker in persian_meaning for marker in ("توانستن", "اجازه", "ممکن"))
+        if meaning_ok:
+            return None
     if normalized_word == "novice":
         definition_ok = any(marker in definition.lower() for marker in ("new to", "little experience", "beginner"))
         meaning_ok = any(marker in persian_meaning for marker in ("تازه‌کار", "مبتدی", "تجربه کم"))
@@ -566,7 +570,7 @@ def run_validation(
             collocation_risk = collocation_target_risk(word, [str(value) for value in row.get("collocations", [])])
             if collocation_risk:
                 flag("collocation_target_review", path, line_no, word, collocation_risk)
-            priority_risk = priority_sense_review_risk(word, definition, meaning)
+            priority_risk = priority_sense_review_risk(word, definition, meaning, pos)
             if priority_risk:
                 flag("priority_sense_review", path, line_no, word, priority_risk)
 

@@ -59,6 +59,13 @@
 - Corrected POS/sense conflicts, definitions, Persian content, bilingual examples, collocations, relevance, tags, and metadata while preserving inherited provenance.
 - Strict validation reports zero findings and zero errors across the final 1,040 IELTS cards with 100% example coverage.
 
+## TOEFL priority review: cards 1–2,000
+
+- Reviewed `toefl_core_001.jsonl` through `toefl_core_004.jsonl` card by word and selected one deliberate TOEFL-relevant sense per entry.
+- Corrected POS/sense conflicts, malformed definitions, Persian encoding and gloss defects, missing examples, and non-aligned bilingual examples.
+- Added sense-specific collocations; strict validation reports zero findings and zero errors across all 2,000 cards with 100% example coverage.
+- Existing source, license, and frequency fields were preserved. Revised learner content is editorial and is not attributed to external dictionaries or upstream datasets.
+
 ## Batch 7: `general_core_002` cards 1–50
 
 - Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.

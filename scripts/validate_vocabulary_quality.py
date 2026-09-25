@@ -22,6 +22,11 @@ from sanitize_vocabulary_assets import (
 
 VALID_CEFR = {"A1", "A2", "B1", "B2", "C1", "C2"}
 REPORT_PATH = VOCAB_ROOT / "quality_report.json"
+POS_OK = {"noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
+          "modal verb", "modal auxiliary", "auxiliary verb", "article", "interjection", "prefix", "suffix",
+          "be-verb", "have-verb", "do-verb", "infinitive-to"}
+RISKY_SENSES = {"it": "pronoun", "or": "conjunction", "may": "modal", "can": "modal",
+                "might": "modal", "must": "modal", "he": "pronoun"}
 
 
 def bank_key(path: Path) -> str:
@@ -51,6 +56,27 @@ def main() -> None:
     example_missing_samples: list[str] = []
     definition_missing_samples: list[str] = []
     proper_noun_samples: list[str] = []
+    semantic_findings: list[dict] = []
+    semantic_counts = Counter()
+
+    def flag(kind: str, path: Path, line_no: int, word: str, detail: str) -> None:
+        semantic_counts[kind] += 1
+        if len(semantic_findings) < 500:
+            semantic_findings.append({"kind": kind, "file": str(path.relative_to(VOCAB_ROOT)),
+                                      "line": line_no, "word": word, "detail": detail})
+
+    def target_present(word: str, example: str) -> bool:
+        import re
+        lemma = re.sub(r"[^a-z]", "", word.lower())
+        tokens = set(re.findall(r"[a-z]+", example.lower()))
+        if not lemma:
+            return True
+        forms = {lemma, lemma + "s", lemma + "es", lemma + "ed", lemma + "d", lemma + "ing"}
+        if lemma.endswith("e"):
+            forms.update({lemma[:-1] + "ed", lemma[:-1] + "ing"})
+        if lemma.endswith("y"):
+            forms.add(lemma[:-1] + "ies")
+        return bool(tokens.intersection(forms))
 
     files = sorted(VOCAB_ROOT.rglob("*.jsonl"))
     for path in files:
@@ -84,6 +110,30 @@ def main() -> None:
                     definition_missing_samples.append(f"{bank}:{word}")
             if cefr not in VALID_CEFR:
                 errors.append(f"{path}:{line_no}: {word}: invalid CEFR '{cefr}'")
+
+            pos = str(row.get("partOfSpeech", "")).strip().lower()
+            if not pos or pos in {"undefined", "word", "unknown"} or pos not in POS_OK:
+                flag("pos_review", path, line_no, word, pos or "(empty)")
+            expected_pos = RISKY_SENSES.get(word.lower())
+            if expected_pos and expected_pos not in pos:
+                flag("closed_class_sense_review", path, line_no, word, "expected %s; got %s" % (expected_pos, pos))
+            if definition.lower() in {"", "word", "a word", "placeholder", "definition"}:
+                flag("placeholder_definition", path, line_no, word, definition or "(empty)")
+            if bank == "general" and row.get("frequencyRank") == 0:
+                flag("zero_frequency_rank", path, line_no, word, "frequencyRank is 0")
+            if bank == "general" and cefr == "C2" and int(row.get("frequencyRank") or 0) < 500:
+                flag("early_c2_outlier", path, line_no, word, "C2 card appears early in General bank")
+            example_persian = str(row.get("examplePersian", "")).strip()
+            if any("\ufffd" in value or any("\uac00" <= ch <= "\ud7af" or "\u4e00" <= ch <= "\u9fff" for ch in value)
+                   for value in (meaning, example_persian)):
+                flag("unexpected_script_or_encoding", path, line_no, word, "inspect Persian fields")
+            if example and not example_persian:
+                flag("missing_example_translation", path, line_no, word, "English example has no translation")
+            if example and not target_present(word, example):
+                flag("target_word_missing_from_example", path, line_no, word, "review lemma/inflection and sense")
+            if word.lower() in {"it", "or", "may", "can", "might", "must", "chess", "metabolism",
+                                "replicate", "orient", "corpus", "novice"}:
+                flag("priority_sense_review", path, line_no, word, "high-risk lemma from editorial checklist")
 
             if normalized_word in per_bank_words[bank]:
                 counts["duplicates"] += 1
@@ -134,6 +184,12 @@ def main() -> None:
             "missingDefinitions": definition_missing_samples,
             "duplicates": duplicate_samples,
             "c2NamesPlaces": proper_noun_samples,
+        },
+        "semanticReview": {
+            "findingCounts": dict(semantic_counts),
+            "findingsTruncatedAt": 500,
+            "findings": semantic_findings,
+            "note": "Heuristic flags require editorial review and never invent meanings.",
         },
         "errorCount": len(errors),
         "errors": errors[:100],

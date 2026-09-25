@@ -80,6 +80,12 @@
 - The priority-sense checklist is now sense-aware, so correctly curated `metabolism`, `orient`, `replicate`, `can`, and `novice` cards are accepted while their historical wrong senses are still flagged.
 - Strict validation reports zero findings and zero errors across all 2,000 cards with 100% example and collocation coverage.
 
+## TOEFL priority review: cards 6,001–6,974
+
+- Reviewed `toefl_core_013.jsonl` and `toefl_core_014.jsonl` card by card, completing the full TOEFL bank.
+- Corrected POS/sense conflicts, multi-sense definitions, Persian encoding, missing examples, translation mismatches, CEFR levels, and relevance metadata.
+- The complete TOEFL bank of 6,974 cards now passes strict validation with zero findings and zero errors and 100% example, IPA, and collocation coverage.
+
 ## Batch 7: `general_core_002` cards 1–50
 
 - Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.

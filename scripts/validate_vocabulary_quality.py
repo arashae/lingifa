@@ -389,6 +389,20 @@ def priority_sense_review_risk(word: str, definition: str, persian_meaning: str,
         meaning_ok = any(marker in persian_meaning for marker in ("توانستن", "اجازه", "ممکن"))
         if meaning_ok:
             return None
+    if normalized_word in {"may", "might", "must"} and "modal" in part_of_speech.lower():
+        modal_markers = {
+            "may": ("ممکن", "اجازه", "شاید", "می‌توان"),
+            "might": ("ممکن", "شاید", "احتمال"),
+            "must": ("باید", "وادار"),
+        }[normalized_word]
+        if any(marker in persian_meaning for marker in modal_markers):
+            return None
+    if normalized_word == "it" and "pronoun" in part_of_speech.lower():
+        if any(marker in persian_meaning for marker in ("آن", "ضمیر")):
+            return None
+    if normalized_word == "or" and "conjunction" in part_of_speech.lower():
+        if "یا" in persian_meaning:
+            return None
     if normalized_word == "metabolism":
         if any(marker in definition.lower() for marker in ("chemical process", "break down substances")) and any(marker in persian_meaning for marker in ("متابولیسم", "متابولیک", "فرایندهای شیمیایی")):
             return None

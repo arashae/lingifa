@@ -79,6 +79,17 @@ jobs:
       - name: Validate vocabulary quality
         run: python scripts/validate_vocabulary_quality.py
 
+      # The reviewed IELTS bank is held to the strict gate.
+      - name: Strict-gate every reviewed IELTS chunk
+        run: |
+          set -euo pipefail
+          for file in app/src/main/assets/vocabulary/ielts/ielts_core_*.jsonl; do
+            echo "::group::strict $(basename "$file")"
+            python scripts/validate_vocabulary_quality.py --file "$file" --strict \
+              --report "$RUNNER_TEMP/$(basename "$file").report.json"
+            echo "::endgroup::"
+          done
+
       - name: Show generated coverage
         run: |
           cat app/src/main/assets/vocabulary/coverage_report.json

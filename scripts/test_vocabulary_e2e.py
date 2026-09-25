@@ -348,6 +348,22 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
                 self.assertIn(pos, POS_OK)
         self.assertNotIn("word", POS_OK)
 
+    def test_corrected_closed_class_senses_do_not_trigger_priority_flag(self) -> None:
+        # A correctly curated modal/function word must not be flagged just for its lemma.
+        passing = [
+            ("may", "Used to say something is possible or allowed.", "ممکن است؛ اجازه داشتن", "modal"),
+            ("might", "Used to say something is possible but not certain.", "ممکن است؛ شاید", "modal"),
+            ("must", "Used to say something is necessary or required.", "باید؛ لازم است", "modal"),
+            ("it", "Used to refer to a single thing already mentioned.", "آن؛ ضمیر شخص غیرشخصی", "pronoun"),
+            ("or", "Used to introduce an alternative choice.", "یا؛ یا اینکه", "conjunction"),
+        ]
+        for word, definition, meaning, pos in passing:
+            with self.subTest(word=word):
+                self.assertIsNone(priority_sense_review_risk(word, definition, meaning, pos))
+        # The wrong senses must still be flagged.
+        self.assertIsNotNone(priority_sense_review_risk("may", "the fifth month of the year", "ماه مه", "noun"))
+        self.assertIsNotNone(priority_sense_review_risk("or", "a North American animal", "سگ گرگ", "noun"))
+
     def test_definition_persian_pos_alignment_heuristic(self) -> None:
         self.assertEqual(
             definition_meaning_alignment_risk("noun", "رسیدن به؛ به دست آوردن", "to arrive at a place or goal"),

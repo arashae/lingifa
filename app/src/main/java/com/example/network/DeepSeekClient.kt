@@ -1,5 +1,6 @@
 package com.example.network
 
+import android.os.SystemClock
 import android.util.Log
 import com.example.data.model.VocabularyItem
 import kotlinx.coroutines.Dispatchers
@@ -24,23 +25,27 @@ object DeepSeekClient {
             .build()
     }
 
-    suspend fun testConnection(apiKey: String, model: String = "deepseek-chat"): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun testConnection(
+        apiKey: String,
+        model: String = AiPreferences.DEFAULT_MODEL
+    ): Result<String> = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
             return@withContext Result.failure(Exception("DeepSeek API key is empty."))
         }
-        val messages = JSONArray().apply {
-            put(JSONObject().apply {
-                put("role", "user")
-                put("content", "Respond with 'Connected' if you receive this.")
-            })
-        }
+
         val requestJson = JSONObject().apply {
             put("model", model)
-            put("messages", messages)
-            put("max_tokens", 10)
+            put("messages", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", "Reply only with Connected.")
+                })
+            })
+            put("max_tokens", 8)
+            put("temperature", 0)
         }
 
-        try {
+        runCatching {
             val request = Request.Builder()
                 .url(BASE_URL)
                 .header("Authorization", "Bearer $apiKey")
@@ -48,34 +53,23 @@ object DeepSeekClient {
                 .post(requestJson.toString().toRequestBody("application/json".toMediaType()))
                 .build()
 
-            val response = client.newCall(request).execute()
-            val body = response.body?.string()
-
-            if (!response.isSuccessful || body == null) {
-                val errorMsg = try {
-                    val errJson = JSONObject(body ?: "")
-                    errJson.optJSONObject("error")?.optString("message") ?: "HTTP ${response.code}"
-                } catch (_: Exception) {
-                    "HTTP ${response.code}"
+            val started = SystemClock.elapsedRealtime()
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string()
+                if (!response.isSuccessful || body == null) {
+                    throw Exception("Connection failed: ${parseError(body, response.code)}")
                 }
-                return@withContext Result.failure(Exception("Connection failed: $errorMsg"))
+                val latencyMs = SystemClock.elapsedRealtime() - started
+                "HTTP ${response.code} · ${latencyMs} ms · $model"
             }
-
-            val json = JSONObject(body)
-            val reply = json.optJSONArray("choices")?.optJSONObject(0)
-                ?.optJSONObject("message")?.optString("content") ?: "Connected"
-            Result.success(reply.trim())
-        } catch (e: Exception) {
-            Log.e(TAG, "DeepSeek test connection error", e)
-            Result.failure(e)
-        }
+        }.onFailure { Log.e(TAG, "DeepSeek test connection error", it) }
     }
 
     suspend fun chat(
         apiKey: String,
         systemPrompt: String,
         userMessage: String,
-        model: String = "deepseek-chat",
+        model: String = AiPreferences.DEFAULT_MODEL,
         temperature: Double = 0.7
     ): Result<String> = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
@@ -101,7 +95,7 @@ object DeepSeekClient {
             put("temperature", temperature)
         }
 
-        try {
+        runCatching {
             val request = Request.Builder()
                 .url(BASE_URL)
                 .header("Authorization", "Bearer $apiKey")
@@ -109,120 +103,97 @@ object DeepSeekClient {
                 .post(requestJson.toString().toRequestBody("application/json".toMediaType()))
                 .build()
 
-            val response = client.newCall(request).execute()
-            val body = response.body?.string()
-
-            if (!response.isSuccessful || body == null) {
-                val errorMsg = try {
-                    val errJson = JSONObject(body ?: "")
-                    errJson.optJSONObject("error")?.optString("message") ?: "HTTP ${response.code}"
-                } catch (_: Exception) {
-                    "HTTP ${response.code}"
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string()
+                if (!response.isSuccessful || body == null) {
+                    throw Exception("DeepSeek error (${parseError(body, response.code)})")
                 }
-                return@withContext Result.failure(Exception("DeepSeek error ($errorMsg)"))
-            }
 
-            val json = JSONObject(body)
-            val content = json.optJSONArray("choices")?.optJSONObject(0)
-                ?.optJSONObject("message")?.optString("content") ?: ""
-            Result.success(content.trim())
-        } catch (e: Exception) {
-            Log.e(TAG, "DeepSeek chat error", e)
-            Result.failure(e)
-        }
+                val json = JSONObject(body)
+                json.optJSONArray("choices")?.optJSONObject(0)
+                    ?.optJSONObject("message")?.optString("content")
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+                    ?: throw Exception("DeepSeek returned an empty response.")
+            }
+        }.onFailure { Log.e(TAG, "DeepSeek chat error", it) }
     }
 
     suspend fun generateVocabularyList(
         apiKey: String,
         userPrompt: String,
-        model: String = "deepseek-chat"
+        model: String = AiPreferences.DEFAULT_MODEL
     ): Result<List<VocabularyItem>> = withContext(Dispatchers.IO) {
         val systemInstruction = """
-            You are a master English lexicographer and Persian linguist for IELTS and TOEFL.
-            Generate a rich vocabulary list based on the user's prompt.
-            The user prompt is in Persian or English.
+            You are an English lexicographer and Persian language-learning assistant for IELTS, TOEFL, and GRE.
+            Generate a concise, pedagogically useful vocabulary list based on the request.
             Return ONLY a valid JSON array where each object has these exact fields:
             - "word": string (lowercase)
-            - "ipa": string (International Phonetic Alphabet)
-            - "persianMeaning": string (concise, accurate Persian translation)
-            - "englishDefinition": string (learner definition)
-            - "partOfSpeech": string (noun, verb, adjective, adverb, or phrase)
-            - "example": string (authentic academic example sentence)
-            - "examplePersian": string (accurate Persian translation of example)
-            - "cefrLevel": string ("A2", "B1", "B2", "C1", or "C2")
-            - "synonyms": array of strings (2-4 synonyms)
-            - "antonyms": array of strings (optional 1-3 antonyms)
-            - "collocations": array of strings (2-4 strong verified academic collocations)
+            - "ipa": string
+            - "persianMeaning": string
+            - "englishDefinition": string
+            - "partOfSpeech": string
+            - "example": string that naturally contains the target word or a normal inflected form
+            - "examplePersian": string
+            - "cefrLevel": string (A2, B1, B2, C1, or C2)
+            - "synonyms": array of strings
+            - "antonyms": array of strings
+            - "collocations": array of 2-4 natural candidate collocations
             - "wordFamily": array of strings
-            - "commonMistakes": string (common pitfall for Persian speakers)
-            - "ieltsRelevance": string ("High", "Medium", or "Low")
-            - "toeflRelevance": string ("High", "Medium", or "Low")
+            - "commonMistakes": string
+            - "ieltsRelevance": string (High, Medium, or Low)
+            - "toeflRelevance": string (High, Medium, or Low)
             - "tags": array of strings
-            Do not enclose in markdown code fences if possible, or return strictly valid JSON array.
+            Do not claim that any individual word guarantees an exam score. AI-generated lexical data will be
+            marked unverified by the application until reviewed against a trusted source.
         """.trimIndent()
 
-        val chatResult = chat(
+        chat(
             apiKey = apiKey,
             systemPrompt = systemInstruction,
             userMessage = userPrompt,
             model = model,
-            temperature = 0.3
-        )
-
-        chatResult.mapCatching { rawText ->
-            val cleanJson = rawText.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-            val array = if (cleanJson.startsWith("[")) JSONArray(cleanJson) else JSONObject(cleanJson).optJSONArray("vocabulary") ?: JSONArray()
-
-            val items = mutableListOf<VocabularyItem>()
-            for (i in 0 until array.length()) {
-                val obj = array.optJSONObject(i) ?: continue
-                val word = obj.optString("word", "").trim()
-                if (word.isEmpty()) continue
-
-                val syns = mutableListOf<String>()
-                obj.optJSONArray("synonyms")?.let { arr ->
-                    for (j in 0 until arr.length()) syns.add(arr.optString(j))
-                }
-
-                val collocations = mutableListOf<String>()
-                obj.optJSONArray("collocations")?.let { arr ->
-                    for (j in 0 until arr.length()) collocations.add(arr.optString(j))
-                }
-
-                val wordFamily = mutableListOf<String>()
-                obj.optJSONArray("wordFamily")?.let { arr ->
-                    for (j in 0 until arr.length()) wordFamily.add(arr.optString(j))
-                }
-
-                val tags = mutableListOf<String>()
-                obj.optJSONArray("tags")?.let { arr ->
-                    for (j in 0 until arr.length()) tags.add(arr.optString(j))
-                }
-
-                items.add(
-                    VocabularyItem(
-                        id = 0L,
-                        word = word,
-                        normalizedWord = word.lowercase().trim(),
-                        ipa = obj.optString("ipa", ""),
-                        persianMeaning = obj.optString("persianMeaning", ""),
-                        englishDefinition = obj.optString("englishDefinition", ""),
-                        partOfSpeech = obj.optString("partOfSpeech", "word"),
-                        example = obj.optString("example", ""),
-                        examplePersian = obj.optString("examplePersian", ""),
-                        cefrLevel = obj.optString("cefrLevel", "B2"),
-                        synonyms = syns,
-                        collocations = collocations,
-                        wordFamily = wordFamily,
-                        commonMistakes = obj.optString("commonMistakes", ""),
-                        ieltsRelevance = obj.optString("ieltsRelevance", "High"),
-                        toeflRelevance = obj.optString("toeflRelevance", "High"),
-                        tags = tags,
-                        source = "DeepSeek AI"
-                    )
-                )
+            temperature = 0.25
+        ).mapCatching { rawText ->
+            val cleanJson = cleanJson(rawText)
+            val array = if (cleanJson.startsWith("[")) {
+                JSONArray(cleanJson)
+            } else {
+                JSONObject(cleanJson).optJSONArray("vocabulary") ?: JSONArray()
             }
-            items
+
+            buildList {
+                for (i in 0 until array.length()) {
+                    val obj = array.optJSONObject(i) ?: continue
+                    val word = obj.optString("word").trim()
+                    if (word.isBlank()) continue
+
+                    val tags = jsonStringList(obj.optJSONArray("tags")) + listOf("ai-generated", "unverified")
+                    add(
+                        VocabularyItem(
+                            id = 0L,
+                            word = word,
+                            normalizedWord = word.lowercase().trim(),
+                            ipa = obj.optString("ipa"),
+                            persianMeaning = obj.optString("persianMeaning"),
+                            englishDefinition = obj.optString("englishDefinition"),
+                            partOfSpeech = obj.optString("partOfSpeech", "word"),
+                            example = obj.optString("example"),
+                            examplePersian = obj.optString("examplePersian"),
+                            cefrLevel = obj.optString("cefrLevel", "B2"),
+                            synonyms = jsonStringList(obj.optJSONArray("synonyms")),
+                            antonyms = jsonStringList(obj.optJSONArray("antonyms")),
+                            collocations = jsonStringList(obj.optJSONArray("collocations")),
+                            wordFamily = jsonStringList(obj.optJSONArray("wordFamily")),
+                            commonMistakes = obj.optString("commonMistakes"),
+                            ieltsRelevance = obj.optString("ieltsRelevance", "Medium"),
+                            toeflRelevance = obj.optString("toeflRelevance", "Medium"),
+                            tags = tags.distinct(),
+                            source = "DeepSeek AI (unverified)"
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -230,11 +201,10 @@ object DeepSeekClient {
         apiKey: String,
         word: String,
         optionalPersian: String = "",
-        model: String = "deepseek-chat"
+        model: String = AiPreferences.DEFAULT_MODEL
     ): Result<VocabularyItem> = withContext(Dispatchers.IO) {
-        val prompt = "Word: '$word'. Optional Persian context: '$optionalPersian'. Return detailed lexicographical information."
-        val result = generateVocabularyList(apiKey, prompt, model)
-        result.mapCatching { list ->
+        val prompt = "Word: '$word'. Optional Persian context: '$optionalPersian'. Return one accurate learner-dictionary entry."
+        generateVocabularyList(apiKey, prompt, model).mapCatching { list ->
             list.firstOrNull() ?: throw Exception("No details found for '$word'.")
         }
     }
@@ -243,64 +213,33 @@ object DeepSeekClient {
         apiKey: String,
         taskPrompt: String,
         essayText: String,
-        model: String = "deepseek-chat"
+        model: String = AiPreferences.DEFAULT_MODEL
     ): Result<WritingEvaluationResult> = withContext(Dispatchers.IO) {
         val systemPrompt = """
-            Evaluate this IELTS essay according to official IELTS Writing band descriptors:
-            1. Task Response / Task Achievement
-            2. Coherence and Cohesion
-            3. Lexical Resource
-            4. Grammatical Range and Accuracy
-            
-            Provide explanations and feedback primarily in Persian (فارسی).
-            Return ONLY a valid JSON object with:
-            {
-              "estimatedBand": "string (e.g. 6.5 - 7.0)",
-              "taskAchievementScore": "string",
-              "coherenceScore": "string",
-              "lexicalScore": "string",
-              "grammarScore": "string",
-              "overallFeedbackFa": "string (in Persian)",
-              "strengthsFa": ["string in Persian", ...],
-              "mainIssuesFa": ["string in Persian", ...],
-              "sentenceCorrections": [
-                 {
-                   "original": "string",
-                   "corrected": "string",
-                   "explanationFa": "string"
-                 }
-              ],
-              "improvedVersion": "string (revised academic version in English)"
-            }
+            Evaluate this IELTS essay using the official writing criteria: Task Response/Achievement,
+            Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy.
+            Be conservative: do not invent a score when evidence is insufficient. Explain primarily in Persian.
+            Return ONLY valid JSON with estimatedBand, taskAchievementScore, coherenceScore, lexicalScore,
+            grammarScore, overallFeedbackFa, strengthsFa, mainIssuesFa, sentenceCorrections, and improvedVersion.
+            sentenceCorrections must be an array of objects with original, corrected, and explanationFa.
         """.trimIndent()
 
-        val userPrompt = "Prompt: $taskPrompt\n\nEssay:\n$essayText"
-        val chatResult = chat(apiKey, systemPrompt, userPrompt, model, temperature = 0.2)
-
-        chatResult.mapCatching { rawText ->
-            val clean = rawText.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-            val obj = JSONObject(clean)
-
-            val strengths = mutableListOf<String>()
-            obj.optJSONArray("strengthsFa")?.let { arr ->
-                for (i in 0 until arr.length()) strengths.add(arr.optString(i))
-            }
-
-            val issues = mutableListOf<String>()
-            obj.optJSONArray("mainIssuesFa")?.let { arr ->
-                for (i in 0 until arr.length()) issues.add(arr.optString(i))
-            }
-
+        chat(
+            apiKey,
+            systemPrompt,
+            "Prompt: $taskPrompt\n\nEssay:\n$essayText",
+            model,
+            temperature = 0.2
+        ).mapCatching { rawText ->
+            val obj = JSONObject(cleanJson(rawText))
             val corrections = mutableListOf<SentenceCorrection>()
             obj.optJSONArray("sentenceCorrections")?.let { arr ->
                 for (i in 0 until arr.length()) {
-                    val c = arr.optJSONObject(i) ?: continue
-                    corrections.add(
-                        SentenceCorrection(
-                            original = c.optString("original", ""),
-                            corrected = c.optString("corrected", ""),
-                            explanationFa = c.optString("explanationFa", "")
-                        )
+                    val item = arr.optJSONObject(i) ?: continue
+                    corrections += SentenceCorrection(
+                        original = item.optString("original"),
+                        corrected = item.optString("corrected"),
+                        explanationFa = item.optString("explanationFa")
                     )
                 }
             }
@@ -311,9 +250,9 @@ object DeepSeekClient {
                 coherenceScore = obj.optString("coherenceScore", "N/A"),
                 lexicalScore = obj.optString("lexicalScore", "N/A"),
                 grammarScore = obj.optString("grammarScore", "N/A"),
-                overallFeedbackFa = obj.optString("overallFeedbackFa", "ارزیابی انجام شد."),
-                strengthsFa = strengths,
-                mainIssuesFa = issues,
+                overallFeedbackFa = obj.optString("overallFeedbackFa", "ارزیابی متنی انجام شد."),
+                strengthsFa = jsonStringList(obj.optJSONArray("strengthsFa")),
+                mainIssuesFa = jsonStringList(obj.optJSONArray("mainIssuesFa")),
                 sentenceCorrections = corrections,
                 improvedVersion = obj.optString("improvedVersion", essayText)
             )
@@ -324,43 +263,57 @@ object DeepSeekClient {
         apiKey: String,
         taskPrompt: String,
         transcriptText: String,
-        model: String = "deepseek-chat"
+        model: String = AiPreferences.DEFAULT_MODEL
     ): Result<SpeakingEvaluationResult> = withContext(Dispatchers.IO) {
         val systemPrompt = """
-            You are an expert IELTS/TOEFL Speaking examiner and Persian coach.
-            Evaluate the following spoken response transcript.
-            
-            Return ONLY a valid JSON object:
-            {
-              "estimatedBand": "string (e.g. 6.5)",
-              "fluencyFeedbackFa": "string (Persian feedback on fluency, discourse markers)",
-              "lexicalFeedbackFa": "string (Persian feedback on vocabulary range, idiomatic language)",
-              "grammarFeedbackFa": "string (Persian feedback on grammatical accuracy, complex structures)",
-              "pronunciationHintsFa": "string (Persian advice on intonation, stress patterns)",
-              "betterPhrasings": ["string", "string", "string"]
-            }
+            You are reviewing ONLY a text transcript of an IELTS/TOEFL speaking response; no audio is available.
+            Assess lexical choice, grammar, organization, and transcript evidence of fluency cautiously.
+            Do NOT claim to hear pronunciation, accent, intonation, pauses, stress, or rhythm. In pronunciationHintsFa,
+            explicitly state that pronunciation requires audio and provide only general practice suggestions.
+            Return ONLY valid JSON with estimatedBand, fluencyFeedbackFa, lexicalFeedbackFa,
+            grammarFeedbackFa, pronunciationHintsFa, and betterPhrasings.
         """.trimIndent()
 
-        val userPrompt = "Task: $taskPrompt\n\nSpoken Transcript: $transcriptText"
-        val chatResult = chat(apiKey, systemPrompt, userPrompt, model, temperature = 0.2)
-
-        chatResult.mapCatching { rawText ->
-            val clean = rawText.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-            val obj = JSONObject(clean)
-
-            val phrasings = mutableListOf<String>()
-            obj.optJSONArray("betterPhrasings")?.let { arr ->
-                for (i in 0 until arr.length()) phrasings.add(arr.optString(i))
-            }
-
+        chat(
+            apiKey,
+            systemPrompt,
+            "Task: $taskPrompt\n\nTranscript: $transcriptText",
+            model,
+            temperature = 0.2
+        ).mapCatching { rawText ->
+            val obj = JSONObject(cleanJson(rawText))
             SpeakingEvaluationResult(
                 estimatedBand = obj.optString("estimatedBand", "N/A"),
-                fluencyFeedbackFa = obj.optString("fluencyFeedbackFa", ""),
-                lexicalFeedbackFa = obj.optString("lexicalFeedbackFa", ""),
-                grammarFeedbackFa = obj.optString("grammarFeedbackFa", ""),
-                pronunciationHintsFa = obj.optString("pronunciationHintsFa", ""),
-                betterPhrasings = phrasings
+                fluencyFeedbackFa = obj.optString("fluencyFeedbackFa"),
+                lexicalFeedbackFa = obj.optString("lexicalFeedbackFa"),
+                grammarFeedbackFa = obj.optString("grammarFeedbackFa"),
+                pronunciationHintsFa = obj.optString(
+                    "pronunciationHintsFa",
+                    "برای ارزیابی تلفظ به فایل صوتی نیاز است؛ از روی متن نمی‌توان تلفظ را نمره‌گذاری کرد."
+                ),
+                betterPhrasings = jsonStringList(obj.optJSONArray("betterPhrasings"))
             )
         }
+    }
+
+    private fun cleanJson(text: String): String = text.trim()
+        .removePrefix("```json")
+        .removePrefix("```")
+        .removeSuffix("```")
+        .trim()
+
+    private fun jsonStringList(array: JSONArray?): List<String> = buildList {
+        if (array == null) return@buildList
+        for (i in 0 until array.length()) {
+            array.optString(i).trim().takeIf { it.isNotBlank() }?.let(::add)
+        }
+    }
+
+    private fun parseError(body: String?, code: Int): String = try {
+        JSONObject(body.orEmpty()).optJSONObject("error")?.optString("message")
+            ?.takeIf { it.isNotBlank() }
+            ?: "HTTP $code"
+    } catch (_: Exception) {
+        "HTTP $code"
     }
 }

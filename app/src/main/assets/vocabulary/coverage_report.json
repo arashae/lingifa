@@ -1,5 +1,5 @@
 {
-  "datasetVersion": "4.0.0",
+  "datasetVersion": "3.0.0",
   "generatedFrom": {
     "examMembership": "skywind3000/ECDICT (MIT)",
     "primaryPersianEnrichment": "amirj4m/openjam (MIT)",

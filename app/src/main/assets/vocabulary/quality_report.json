@@ -1,0 +1,61 @@
+{
+  "rows": 40120,
+  "files": 85,
+  "coverage": {
+    "examples": 0.9135,
+    "ipa": 0.9835,
+    "collocations": 0.0
+  },
+  "c2SuspiciousNamesPlacesDownranked": 261,
+  "duplicateCount": 0,
+  "samples": {
+    "missingExamples": [
+      "cefr/c2:abo",
+      "gre:abduct",
+      "gre:ablution",
+      "gre:abnegation",
+      "gre:abrasion",
+      "gre:abscission",
+      "gre:abstentious",
+      "gre:abstinent",
+      "gre:abut",
+      "gre:academician",
+      "gre:acarpous",
+      "gre:accommodating",
+      "gre:accomplished",
+      "gre:acerbity",
+      "gre:achromatic",
+      "gre:acorn",
+      "gre:acquired",
+      "gre:acrimony",
+      "gre:acrobat",
+      "gre:acronym"
+    ],
+    "missingDefinitions": [],
+    "duplicates": [],
+    "c2NamesPlaces": [
+      "hampshire",
+      "geneva",
+      "java",
+      "nashville",
+      "brisbane",
+      "curiosity",
+      "quebec",
+      "cincinnati",
+      "florence",
+      "frederick",
+      "pierre",
+      "seoul",
+      "venice",
+      "jamaica",
+      "oakland",
+      "idaho",
+      "nickname",
+      "sd",
+      "minneapolis",
+      "sacramento"
+    ]
+  },
+  "errorCount": 0,
+  "errors": []
+}

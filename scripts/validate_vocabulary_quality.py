@@ -45,6 +45,7 @@ VALID_CEFR = {"A1", "A2", "B1", "B2", "C1", "C2"}
 REPORT_PATH = VOCAB_ROOT / "quality_report.json"
 POS_OK = {
     "noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
+    "modal", "phrase", "phrasal verb", "idiom", "prepositional phrase",
     "modal verb", "modal auxiliary", "auxiliary verb", "article", "interjection", "prefix", "suffix",
     "be-verb", "have-verb", "do-verb", "infinitive-to"
 }
@@ -174,8 +175,28 @@ URDU_NON_PERSIAN_GLYPHS = {
 }
 
 
+def rel_label(path: Path) -> str:
+    """Path relative to the asset root when possible, else the path as given.
+
+    Reviewed source-of-truth chunks live in scripts/vocabulary_overrides, so
+    validation must also work for files outside the asset root.
+    """
+    try:
+        return path.relative_to(VOCAB_ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def bank_key(path: Path) -> str:
-    rel = path.relative_to(VOCAB_ROOT)
+    try:
+        rel = path.relative_to(VOCAB_ROOT)
+    except ValueError:
+        parts = path.parts
+        if "vocabulary_overrides" in parts:
+            index = parts.index("vocabulary_overrides")
+            if len(parts) > index + 1:
+                return parts[index + 1]
+        return "unknown"
     parts = rel.parts
     if not parts:
         return "unknown"
@@ -500,7 +521,7 @@ def run_validation(
 
     def flag(kind: str, path: Path, line_no: int, word: str, detail: str) -> None:
         semantic_counts[kind] += 1
-        rel_posix = path.relative_to(VOCAB_ROOT).as_posix()
+        rel_posix = rel_label(path)
         if len(semantic_findings) < 500:
             semantic_findings.append({
                 "kind": kind,
@@ -514,7 +535,7 @@ def run_validation(
 
     for path in files:
         bank = bank_key(path)
-        rel_posix = path.relative_to(VOCAB_ROOT).as_posix()
+        rel_posix = rel_label(path)
         for line_no, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if line_range is not None:
                 start_l, end_l = line_range

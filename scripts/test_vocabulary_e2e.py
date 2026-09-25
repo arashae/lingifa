@@ -337,6 +337,17 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
             "noun",
         ))
 
+    def test_pos_whitelist_covers_multiword_and_phrase_classes(self) -> None:
+        # Multiword/phrase entries must be classifiable instead of falling back to "word".
+        for pos in (
+            "noun", "verb", "adjective", "adverb", "preposition", "conjunction",
+            "pronoun", "determiner", "modal", "modal verb",
+            "phrase", "phrasal verb", "idiom", "prepositional phrase",
+        ):
+            with self.subTest(pos=pos):
+                self.assertIn(pos, POS_OK)
+        self.assertNotIn("word", POS_OK)
+
     def test_definition_persian_pos_alignment_heuristic(self) -> None:
         self.assertEqual(
             definition_meaning_alignment_risk("noun", "رسیدن به؛ به دست آوردن", "to arrive at a place or goal"),

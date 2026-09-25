@@ -2,6 +2,7 @@ package com.example.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -17,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,6 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.theme.Dimens
 import com.example.ui.screens.exams.DiagnosticTestScreen
 import com.example.ui.screens.exams.ExamsViewModel
 import com.example.ui.screens.exams.SpeakingPracticeScreen
@@ -78,44 +83,61 @@ fun AppNavGraph() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute != null && bottomNavItems.any { it.route == currentRoute }
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
 
     EnglishLtrLayout {
         Scaffold(
-            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background,
+            containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 if (showBottomBar) {
                     NavigationBar(
-                        tonalElevation = 0.dp
+                        tonalElevation = 0.dp,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.drawBehind {
+                            drawLine(
+                                color = borderColor,
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        }
                     ) {
                         bottomNavItems.forEach { item ->
                             val selected = currentRoute == item.route
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                    if (!selected) {
+                                        navController.navigate(item.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
                                 },
                                 icon = {
-                                    Icon(imageVector = item.icon, contentDescription = item.title)
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.title,
+                                        modifier = Modifier.size(Dimens.iconMd)
+                                    )
                                 },
                                 label = {
                                     Text(
                                         text = item.title,
+                                        style = MaterialTheme.typography.labelSmall,
                                         maxLines = 1
                                     )
                                 },
-                                alwaysShowLabel = selected,
+                                alwaysShowLabel = true,
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
-                                    selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                    indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }

@@ -1,34 +1,25 @@
 package com.example.ui.screens.learn
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,19 +28,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.data.model.GrammarTopic
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.data.seed.GrammarSeed
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.theme.ErrorRed
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
 @Composable
 fun GrammarDetailScreen(
@@ -59,7 +50,6 @@ fun GrammarDetailScreen(
     val topic = remember(topicId) {
         GrammarSeed.getTopics().find { it.id == topicId } ?: GrammarSeed.getTopics().first()
     }
-
     var selectedOptionIndices by remember { mutableStateOf(mutableMapOf<Int, Int>()) }
     var isAnswerChecked by remember { mutableStateOf(mutableMapOf<Int, Boolean>()) }
 
@@ -68,235 +58,237 @@ fun GrammarDetailScreen(
             topBar = {
                 LinguaTopAppBar(
                     title = topic.titleEn,
-                    onBack = onBack
+                    subtitle = "Grammar lesson",
+                    onBack = onBack,
+                    actions = {
+                        CefrBadge(
+                            level = topic.level,
+                            modifier = Modifier.padding(end = Dimens.screenGutter)
+                        )
+                    }
                 )
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(
+                    start = Dimens.screenGutter,
+                    end = Dimens.screenGutter,
+                    top = Dimens.sectionGap,
+                    bottom = Dimens.space20
+                ),
+                verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
             ) {
-                // Header Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                item {
+                    AppCard(padding = Dimens.cardPaddingTight) {
+                        PersianContentRtl {
                             Text(
-                                text = topic.titleEn,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryBlue
-                                )
+                                text = topic.descriptionFa,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            CefrBadge(level = topic.level)
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = topic.descriptionFa,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface)
-                        )
                     }
                 }
-
-                // Rules & Structure
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Text(
-                            text = "Grammar Rules & Structure:",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue
+                item {
+                    AppCard {
+                        SectionHeader(title = "Grammar Rules & Structure")
+                        Spacer(modifier = Modifier.height(Dimens.blockGap))
+                        PersianContentRtl {
+                            Text(
+                                text = topic.rulesFa,
+                                style = MaterialTheme.typography.bodyMedium
                             )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = topic.rulesFa,
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp)
-                        )
+                        }
                     }
                 }
-
-                // Examples
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Text(
-                            text = "Academic & Practical Examples:",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        topic.examplesEn.forEachIndexed { index, exEn ->
-                            val exFa = topic.examplesFa.getOrNull(index) ?: ""
-                            Surface(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                item {
+                    AppCard {
+                        SectionHeader(title = "Academic & Practical Examples")
+                        Column(
+                            modifier = Modifier.padding(top = Dimens.blockGap),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
+                        ) {
+                            topic.examplesEn.forEachIndexed { index, exampleEn ->
+                                val exampleFa = topic.examplesFa.getOrNull(index).orEmpty()
+                                AppInset {
                                     Text(
-                                        text = exEn,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
+                                        text = exampleEn,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    if (exFa.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = "Translation: $exFa",
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    if (exampleFa.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(Dimens.space6))
+                                        FieldLabel(text = "Translation")
+                                        PersianContentRtl {
+                                            Text(
+                                                text = exampleFa,
+                                                style = MaterialTheme.typography.bodySmall
                                             )
-                                        )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-                // Iranian Learner Common Mistakes
                 if (topic.iranianCommonMistakesFa.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f))
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.PriorityHigh, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
+                    item {
+                        AppCard(
+                            containerColor = Accent.dangerSoft,
+                            borderColor = Accent.danger
+                        ) {
+                            SectionHeader(title = "Common Pitfalls for Persian Speakers")
+                            Spacer(modifier = Modifier.height(Dimens.blockGap))
+                            PersianContentRtl {
                                 Text(
-                                    text = "Common Pitfalls for Persian Speakers:",
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = ErrorRed
-                                    )
+                                    text = topic.iranianCommonMistakesFa,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Accent.dangerOnSoft
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = topic.iranianCommonMistakesFa,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onErrorContainer, lineHeight = 22.sp)
+                        }
+                    }
+                }
+                if (topic.quizQuestions.isNotEmpty()) {
+                    item {
+                        SectionHeader(title = "Grammar Practice Quiz")
+                    }
+                    itemsIndexed(
+                        items = topic.quizQuestions,
+                        key = { index, _ -> "${topic.id}-$index" }
+                    ) { index, question ->
+                        QuizQuestionCard(
+                            questionIndex = index,
+                            question = question.questionEn,
+                            options = question.options,
+                            correctIndex = question.correctIndex,
+                            explanationFa = question.explanationFa,
+                            selectedOption = selectedOptionIndices[index],
+                            checked = isAnswerChecked[index] == true,
+                            onOptionSelected = { optionIndex ->
+                                selectedOptionIndices = selectedOptionIndices.toMutableMap().apply {
+                                    this[index] = optionIndex
+                                }
+                            },
+                            onCheck = {
+                                isAnswerChecked = isAnswerChecked.toMutableMap().apply {
+                                    this[index] = true
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun QuizQuestionCard(
+    questionIndex: Int,
+    question: String,
+    options: List<String>,
+    correctIndex: Int,
+    explanationFa: String,
+    selectedOption: Int?,
+    checked: Boolean,
+    onOptionSelected: (Int) -> Unit,
+    onCheck: () -> Unit
+) {
+    AppCard(padding = Dimens.cardPaddingTight) {
+        Text(
+            text = "Question ${questionIndex + 1}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(Dimens.space4))
+        Text(
+            text = question,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 4,
+            overflow = TextOverflow.Ellipsis
+        )
+        Column(
+            modifier = Modifier.padding(top = Dimens.blockGap),
+            verticalArrangement = Arrangement.spacedBy(Dimens.space8)
+        ) {
+            options.forEachIndexed { optionIndex, optionText ->
+                val isSelected = selectedOption == optionIndex
+                val isCorrect = optionIndex == correctIndex
+                val containerColor = when {
+                    !checked && isSelected -> MaterialTheme.colorScheme.primaryContainer
+                    checked && isCorrect -> Accent.successSoft
+                    checked && isSelected -> Accent.dangerSoft
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+                val contentColor = when {
+                    !checked && isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                    checked && isCorrect -> Accent.successOnSoft
+                    checked && isSelected -> Accent.dangerOnSoft
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+
+                AppInset(
+                    modifier = Modifier.defaultMinSize(minHeight = Dimens.rowHeight),
+                    color = containerColor,
+                    contentColor = contentColor,
+                    shape = RoundedCornerShape(Dimens.radiusSm),
+                    onClick = if (checked) null else {
+                        { onOptionSelected(optionIndex) }
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = contentColor,
+                                modifier = Modifier.size(Dimens.iconSm)
                             )
                         }
+                        Text(
+                            text = optionText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = contentColor,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
-
-                // Interactive Quiz
-                if (topic.quizQuestions.isNotEmpty()) {
-                    Text(
-                        text = "Grammar Practice Quiz:",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    topic.quizQuestions.forEachIndexed { qIndex, q ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = "Question ${qIndex + 1}: ${q.questionEn}",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                val userSelected = selectedOptionIndices[qIndex]
-                                val checked = isAnswerChecked[qIndex] == true
-
-                                q.options.forEachIndexed { optIndex, optText ->
-                                    val isThisSelected = userSelected == optIndex
-                                    val isCorrect = optIndex == q.correctIndex
-
-                                    val bg = when {
-                                        !checked -> if (isThisSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                                        isCorrect -> Color(0xFFDCFCE7)
-                                        isThisSelected -> Color(0xFFFEE2E2)
-                                        else -> MaterialTheme.colorScheme.surfaceVariant
-                                    }
-
-                                    Surface(
-                                        color = bg,
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                            .clickable(enabled = !checked) {
-                                                val m = selectedOptionIndices.toMutableMap()
-                                                m[qIndex] = optIndex
-                                                selectedOptionIndices = m
-                                            }
-                                    ) {
-                                        Text(
-                                            text = optText,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = if (isThisSelected) FontWeight.Bold else FontWeight.Normal,
-                                                color = if (checked && isCorrect) SuccessGreen else MaterialTheme.colorScheme.onSurface
-                                            ),
-                                            modifier = Modifier.padding(12.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                if (!checked && userSelected != null) {
-                                    Button(
-                                        onClick = {
-                                            val m = isAnswerChecked.toMutableMap()
-                                            m[qIndex] = true
-                                            isAnswerChecked = m
-                                        },
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                                    ) {
-                                        Text("Check Answer", fontWeight = FontWeight.Bold)
-                                    }
-                                }
-
-                                if (checked) {
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = "Explanation: ${q.explanationFa}",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        if (!checked && selectedOption != null) {
+            Button(
+                onClick = onCheck,
+                modifier = Modifier
+                    .padding(top = Dimens.blockGap)
+                    .heightIn(min = Dimens.minTapTarget),
+                shape = RoundedCornerShape(Dimens.radiusSm)
+            ) {
+                Text(
+                    text = "Check Answer",
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+        if (checked) {
+            Spacer(modifier = Modifier.height(Dimens.blockGap))
+            FieldLabel(text = "Explanation")
+            PersianContentRtl {
+                Text(
+                    text = explanationFa,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

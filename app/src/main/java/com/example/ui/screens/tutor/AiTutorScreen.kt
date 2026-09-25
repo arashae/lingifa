@@ -1,16 +1,15 @@
 package com.example.ui.screens.tutor
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -39,13 +39,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.components.EnglishLtrLayout
+import com.example.ui.components.FieldLabel
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.theme.PrimaryBlue
+import com.example.ui.components.SelectChip
+import com.example.ui.theme.Dimens
 
 @Composable
 fun AiTutorScreen(
@@ -68,108 +66,124 @@ fun AiTutorScreen(
                     title = "AI Tutor & Language Assistant",
                     onBack = onBack
                 )
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
             ) {
-                // Messages List
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = Dimens.screenGutter,
+                        end = Dimens.screenGutter,
+                        top = Dimens.blockGap,
+                        bottom = Dimens.blockGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
                 ) {
                     items(state.messages, key = { it.id }) { message ->
                         ChatBubble(message = message)
                     }
-
                     if (state.isLoading) {
                         item {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.blockGap)
                             ) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                Spacer(modifier = Modifier.width(10.dp))
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(Dimens.iconMd),
+                                    strokeWidth = Dimens.hairline
+                                )
                                 Text(
                                     text = "AI Tutor is typing a response...",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
-
-                // Quick Question Prompts Row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(
+                            start = Dimens.screenGutter,
+                            end = Dimens.screenGutter,
+                            top = Dimens.space4,
+                            bottom = Dimens.space4
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
                 ) {
                     state.suggestedPrompts.forEach { prompt ->
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.clickable { viewModel.sendMessage(prompt) }
-                        ) {
-                            Text(
-                                text = prompt,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
+                        SelectChip(
+                            text = prompt,
+                            selected = false,
+                            onClick = { viewModel.sendMessage(prompt) },
+                            leadingIcon = Icons.Default.AutoAwesome
+                        )
                     }
                 }
-
-                // Input Bar
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 3.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(Dimens.cardPadding),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                     ) {
-                        OutlinedTextField(
-                            value = state.inputText,
-                            onValueChange = { viewModel.onInputChanged(it) },
-                            placeholder = { Text("Ask a grammar question, word meaning, or check errors...") },
-                            maxLines = 3,
-                            shape = RoundedCornerShape(24.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        IconButton(
-                            onClick = { viewModel.sendMessage() },
-                            enabled = state.inputText.isNotBlank() && !state.isLoading,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(if (state.inputText.isNotBlank()) PrimaryBlue else Color.LightGray)
+                        FieldLabel(text = "Message")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Send Message",
-                                tint = Color.White
+                            OutlinedTextField(
+                                value = state.inputText,
+                                onValueChange = viewModel::onInputChanged,
+                                placeholder = {
+                                    Text("Ask about grammar, word meaning, or errors")
+                                },
+                                minLines = 1,
+                                maxLines = 3,
+                                shape = RoundedCornerShape(Dimens.radiusMd),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                modifier = Modifier.weight(1f)
                             )
+                            val canSend = state.inputText.isNotBlank() && !state.isLoading
+                            IconButton(
+                                onClick = viewModel::sendMessage,
+                                enabled = canSend,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (canSend) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        }
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "Send message",
+                                    tint = if (canSend) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -189,7 +203,7 @@ private fun ChatBubble(message: ChatMessage) {
         if (!isUser) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(Dimens.iconTileMd + Dimens.space8)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
@@ -198,28 +212,34 @@ private fun ChatBubble(message: ChatMessage) {
                     imageVector = Icons.Default.Psychology,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.iconMd)
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.space8))
         }
-
         Surface(
-            color = if (isUser) PrimaryBlue else MaterialTheme.colorScheme.surface,
+            color = if (isUser) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+            contentColor = if (isUser) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
             shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 4.dp else 16.dp,
-                bottomEnd = if (isUser) 16.dp else 4.dp
+                topStart = Dimens.radiusLg,
+                topEnd = Dimens.radiusLg,
+                bottomStart = if (isUser) Dimens.radiusXs else Dimens.radiusLg,
+                bottomEnd = if (isUser) Dimens.radiusLg else Dimens.radiusXs
             ),
-            tonalElevation = if (isUser) 0.dp else 1.dp,
             modifier = Modifier.fillMaxWidth(0.85f)
         ) {
             Text(
                 text = message.text,
-                color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 22.sp),
-                modifier = Modifier.padding(14.dp)
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(Dimens.cardPaddingLoose)
             )
         }
     }

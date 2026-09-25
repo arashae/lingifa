@@ -449,24 +449,17 @@ private fun CompactActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    AppCard(
         onClick = onClick,
         modifier = modifier.defaultMinSize(
             minHeight = Dimens.minTapTarget + Dimens.space12
         ),
+        padding = Dimens.space6,
         shape = RoundedCornerShape(Dimens.radiusSm),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(
-            Dimens.hairline,
-            MaterialTheme.colorScheme.outlineVariant
-        )
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        borderColor = MaterialTheme.colorScheme.outlineVariant
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = Dimens.space6,
-                vertical = Dimens.blockGap
-            ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.space6)
         ) {
@@ -479,6 +472,7 @@ private fun CompactActionTile(
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

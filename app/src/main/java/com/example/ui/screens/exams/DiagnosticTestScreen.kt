@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -34,10 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.AppCard
 import com.example.ui.components.AppInset
@@ -66,29 +65,32 @@ fun DiagnosticTestScreen(
                 )
             }
         ) { paddingValues ->
-            if (state.diagnosticFinished) {
-                DiagnosticResult(
-                    estimatedLevel = state.estimatedCefrLevel?.take(2) ?: "B2",
-                    score = state.diagnosticScore,
-                    total = state.diagnosticQuestions.size,
-                    onBack = onBack
-                )
-            } else {
-                val currentQuestion = state.diagnosticQuestions.getOrNull(state.diagnosticCurrentIndex)
-                if (currentQuestion != null) {
-                    DiagnosticQuestionContent(
-                        questionIndex = state.diagnosticCurrentIndex,
-                        questionCount = state.diagnosticQuestions.size,
-                        level = currentQuestion.testedLevel,
-                        question = currentQuestion.questionEn,
-                        options = currentQuestion.options,
-                        onAnswer = viewModel::answerDiagnosticQuestion
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (state.diagnosticFinished) {
+                    DiagnosticResult(
+                        estimatedLevel = state.estimatedCefrLevel?.take(2) ?: "B2",
+                        score = state.diagnosticScore,
+                        total = state.diagnosticQuestions.size,
+                        onBack = onBack
                     )
+                } else {
+                    val currentQuestion = state.diagnosticQuestions.getOrNull(state.diagnosticCurrentIndex)
+                    if (currentQuestion != null) {
+                        DiagnosticQuestionContent(
+                            questionIndex = state.diagnosticCurrentIndex,
+                            questionCount = state.diagnosticQuestions.size,
+                            level = currentQuestion.testedLevel,
+                            question = currentQuestion.questionEn,
+                            options = currentQuestion.options,
+                            onAnswer = viewModel::answerDiagnosticQuestion
+                        )
+                    }
                 }
             }
-
-            @Suppress("UNUSED_EXPRESSION")
-            Column(modifier = Modifier.padding(paddingValues))
         }
     }
 }
@@ -123,7 +125,7 @@ private fun DiagnosticResult(
                         tint = Accent.success,
                         size = Dimens.space24 * 2,
                         iconSize = Dimens.iconLg,
-                        shape = CircleShape
+                        shape = RoundedCornerShape(Dimens.radiusPill)
                     )
                     Text(
                         text = "Level placement completed",
@@ -234,14 +236,11 @@ private fun DiagnosticQuestionContent(
             AppInset(
                 modifier = Modifier
                     .heightIn(min = Dimens.rowHeight)
-                    .selectable(
-                        selected = isSelected,
-                        role = Role.RadioButton,
-                        onClick = {
-                            selectedOption = optionIndex
-                            onAnswer(optionIndex)
-                        }
-                    ),
+                    .semantics { selected = isSelected },
+                onClick = {
+                    selectedOption = optionIndex
+                    onAnswer(optionIndex)
+                },
                 padding = Dimens.cardPaddingTight,
                 color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
                 else MaterialTheme.colorScheme.surface,

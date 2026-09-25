@@ -96,8 +96,7 @@ fun WritingGraderScreen(
                         HairLine()
                         SectionHeader(
                             title = activePrompt.titleEn,
-                            subtitle = "Write at least 250 words",
-                            modifier = Modifier.weight(1f)
+                            subtitle = "Write at least 250 words"
                         )
                         Text(
                             text = activePrompt.promptTextEn,
@@ -200,8 +199,7 @@ private fun WritingResultCard(result: WritingEvaluationResult) {
     ) {
         SectionHeader(
             title = "Estimated IELTS score: Band ${result.estimatedBand}",
-            subtitle = "AI assessment, not an official IELTS score",
-            modifier = Modifier.weight(1f)
+            subtitle = "AI assessment, not an official IELTS score"
         )
         Row(
             modifier = Modifier.fillMaxWidth(),

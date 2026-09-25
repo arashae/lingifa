@@ -1,18 +1,14 @@
 package com.example.ui.screens.vocab
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,21 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
@@ -45,11 +34,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -58,15 +44,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -81,21 +64,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.audio.TtsManager
 import com.example.data.model.ExamTrackStage
 import com.example.data.model.ExamTrackState
 import com.example.data.model.ExamTrackType
-import com.example.data.model.ExamWordItem
+import com.example.ui.components.AppCard
+import com.example.ui.components.AppInset
+import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.EnglishLtrLayout
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.PrimaryBlue
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.components.LinguaTopAppBar
+import com.example.ui.components.PersianContentRtl
+import com.example.ui.components.SectionHeader
+import com.example.ui.components.SelectChip
+import com.example.ui.components.TagChip
+import com.example.ui.theme.Accent
+import com.example.ui.theme.Dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ExamTrackScreen(
     onBack: () -> Unit,
@@ -103,18 +90,18 @@ fun ExamTrackScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val trackState by viewModel.currentTrackState.collectAsState()
-
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
-    DisposableEffect(tts) {
-        onDispose { tts.shutdown() }
-    }
     val snackbarHostState = remember { SnackbarHostState() }
     var showGoalDialog by remember { mutableStateOf(false) }
 
+    DisposableEffect(tts) {
+        onDispose { tts.shutdown() }
+    }
+
     LaunchedEffect(uiState.statusMessage) {
-        uiState.statusMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        uiState.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
             viewModel.clearStatusMessage()
         }
     }
@@ -123,32 +110,10 @@ fun ExamTrackScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = "Exam Mastery Tracks",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "IELTS • TOEFL • GRE • Complete Vocabulary Bank",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
+                LinguaTopAppBar(
+                    title = "Exam Mastery Tracks",
+                    subtitle = "IELTS · TOEFL · GRE · Complete vocabulary bank",
+                    onBack = onBack
                 )
             }
         ) { paddingValues ->
@@ -162,40 +127,21 @@ fun ExamTrackScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = Dimens.screenGutter, vertical = Dimens.space8),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
                 ) {
-                    // Track Switcher Tabs (IELTS, TOEFL, GRE)
                     ExamTrackSelector(
                         selectedTrack = uiState.selectedTrack,
-                        onSelect = { viewModel.selectTrack(it) }
+                        onSelect = viewModel::selectTrack
                     )
-
-                    // Track Overview & Stats Card
                     ExamTrackOverviewCard(
                         state = trackState,
                         onSetGoalClick = { showGoalDialog = true }
                     )
-
-                    // Section Title
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${trackState.trackType.name} Curriculum Stages",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "4 Progressive Stages",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Stages List
+                    SectionHeader(
+                        title = "${trackState.trackType.name} curriculum stages",
+                        subtitle = "Four progressive stages"
+                    )
                     trackState.stages.forEach { stage ->
                         ExamStageCard(
                             stage = stage,
@@ -203,73 +149,68 @@ fun ExamTrackScreen(
                             onStartStudy = { viewModel.startStudyingStage(stage) }
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-
-                // Interactive Study Session Modal
-                uiState.activeStudyStage?.let { stage ->
-                    InteractiveStageStudyDialog(
-                        stage = stage,
-                        wordIndex = uiState.studyWordIndex,
-                        isCardFlipped = uiState.isCardFlipped,
-                        isUkAccent = uiState.isUkAccent,
-                        isPlayingAudio = uiState.isPlayingAudio,
-                        onFlip = { viewModel.flipCard() },
-                        onToggleAccent = { viewModel.toggleAccent() },
-                        onPlayAudio = { text -> viewModel.playAudio(tts, text) },
-                        onRecordResult = { isMastered -> viewModel.recordWordResult(isMastered) },
-                        onClose = { viewModel.closeStudySession() }
-                    )
                 }
             }
         }
     }
 
-    // Daily Goal Dialog
     if (showGoalDialog) {
         AlertDialog(
             onDismissRequest = { showGoalDialog = false },
             title = {
                 Text(
-                    text = "Set Daily Vocabulary Goal",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
+                    text = "Set daily vocabulary goal",
+                    style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)) {
                     Text(
                         text = "How many words would you like to master each day in ${trackState.trackType.name}?",
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                     ) {
                         listOf(5, 10, 15, 20, 25).forEach { goal ->
-                            FilterChip(
+                            SelectChip(
+                                text = "$goal words",
                                 selected = trackState.dailyGoalWords == goal,
                                 onClick = {
                                     viewModel.setDailyGoal(goal)
                                     showGoalDialog = false
-                                },
-                                label = { Text("$goal words", fontSize = 11.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(trackState.trackType.colorHex),
-                                    selectedLabelColor = Color.White
-                                )
+                                }
                             )
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showGoalDialog = false }) {
+                TextButton(
+                    onClick = { showGoalDialog = false },
+                    modifier = Modifier.defaultMinSize(minHeight = Dimens.minTapTarget)
+                ) {
                     Text("Close")
                 }
             }
+        )
+    }
+
+    uiState.activeStudyStage?.let { stage ->
+        InteractiveStageStudyDialog(
+            stage = stage,
+            wordIndex = uiState.studyWordIndex,
+            isCardFlipped = uiState.isCardFlipped,
+            isUkAccent = uiState.isUkAccent,
+            isPlayingAudio = uiState.isPlayingAudio,
+            trackColor = Color(trackState.trackType.colorHex),
+            onFlip = viewModel::flipCard,
+            onToggleAccent = viewModel::toggleAccent,
+            onPlayAudio = { text -> viewModel.playAudio(tts, text) },
+            onRecordResult = viewModel::recordWordResult,
+            onClose = viewModel::closeStudySession
         )
     }
 }
@@ -295,8 +236,12 @@ private fun ExamTrackSelector(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(Dimens.radiusLg))
+            .border(
+                Dimens.hairline,
+                MaterialTheme.colorScheme.outlineVariant,
+                RoundedCornerShape(Dimens.radiusLg)
+            )
     ) {
         tracks.forEach { track ->
             val isSelected = selectedTrack == track
@@ -312,13 +257,13 @@ private fun ExamTrackSelector(
                 onClick = { onSelect(track) },
                 text = {
                     Column(
+                        modifier = Modifier.padding(vertical = Dimens.space8),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.space2)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
                         ) {
                             Icon(
                                 imageVector = when (track) {
@@ -328,19 +273,22 @@ private fun ExamTrackSelector(
                                 },
                                 contentDescription = null,
                                 tint = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(17.dp)
+                                modifier = Modifier.size(Dimens.iconSm)
                             )
                             Text(
                                 text = track.name,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                color = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         Text(
                             text = wordTarget,
-                            fontSize = 10.sp,
-                            color = if (isSelected) trackColor.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
                 }
@@ -356,166 +304,128 @@ private fun ExamTrackOverviewCard(
 ) {
     val trackColor = Color(state.trackType.colorHex)
     val scoreBand = when (state.trackType) {
-        ExamTrackType.IELTS -> "Band 6.5 - 9.0 Target"
-        ExamTrackType.TOEFL -> "Score 80 - 120 Target"
-        ExamTrackType.GRE -> "Verbal 150 - 170 Target"
+        ExamTrackType.IELTS -> "Band 6.5–9.0 target"
+        ExamTrackType.TOEFL -> "Score 80–120 target"
+        ExamTrackType.GRE -> "Verbal 150–170 target"
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, trackColor.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    AppCard(
+        borderColor = trackColor.copy(alpha = 0.35f)
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header Row: Track Title + Goal Button
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.space2)
+                ) {
                     Text(
-                        text = "${state.trackType.name} Master Bank",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "${state.trackType.name} master bank",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = scoreBand,
                         style = MaterialTheme.typography.bodySmall,
                         color = trackColor,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = trackColor.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, trackColor.copy(alpha = 0.25f)),
-                    modifier = Modifier.clickable { onSetGoalClick() }
+                TextButton(
+                    onClick = onSetGoalClick,
+                    modifier = Modifier.defaultMinSize(minHeight = Dimens.minTapTarget)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.TrackChanges,
-                            contentDescription = null,
-                            tint = trackColor,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Text(
-                            text = "${state.dailyGoalWords}/day",
-                            color = trackColor,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Goal",
-                            tint = trackColor.copy(alpha = 0.7f),
-                            modifier = Modifier.size(11.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.TrackChanges,
+                        contentDescription = null,
+                        modifier = Modifier.size(Dimens.iconSm)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(Dimens.iconSm)
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.space4))
+                    Text("${state.dailyGoalWords}/day")
                 }
             }
 
-            // Daily Progress Section
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "Today's Study Session",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            if (state.isDailyGoalMet) {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = SuccessGreen.copy(alpha = 0.15f)
-                                ) {
-                                    Text(
-                                        text = "Goal Reached ✓",
-                                        color = SuccessGreen,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Text(
-                            text = "${state.wordsStudiedToday} of ${state.dailyGoalWords} words",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = trackColor
-                        )
-                    }
-
-                    LinearProgressIndicator(
-                        progress = { state.dailyProgressPercentage / 100f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = if (state.isDailyGoalMet) SuccessGreen else trackColor,
-                        trackColor = trackColor.copy(alpha = 0.15f)
-                    )
-                }
-            }
-
-            // Overall Track Completion Metric
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
+            ) {
+                Text(
+                    text = "Today's study session",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (state.isDailyGoalMet) {
+                    TagChip(
+                        text = "Goal reached",
+                        containerColor = Accent.successSoft,
+                        contentColor = Accent.successOnSoft
+                    )
+                }
+                Text(
+                    text = "${state.wordsStudiedToday}/${state.dailyGoalWords}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = trackColor,
+                    maxLines = 1
+                )
+            }
+
+            LinearProgressIndicator(
+                progress = { state.dailyProgressPercentage / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Dimens.progressHeight)
+                    .clip(RoundedCornerShape(Dimens.radiusPill)),
+                color = if (state.isDailyGoalMet) Accent.success else trackColor,
+                trackColor = trackColor.copy(alpha = 0.15f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
             ) {
                 Row(
+                    modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Flag,
                         contentDescription = null,
                         tint = trackColor,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.iconSm)
                     )
                     Text(
-                        text = "Total Track Mastery:",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Total track mastery",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-
                 Text(
-                    text = "${state.totalWordsLearned} / ${state.totalWordsInTrack} words (${state.overallPercentage}%)",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "${state.totalWordsLearned}/${state.totalWordsInTrack} · ${state.overallPercentage}%",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -528,166 +438,127 @@ private fun ExamStageCard(
     trackColor: Color,
     onStartStudy: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = stage.isUnlocked) { onStartStudy() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (stage.isCompleted) SuccessGreen.copy(alpha = 0.4f)
-            else if (stage.isCurrent) trackColor.copy(alpha = 0.5f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    val statusText = when {
+        stage.isCompleted -> "Completed"
+        !stage.isUnlocked -> "Locked"
+        stage.progressPercentage > 0 -> "${stage.progressPercentage}% done"
+        else -> "Ready"
+    }
+    val statusColor = when {
+        stage.isCompleted -> Accent.success
+        stage.progressPercentage > 0 -> Accent.warning
+        else -> trackColor
+    }
+    val borderColor = when {
+        stage.isCompleted -> Accent.success.copy(alpha = 0.4f)
+        stage.isCurrent -> trackColor.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.outlineVariant
+    }
+
+    AppCard(
+        borderColor = borderColor,
+        onClick = if (stage.isUnlocked) onStartStudy else null
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // Stage Header: Title + Target Score Badge + Status
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
+            ) {
+                TagChip(
+                    text = "Stage ${stage.stageNumber}",
+                    containerColor = if (stage.isCompleted) Accent.success else trackColor,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+                Box(modifier = Modifier.weight(1f)) {
+                    PersianContentRtl {
+                        Text(
+                            text = stage.targetScoreFa,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                TagChip(
+                    text = statusText,
+                    containerColor = statusColor.copy(alpha = 0.12f),
+                    contentColor = statusColor
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.space2)) {
+                Text(
+                    text = stage.titleEn,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                PersianContentRtl {
+                    Text(
+                        text = stage.subtitleFa,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (stage.isCompleted) SuccessGreen else trackColor
-                    ) {
-                        Text(
-                            text = "Stage ${stage.stageNumber}",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-
-                    Text(
-                        text = stage.targetScoreFa,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Status Pill
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = when {
-                        stage.isCompleted -> SuccessGreen.copy(alpha = 0.12f)
-                        stage.progressPercentage > 0 -> AccentGold.copy(alpha = 0.15f)
-                        else -> trackColor.copy(alpha = 0.10f)
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = when {
-                                stage.isCompleted -> Icons.Default.CheckCircle
-                                else -> Icons.Default.PlayArrow
-                            },
-                            contentDescription = null,
-                            tint = when {
-                                stage.isCompleted -> SuccessGreen
-                                stage.progressPercentage > 0 -> AccentGold
-                                else -> trackColor
-                            },
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = when {
-                                stage.isCompleted -> "Completed"
-                                stage.progressPercentage > 0 -> "${stage.progressPercentage}% Done"
-                                else -> "Ready"
-                            },
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = when {
-                                stage.isCompleted -> SuccessGreen
-                                stage.progressPercentage > 0 -> AccentGold
-                                else -> trackColor
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Titles
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = stage.titleEn,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stage.subtitleFa,
+                    text = "${stage.masteredCount}/${stage.totalCount} words mastered",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.sp
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "${stage.progressPercentage}%",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = statusColor,
+                    maxLines = 1
                 )
             }
+            LinearProgressIndicator(
+                progress = { stage.progressPercentage / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Dimens.progressHeight)
+                    .clip(RoundedCornerShape(Dimens.radiusPill)),
+                color = if (stage.isCompleted) Accent.success else trackColor,
+                trackColor = trackColor.copy(alpha = 0.12f)
+            )
 
-            // Progress Bar & Count
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${stage.masteredCount} of ${stage.totalCount} words mastered",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${stage.progressPercentage}%",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (stage.isCompleted) SuccessGreen else trackColor
-                    )
-                }
-
-                LinearProgressIndicator(
-                    progress = { stage.progressPercentage / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = if (stage.isCompleted) SuccessGreen else trackColor,
-                    trackColor = trackColor.copy(alpha = 0.12f)
-                )
-            }
-
-            // Action Button
             Button(
                 onClick = onStartStudy,
                 enabled = stage.isUnlocked,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(Dimens.radiusSm),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (stage.isCompleted) SuccessGreen else trackColor,
-                    contentColor = Color.White
+                    containerColor = if (stage.isCompleted) Accent.success else trackColor,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Dimens.rowHeight)
             ) {
                 Icon(
                     imageVector = if (stage.isCompleted) Icons.Default.Replay else Icons.Default.PlayArrow,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(Dimens.iconSm)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(Dimens.space6))
                 Text(
-                    text = if (stage.isCompleted) "Review Stage Words" else "Start Practice (${stage.totalCount} words)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    text = if (stage.isCompleted) "Review stage words" else "Start practice · ${stage.totalCount} words",
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -702,6 +573,7 @@ private fun InteractiveStageStudyDialog(
     isCardFlipped: Boolean,
     isUkAccent: Boolean,
     isPlayingAudio: Boolean,
+    trackColor: Color,
     onFlip: () -> Unit,
     onToggleAccent: () -> Unit,
     onPlayAudio: (String) -> Unit,
@@ -710,216 +582,186 @@ private fun InteractiveStageStudyDialog(
 ) {
     val word = stage.words.getOrNull(wordIndex) ?: return
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.65f))
-            .clickable { /* prevent click through */ },
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .padding(vertical = 20.dp),
-            shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+    Dialog(onDismissRequest = onClose) {
+        AppCard(
+            modifier = Modifier.fillMaxWidth(0.96f),
+            padding = Dimens.cardPadding
         ) {
             Column(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
             ) {
-                // Header: Stage Title, Progress, Close
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Stage ${stage.stageNumber} • ${stage.titleEn}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = PrimaryBlue
+                            text = "Stage ${stage.stageNumber} · ${stage.titleEn}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "Card ${wordIndex + 1} of ${stage.words.size}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
-
-                    IconButton(onClick = onClose) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier.defaultMinSize(minHeight = Dimens.minTapTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close study session"
+                        )
                     }
                 }
 
-                // Flashcard Box
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onFlip() },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.25f))
+                AppCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    padding = Dimens.cardPaddingTight,
+                    borderColor = trackColor.copy(alpha = 0.35f),
+                    onClick = onFlip
                 ) {
-                    Column(
-                        modifier = Modifier.padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Word & Audio pronunciation row
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.space8)
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = word.word,
-                                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${word.phonetic} • ${word.partOfSpeech}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "${word.phonetic} · ${word.partOfSpeech}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                FilterChip(
-                                    selected = isUkAccent,
-                                    onClick = onToggleAccent,
-                                    label = { Text(if (isUkAccent) "UK" else "US", fontSize = 10.sp) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = PrimaryBlue,
-                                        selectedLabelColor = Color.White
-                                    )
-                                )
-                                IconButton(
-                                    onClick = { onPlayAudio(word.word) },
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(PrimaryBlue)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isPlayingAudio) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                                        contentDescription = "Audio pronunciation",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                            SelectChip(
+                                text = if (isUkAccent) "UK" else "US",
+                                selected = isUkAccent,
+                                onClick = onToggleAccent
+                            )
+                            AudioSpeakerButton(
+                                onClick = { onPlayAudio(word.word) },
+                                size = Dimens.minTapTarget,
+                                contentDescription = if (isPlayingAudio) {
+                                    "Playing ${word.word} pronunciation"
+                                } else {
+                                    "Play ${word.word} pronunciation"
                                 }
-                            }
+                            )
                         }
 
-                        // English Example
                         if (word.exampleEn.isNotBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                            AppInset {
                                 Text(
                                     text = "“${word.exampleEn}”",
-                                    fontSize = 13.sp,
-                                    lineHeight = 19.sp,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(12.dp)
+                                    maxLines = 4,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
 
-                        // Flipped / Revealed Section (Persian Translation & Academic Tips)
                         if (isCardFlipped) {
-                            // Persian Meaning Card
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = PrimaryBlue.copy(alpha = 0.08f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
+                            AppInset(color = Accent.infoSoft, contentColor = Accent.infoOnSoft) {
+                                Column(verticalArrangement = Arrangement.spacedBy(Dimens.space4)) {
                                     Text(
-                                        text = "Persian: ${word.persianMeaning}",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        text = "Persian",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = Accent.infoOnSoft
                                     )
+                                    PersianContentRtl {
+                                        Text(
+                                            text = word.persianMeaning,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = Accent.infoOnSoft,
+                                            maxLines = 3,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                     if (word.exampleFa.isNotBlank()) {
                                         Text(
-                                            text = "Translation: ${word.exampleFa}",
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            lineHeight = 18.sp
+                                            text = "Translation",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = Accent.infoOnSoft
                                         )
+                                        PersianContentRtl {
+                                            Text(
+                                                text = word.exampleFa,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Accent.infoOnSoft,
+                                                maxLines = 3,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     }
                                     if (word.englishDefinition.isNotBlank()) {
                                         Text(
                                             text = "Definition: ${word.englishDefinition}",
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Accent.infoOnSoft,
+                                            maxLines = 3,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
                             }
 
-                            // Collocations & Synonyms
                             if (word.collocations.isNotEmpty()) {
                                 FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.space6)
                                 ) {
-                                    word.collocations.forEach { col ->
-                                        Surface(
-                                            shape = RoundedCornerShape(6.dp),
-                                            color = SuccessGreen.copy(alpha = 0.12f)
-                                        ) {
-                                            Text(
-                                                text = col,
-                                                color = SuccessGreen,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
+                                    word.collocations.forEach { collocation ->
+                                        TagChip(
+                                            text = collocation,
+                                            containerColor = Accent.successSoft,
+                                            contentColor = Accent.successOnSoft
+                                        )
                                     }
                                 }
                             }
 
-                            // Exam Tip
                             if (word.examTipFa.isNotBlank() || word.iranianMistakeFa.isNotBlank()) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = AccentGold.copy(alpha = 0.1f),
-                                    modifier = Modifier.fillMaxWidth()
+                                AppInset(
+                                    color = Accent.warningSoft,
+                                    contentColor = Accent.warningOnSoft
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(Dimens.space6),
                                         verticalAlignment = Alignment.Top
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Lightbulb,
                                             contentDescription = null,
-                                            tint = AccentGold,
-                                            modifier = Modifier.size(16.dp)
+                                            tint = Accent.warning,
+                                            modifier = Modifier.size(Dimens.iconSm)
                                         )
-                                        Text(
-                                            text = word.examTipFa.ifEmpty { word.iranianMistakeFa },
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            lineHeight = 16.sp
-                                        )
+                                        PersianContentRtl {
+                                            Text(
+                                                text = word.examTipFa.ifEmpty { word.iranianMistakeFa },
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Accent.warningOnSoft,
+                                                maxLines = 4,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -932,52 +774,69 @@ private fun InteractiveStageStudyDialog(
                                 Icon(
                                     imageVector = Icons.Default.Visibility,
                                     contentDescription = null,
-                                    tint = PrimaryBlue,
-                                    modifier = Modifier.size(14.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(Dimens.iconSm)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(Dimens.space6))
                                 Text(
-                                    text = "Tap to reveal Persian meaning, collocations & tips",
-                                    fontSize = 11.sp,
-                                    color = PrimaryBlue,
-                                    fontWeight = FontWeight.SemiBold
+                                    text = "Tap to reveal meaning, collocations, and tips",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
                     }
                 }
 
-                // Action Buttons: Need Review vs Mastered
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.blockGap)
                 ) {
                     OutlinedButton(
                         onClick = { onRecordResult(false) },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(Dimens.radiusSm),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(Dimens.rowHeight)
                     ) {
-                        Icon(imageVector = Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(15.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Need Review", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Icon(
+                            imageVector = Icons.Default.Replay,
+                            contentDescription = null,
+                            modifier = Modifier.size(Dimens.iconSm)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.space6))
+                        Text(
+                            text = "Need review",
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-
                     Button(
                         onClick = { onRecordResult(true) },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(Dimens.radiusSm),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = SuccessGreen,
-                            contentColor = Color.White
+                            containerColor = Accent.success,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(Dimens.rowHeight)
                     ) {
-                        Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Mastered ✓", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(Dimens.iconSm)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.space6))
+                        Text(
+                            text = "Mastered",
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }

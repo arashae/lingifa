@@ -62,18 +62,20 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python scripts/curate_vocabulary_sources.py
 
-      - name: Re-apply reviewed TOEFL source of truth
+      - name: Re-apply reviewed IELTS and TOEFL sources of truth
         run: python scripts/apply_vocabulary_overrides.py
 
-      - name: Strictly validate reviewed TOEFL chunks
+      - name: Strictly validate reviewed IELTS and TOEFL chunks
         shell: bash
         run: |
           set -euo pipefail
-          for file in app/src/main/assets/vocabulary/toefl/toefl_core_*.jsonl; do
-            python scripts/validate_vocabulary_quality.py \
-              --file "$file" \
-              --strict \
-              --report "/tmp/$(basename "$file").quality.json"
+          for bank in ielts toefl; do
+            for file in app/src/main/assets/vocabulary/$bank/${bank}_core_*.jsonl; do
+              python scripts/validate_vocabulary_quality.py \
+                --file "$file" \
+                --strict \
+                --report "/tmp/$(basename "$file").quality.json"
+            done
           done
 
       - name: Validate vocabulary quality
@@ -93,7 +95,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Vocabulary assets are already up to date."
           else
-            git commit -m "data: preserve reviewed TOEFL vocabulary"
+            git commit -m "data: preserve reviewed IELTS and TOEFL vocabulary"
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main

@@ -66,6 +66,13 @@
 - Added sense-specific collocations; strict validation reports zero findings and zero errors across all 2,000 cards with 100% example coverage.
 - Existing source, license, and frequency fields were preserved. Revised learner content is editorial and is not attributed to external dictionaries or upstream datasets.
 
+## TOEFL priority review: cards 2,001–4,000
+
+- Reviewed `toefl_core_005.jsonl` through `toefl_core_008.jsonl` card by card; all findings were re-verified from clean validator runs rather than worker summaries.
+- Corrected POS/sense conflicts, placeholder and multi-sense definitions, Persian script/ZWNJ defects, missing or non-aligned examples, and collocation/metadata gaps.
+- Strict validation reports zero findings and zero errors across all 2,000 cards with 100% example and collocation coverage.
+- Existing source, license, and frequency fields were preserved; revised learner content is editorial and is not attributed to external sources.
+
 ## Batch 7: `general_core_002` cards 1–50
 
 - Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.

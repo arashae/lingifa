@@ -39,6 +39,13 @@
 - Added only high-confidence collocations and removed stale `needs-collocation` tags.
 - Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.
 
+## IELTS priority review: cards 1–2,000
+
+- Reviewed `ielts_core_001.jsonl` through `ielts_core_004.jsonl` card by card for one deliberate IELTS-relevant sense per entry.
+- Corrected POS/sense conflicts, rare WordNet senses, malformed definitions, Persian encoding and gloss defects, missing examples, and non-aligned English/Persian examples.
+- Added corpus-natural collocations; strict validation reports zero findings and zero errors across all 2,000 cards with 100% example coverage.
+- Existing source, license, and frequency fields were preserved. Revised definitions, examples, Persian translations, and collocations are editorial and are not attributed to Cambridge, Oxford, NGSL, NAWL, or upstream datasets.
+
 ## Batch 7: `general_core_002` cards 1–50
 
 - Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.

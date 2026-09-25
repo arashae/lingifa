@@ -15,6 +15,8 @@ jobs:
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      # Monotonically increasing across this workflow so every APK is a valid Android upgrade.
+      LINGUAFA_VERSION_CODE: ${{ github.run_number }}
 
     steps:
       - name: Checkout
@@ -44,6 +46,20 @@ jobs:
 
       - name: Test, lint and build debug APK
         run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug --stacktrace
+
+      - name: Verify stable signer and upgrade metadata
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          AAPT2="$ANDROID_HOME/build-tools/36.0.0/aapt2"
+
+          "$APKSIGNER" verify --print-certs "$APK" | tee /tmp/apk-cert.txt
+          grep -qi "3e87cc2a017ba41dceecde4349b7f3c92bc72cd7f3eceb7f735e371a98487806" /tmp/apk-cert.txt
+
+          "$AAPT2" dump badging "$APK" | head -n 1 | tee /tmp/apk-badging.txt
+          grep -q "name='com.aistudio.linguafa.zqkxmr'" /tmp/apk-badging.txt
+          grep -q "versionCode='${LINGUAFA_VERSION_CODE}'" /tmp/apk-badging.txt
 
       - name: Upload debug APK
         if: success()

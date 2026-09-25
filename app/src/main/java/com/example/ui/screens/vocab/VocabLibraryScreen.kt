@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -63,9 +64,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.ui.components.AudioSpeakerButton
@@ -73,6 +76,11 @@ import com.example.ui.components.CefrBadge
 import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.SuccessGreen
+import com.example.vocab.VocabularyDailyPlan
+import com.example.vocab.VocabularyMasteryStats
+import com.example.vocab.VocabularySkillAxis
+import com.example.vocab.VocabularyStudyPolicy
+import com.example.vocab.VocabularyTier
 
 @Composable
 fun VocabLibraryScreen(
@@ -126,6 +134,13 @@ fun VocabLibraryScreen(
                 ) {
                     LibraryHeader(totalCount = state.totalCount)
 
+                    DailyVocabularyPlanCard(
+                        plan = state.dailyPlan,
+                        stats = state.masteryStats,
+                        onLimitChange = viewModel::setDailyNewWordLimit,
+                        onStart = onNavigateToReview
+                    )
+
                     OutlinedTextField(
                         value = state.searchQuery,
                         onValueChange = viewModel::onSearchQueryChanged,
@@ -166,13 +181,24 @@ fun VocabLibraryScreen(
                         }
                     )
 
+                    if (VocabularyStudyPolicy.supportsTiers(state.selectedPackId)) {
+                        ExamTierStrip(
+                            selectedTier = state.selectedTier,
+                            onTierSelected = viewModel::onTierFilterChanged
+                        )
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "کتابخانه واژگان",
+                            text = when (state.selectedTier) {
+                                VocabularyTier.CORE -> "واژگان Core"
+                                VocabularyTier.EXTENDED -> "واژگان Extended"
+                                VocabularyTier.ALL -> "کتابخانه واژگان"
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -203,6 +229,176 @@ fun VocabLibraryScreen(
                     }
                     item { Spacer(modifier = Modifier.height(92.dp)) }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyVocabularyPlanCard(
+    plan: VocabularyDailyPlan,
+    stats: VocabularyMasteryStats,
+    onLimitChange: (Int) -> Unit,
+    onStart: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "برنامه واژگان امروز",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = "اول مرورهای موعددار، بعد لغات ضعیف، بعد لغات جدید",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
+                    )
+                }
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+                ) {
+                    Text(
+                        text = "${plan.total}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                PlanMetric("مرور", plan.dueReviews, Modifier.weight(1f))
+                PlanMetric("ضعیف", plan.weakWords, Modifier.weight(1f))
+                PlanMetric("جدید", plan.newWords, Modifier.weight(1f))
+            }
+
+            Text(
+                text = "سقف لغت جدید روزانه",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                VocabularyStudyPolicy.DAILY_NEW_LIMIT_OPTIONS.forEach { limit ->
+                    FilterChip(
+                        selected = plan.newWordLimit == limit,
+                        onClick = { onLimitChange(limit) },
+                        label = { Text(limit.toString()) },
+                        shape = RoundedCornerShape(9.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                MasteryMetric("New", stats.unseen, Modifier.weight(1f))
+                MasteryMetric("Learning", stats.learning, Modifier.weight(1f))
+                MasteryMetric("Review", stats.review, Modifier.weight(1f))
+                MasteryMetric("Mastered", stats.mastered, Modifier.weight(1f))
+            }
+
+            Button(
+                onClick = onStart,
+                enabled = plan.total > 0,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Timer, contentDescription = null)
+                Spacer(modifier = Modifier.width(7.dp))
+                Text(if (plan.total > 0) "شروع برنامه امروز" else "برنامه امروز کامل است")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlanMetric(label: String, value: Int, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(11.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun MasteryMetric(label: String, value: Int, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value.toString(), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun ExamTierStrip(
+    selectedTier: VocabularyTier,
+    onTierSelected: (VocabularyTier) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(
+            text = "اولویت مطالعه آزمون",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            listOf(
+                VocabularyTier.ALL to "همه",
+                VocabularyTier.CORE to "Core · ضروری",
+                VocabularyTier.EXTENDED to "Extended · تکمیلی"
+            ).forEach { (tier, label) ->
+                FilterChip(
+                    selected = selectedTier == tier,
+                    onClick = { onTierSelected(tier) },
+                    label = { Text(label) },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
             }
         }
     }
@@ -394,6 +590,9 @@ fun WordLibraryCard(
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {
+    val spellingMastery = VocabularyStudyPolicy.skillMastery(item, VocabularySkillAxis.SPELLING)
+    val contextMastery = VocabularyStudyPolicy.skillMastery(item, VocabularySkillAxis.CONTEXT)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -465,7 +664,16 @@ fun WordLibraryCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "معنی ${item.mastery}%  •  متن $contextMastery%  •  املا $spellingMastery%",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -479,7 +687,7 @@ fun WordLibraryCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "تسلط ${item.mastery}%",
+                            text = "تسلط معنایی ${item.mastery}%",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

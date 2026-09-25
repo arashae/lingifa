@@ -9,20 +9,28 @@ import com.example.data.importer.ParsedImportItem
 import com.example.data.importer.RemoteMasterVocabularySync
 import com.example.data.importer.VocabularyFileParser
 import com.example.data.local.AppDatabase
+import com.example.data.model.UserProfile
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
-import com.example.data.model.UserProfile
 import com.example.data.repository.VocabularyRepository
 import com.example.network.GeminiClient
 import com.example.srs.ReviewRating
+import com.example.vocab.VocabularyDailyPlan
+import com.example.vocab.VocabularyMasteryStats
+import com.example.vocab.VocabularyStudyPolicy
+import com.example.vocab.VocabularyTier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -35,7 +43,10 @@ data class VocabLibraryUiState(
     val selectedLevel: String = "All",
     val selectedStatus: String = "All",
     val selectedPackId: String? = null,
+    val selectedTier: VocabularyTier = VocabularyTier.ALL,
     val learningLevel: String = "B2",
+    val dailyPlan: VocabularyDailyPlan = VocabularyDailyPlan(),
+    val masteryStats: VocabularyMasteryStats = VocabularyMasteryStats(),
     val isLoading: Boolean = false,
     val isAiGenerating: Boolean = false,
     val aiGeneratedPreview: List<ParsedImportItem> = emptyList(),
@@ -55,6 +66,11 @@ data class PackSyncUiState(
         get() = if (target <= 0) 0f else (installed.toFloat() / target).coerceIn(0f, 1f)
 }
 
+private data class StudySummary(
+    val dailyPlan: VocabularyDailyPlan,
+    val masteryStats: VocabularyMasteryStats
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -64,11 +80,21 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         packDao = db.vocabularyPackDao(),
         packItemDao = db.vocabularyPackItemDao()
     )
+    private val studyPreferences = application.getSharedPreferences(
+        VocabularyStudyPolicy.PREFS_NAME,
+        android.content.Context.MODE_PRIVATE
+    )
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedLevel = MutableStateFlow("All")
     private val _selectedStatus = MutableStateFlow("All")
     private val _selectedPackId = MutableStateFlow<String?>(null)
+    private val _selectedTier = MutableStateFlow(VocabularyTier.ALL)
+    private val _dailyNewLimit = MutableStateFlow(
+        studyPreferences.getInt(VocabularyStudyPolicy.KEY_DAILY_NEW_LIMIT, 15)
+            .takeIf { it in VocabularyStudyPolicy.DAILY_NEW_LIMIT_OPTIONS }
+            ?: 15
+    )
     private val _isAiGenerating = MutableStateFlow(false)
     private val _aiPreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
     private val _filePreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
@@ -77,8 +103,15 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeMasterSyncPackId = MutableStateFlow<String?>(null)
     val packSyncStates: StateFlow<Map<String, PackSyncUiState>> = _packSyncStates.asStateFlow()
 
+    private data class FilterParams(
+        val query: String,
+        val level: String,
+        val status: String,
+        val packId: String?
+    )
+
     @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
-    private val filteredWordsFlow: Flow<List<VocabularyItem>> =
+    private val rawFilteredWordsFlow: Flow<List<VocabularyItem>> =
         combine(
             _searchQuery.debounce { query -> if (query.isBlank()) 0L else 200L },
             _selectedLevel,
@@ -92,16 +125,45 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
                 level = params.level,
                 status = params.status,
                 packId = params.packId,
-                limit = 250
+                limit = 10_000
             )
-        }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+        }
 
-    private data class FilterParams(
-        val query: String,
-        val level: String,
-        val status: String,
-        val packId: String?
-    )
+    /**
+     * Core/Extended is computed from the complete selected exam pack before the visible search or
+     * mastery filter is applied. This avoids the common bug where "Core" means the first N rows of
+     * an already-filtered subset rather than the highest-priority N words in the exam bank.
+     */
+    private val tierIdsFlow: Flow<Set<Long>?> =
+        combine(_selectedPackId, _selectedTier) { packId, tier -> packId to tier }
+            .flatMapLatest { (packId, tier) ->
+                if (packId == null || tier == VocabularyTier.ALL || !VocabularyStudyPolicy.supportsTiers(packId)) {
+                    flowOf(null)
+                } else {
+                    repo.getByPack(packId).map { packWords ->
+                        VocabularyStudyPolicy.idsForTier(packWords, packId, tier)
+                    }
+                }
+            }
+
+    private val filteredWordsFlow: Flow<List<VocabularyItem>> = combine(
+        rawFilteredWordsFlow,
+        tierIdsFlow,
+        _selectedPackId
+    ) { words, tierIds, packId ->
+        val tierFiltered = if (tierIds == null) words else words.filter { it.id in tierIds }
+        VocabularyStudyPolicy.sortForStudy(tierFiltered, packId)
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+
+    private val studySummaryFlow: Flow<StudySummary> = combine(
+        repo.allVocabularies,
+        _dailyNewLimit
+    ) { allWords, newLimit ->
+        StudySummary(
+            dailyPlan = VocabularyStudyPolicy.dailyPlan(allWords, newLimit),
+            masteryStats = VocabularyStudyPolicy.masteryStats(allWords)
+        )
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
 
     val uiState: StateFlow<VocabLibraryUiState> = combine(
         filteredWordsFlow,
@@ -110,13 +172,15 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         _selectedLevel,
         _selectedStatus,
         _selectedPackId,
+        _selectedTier,
         _isAiGenerating,
         _aiPreview,
         _filePreview,
         _statusMessage,
         repo.totalCount,
         repo.learnedCount,
-        db.userProfileDao().getProfile()
+        db.userProfileDao().getProfile(),
+        studySummaryFlow
     ) { params ->
         @Suppress("UNCHECKED_CAST")
         val words = params[0] as List<VocabularyItem>
@@ -126,15 +190,17 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
         val level = params[3] as String
         val status = params[4] as String
         val packId = params[5] as String?
-        val aiGen = params[6] as Boolean
+        val tier = params[6] as VocabularyTier
+        val aiGen = params[7] as Boolean
         @Suppress("UNCHECKED_CAST")
-        val aiPreview = params[7] as List<ParsedImportItem>
+        val aiPreview = params[8] as List<ParsedImportItem>
         @Suppress("UNCHECKED_CAST")
-        val filePreview = params[8] as List<ParsedImportItem>
-        val statusMsg = params[9] as String?
-        val totalCount = params[10] as Int
-        val learnedCount = params[11] as Int
-        val profile = params[12] as UserProfile?
+        val filePreview = params[9] as List<ParsedImportItem>
+        val statusMsg = params[10] as String?
+        val totalCount = params[11] as Int
+        val learnedCount = params[12] as Int
+        val profile = params[13] as UserProfile?
+        val studySummary = params[14] as StudySummary
 
         VocabLibraryUiState(
             words = words,
@@ -145,18 +211,21 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
             selectedLevel = level,
             selectedStatus = status,
             selectedPackId = packId,
+            selectedTier = tier,
             learningLevel = profile?.currentLevel ?: "B2",
+            dailyPlan = studySummary.dailyPlan,
+            masteryStats = studySummary.masteryStats,
             isAiGenerating = aiGen,
             aiGeneratedPreview = aiPreview,
             fileImportPreview = filePreview,
             statusMessage = statusMsg
         )
     }.flowOn(kotlinx.coroutines.Dispatchers.Default)
-    .stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = VocabLibraryUiState()
-    )
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = VocabLibraryUiState()
+        )
 
     fun onSearchQueryChanged(q: String) {
         _searchQuery.value = q
@@ -172,6 +241,23 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onPackFilterChanged(packId: String?) {
         _selectedPackId.value = packId
+        if (!VocabularyStudyPolicy.supportsTiers(packId)) {
+            _selectedTier.value = VocabularyTier.ALL
+        }
+    }
+
+    fun onTierFilterChanged(tier: VocabularyTier) {
+        _selectedTier.value = if (VocabularyStudyPolicy.supportsTiers(_selectedPackId.value)) {
+            tier
+        } else {
+            VocabularyTier.ALL
+        }
+    }
+
+    fun setDailyNewWordLimit(limit: Int) {
+        if (limit !in VocabularyStudyPolicy.DAILY_NEW_LIMIT_OPTIONS) return
+        studyPreferences.edit().putInt(VocabularyStudyPolicy.KEY_DAILY_NEW_LIMIT, limit).apply()
+        _dailyNewLimit.value = limit
     }
 
     /** Lets a learner start at any CEFR level, without forcing a placement test. */
@@ -302,7 +388,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     /** Records the learner's first judgement so the word can enter SRS safely. */
     fun recordLearningJudgement(item: VocabularyItem, rating: ReviewRating) {
         viewModelScope.launch {
-            repo.recordReview(item, rating)
+            val fresh = repo.getByIdSync(item.id) ?: item
+            repo.recordReview(fresh, rating)
         }
     }
 

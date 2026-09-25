@@ -271,6 +271,14 @@ private fun VocabPackCard(
     val isSyncing = syncState?.isRunning == true
     val isComplete = pack.isCorePack && target > 0 && installed >= target
     val statusMessage = syncState?.message?.takeIf { it.isNotBlank() }
+    val isC2Advanced = pack.id == "pack_cefr_c2"
+    val displayTitleFa = if (isC2Advanced) "C2 + واژگان پیشرفته" else pack.titleFa
+    val displayTitleEn = if (isC2Advanced) "C2 + Advanced Vocabulary" else pack.titleEn
+    val displayDescription = if (isC2Advanced) {
+        "Extensive advanced & general vocabulary bank; specialized and rare words are prioritized for later study."
+    } else {
+        pack.descriptionEn.ifBlank { pack.descriptionFa }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,12 +312,12 @@ private fun VocabPackCard(
                 Spacer(modifier = Modifier.width(11.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(
-                        text = pack.titleEn.ifBlank { pack.titleFa },
+                        text = displayTitleEn.ifBlank { displayTitleFa },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = pack.titleFa,
+                        text = displayTitleFa,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -318,9 +326,9 @@ private fun VocabPackCard(
                 CefrBadge(level = pack.level)
             }
 
-            if (pack.descriptionEn.isNotBlank() || pack.descriptionFa.isNotBlank()) {
+            if (displayDescription.isNotBlank()) {
                 Text(
-                    text = pack.descriptionEn.ifBlank { pack.descriptionFa },
+                    text = displayDescription,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

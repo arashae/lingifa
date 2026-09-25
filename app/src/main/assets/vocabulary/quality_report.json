@@ -2,11 +2,11 @@
   "rows": 43887,
   "files": 93,
   "coverage": {
-    "examples": 0.9451,
-    "ipa": 0.983,
-    "collocations": 0.1883
+    "examples": 0.9518,
+    "ipa": 0.9855,
+    "collocations": 0.2444
   },
-  "c2SuspiciousNamesPlacesDownranked": 231,
+  "c2SuspiciousNamesPlacesDownranked": 227,
   "duplicateCount": 0,
   "samples": {
     "missingExamples": [
@@ -58,16 +58,16 @@
   },
   "semanticReview": {
     "findingCounts": {
-      "example_translation_alignment_review": 2197,
+      "example_translation_alignment_review": 2014,
       "closed_class_sense_review": 9,
-      "target_word_missing_from_example": 5672,
+      "target_word_missing_from_example": 5274,
       "priority_sense_review": 31,
-      "definition_meaning_alignment_review": 2767,
-      "placeholder_definition": 269,
-      "unexpected_script_or_encoding": 550,
+      "definition_meaning_alignment_review": 2509,
+      "placeholder_definition": 258,
+      "unexpected_script_or_encoding": 509,
       "missing_example_translation": 8,
       "metadata_outlier_review": 17,
-      "pos_review": 2274,
+      "pos_review": 1978,
       "zero_frequency_rank": 52
     },
     "findingsTruncatedAt": 500,

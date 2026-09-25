@@ -1,68 +1,3571 @@
 {
-  "rows": 100,
-  "files": 1,
+  "rows": 43887,
+  "files": 93,
   "coverage": {
-    "examples": 0.99,
-    "ipa": 0.92,
-    "collocations": 0.03
+    "examples": 0.9171,
+    "ipa": 0.9818,
+    "collocations": 0.0056
   },
-  "c2SuspiciousNamesPlacesDownranked": 0,
+  "c2SuspiciousNamesPlacesDownranked": 235,
   "duplicateCount": 0,
   "samples": {
     "missingExamples": [
-      "general:without"
+      "cefr/c2:abo",
+      "general:the",
+      "general:and",
+      "general:of",
+      "general:to",
+      "general:a",
+      "general:you",
+      "general:for",
+      "general:they",
+      "general:we",
+      "general:with",
+      "general:this",
+      "general:i",
+      "general:at",
+      "general:she",
+      "general:from",
+      "general:by",
+      "general:if",
+      "general:would",
+      "general:which"
     ],
     "missingDefinitions": [],
     "duplicates": [],
-    "c2NamesPlaces": []
+    "c2NamesPlaces": [
+      "hampshire",
+      "geneva",
+      "java",
+      "nashville",
+      "brisbane",
+      "quebec",
+      "cincinnati",
+      "florence",
+      "frederick",
+      "pierre",
+      "seoul",
+      "venice",
+      "jamaica",
+      "oakland",
+      "nickname",
+      "minneapolis",
+      "sacramento",
+      "princeton",
+      "bangkok",
+      "louisville"
+    ]
   },
   "semanticReview": {
     "findingCounts": {
-      "target_word_missing_from_example": 5,
-      "unexpected_script_or_encoding": 1
+      "closed_class_sense_review": 10,
+      "target_word_missing_from_example": 7125,
+      "priority_sense_review": 37,
+      "unexpected_script_or_encoding": 788,
+      "missing_example_translation": 9,
+      "pos_review": 3493,
+      "zero_frequency_rank": 52
     },
     "findingsTruncatedAt": 500,
     "findings": [
       {
+        "kind": "closed_class_sense_review",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 5,
+        "word": "can",
+        "detail": "expected modal; got verb"
+      },
+      {
         "kind": "target_word_missing_from_example",
-        "file": "general/general_core_001.jsonl",
-        "line": 221,
-        "word": "build",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 5,
+        "word": "can",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "priority_sense_review",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 5,
+        "word": "can",
+        "detail": "high-risk lemma from editorial checklist"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 7,
+        "word": "just",
         "detail": "review lemma/inflection and sense"
       },
       {
         "kind": "target_word_missing_from_example",
-        "file": "general/general_core_001.jsonl",
-        "line": 231,
-        "word": "job",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 9,
+        "word": "do",
         "detail": "review lemma/inflection and sense"
       },
       {
         "kind": "target_word_missing_from_example",
-        "file": "general/general_core_001.jsonl",
-        "line": 242,
-        "word": "buy",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 14,
+        "word": "also",
         "detail": "review lemma/inflection and sense"
       },
       {
-        "kind": "unexpected_script_or_encoding",
-        "file": "general/general_core_001.jsonl",
-        "line": 249,
-        "word": "face",
-        "detail": "persianMeaning: ZWNJ adjacent to whitespace detected"
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 18,
+        "word": "only",
+        "detail": "review lemma/inflection and sense"
       },
       {
         "kind": "target_word_missing_from_example",
-        "file": "general/general_core_001.jsonl",
-        "line": 279,
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 30,
+        "word": "way",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 37,
+        "word": "really",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 48,
+        "word": "world",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 57,
+        "word": "look",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 65,
+        "word": "help",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 77,
+        "word": "next",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 80,
+        "word": "big",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 82,
         "word": "sure",
         "detail": "review lemma/inflection and sense"
       },
       {
         "kind": "target_word_missing_from_example",
-        "file": "general/general_core_001.jsonl",
-        "line": 298,
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 92,
+        "word": "someone",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 97,
+        "word": "lot",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 103,
+        "word": "let",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 126,
+        "word": "enough",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 131,
+        "word": "tell",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 134,
         "word": "hard",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 147,
+        "word": "small",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 150,
+        "word": "job",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 155,
+        "word": "later",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 162,
+        "word": "country",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 178,
+        "word": "face",
+        "detail": "persianMeaning: ZWNJ adjacent to whitespace detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 179,
+        "word": "kind",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 180,
+        "word": "maybe",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 182,
+        "word": "story",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 197,
+        "word": "video",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 206,
+        "word": "level",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 209,
+        "word": "single",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 221,
+        "word": "almost",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 222,
+        "word": "fuck",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 231,
+        "word": "wrong",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 232,
+        "word": "girl",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 238,
+        "word": "bit",
+        "detail": "persianMeaning: Hangul script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 238,
+        "word": "bit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 243,
+        "word": "yeah",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 260,
+        "word": "wait",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 267,
+        "word": "special",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 273,
+        "word": "police",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 277,
+        "word": "buy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 282,
+        "word": "report",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a1/a1_core_001.jsonl",
+        "line": 285,
+        "word": "turn",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 5,
+        "word": "phone",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 17,
+        "word": "final",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 20,
+        "word": "kid",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 34,
+        "word": "program",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 37,
+        "word": "chance",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 40,
+        "word": "process",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 52,
+        "word": "hold",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 54,
+        "word": "main",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 62,
+        "word": "fight",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 63,
+        "word": "fine",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 66,
+        "word": "price",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 68,
+        "word": "rest",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 69,
+        "word": "result",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 79,
+        "word": "miss",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 80,
+        "word": "project",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 82,
+        "word": "shot",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 85,
+        "word": "account",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 87,
+        "word": "especially",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 93,
+        "word": "position",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 100,
+        "word": "film",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 109,
+        "word": "tv",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 121,
+        "word": "test",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 123,
+        "word": "break",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 126,
+        "word": "middle",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 128,
+        "word": "sorry",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 136,
+        "word": "guess",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 145,
+        "word": "alone",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 146,
+        "word": "average",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 152,
+        "word": "longer",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 158,
+        "word": "press",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 160,
+        "word": "role",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 164,
+        "word": "cool",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 167,
+        "word": "ground",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 173,
+        "word": "source",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 178,
+        "word": "ok",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 183,
+        "word": "stand",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 184,
+        "word": "stuff",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 186,
+        "word": "amount",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 203,
+        "word": "step",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 205,
+        "word": "central",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 216,
+        "word": "various",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 220,
+        "word": "chief",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 229,
+        "word": "style",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 235,
+        "word": "complete",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 239,
+        "word": "involve",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 244,
+        "word": "relate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 254,
+        "word": "enjoy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 259,
+        "word": "poor",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 263,
+        "word": "write",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 264,
+        "word": "choice",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 266,
+        "word": "consider",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 267,
+        "word": "continue",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 269,
+        "word": "cover",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 270,
+        "word": "currently",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 274,
+        "word": "financial",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 277,
+        "word": "increase",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 284,
+        "word": "simply",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 292,
+        "word": "build",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 294,
+        "word": "crazy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 312,
+        "word": "forget",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 313,
+        "word": "goal",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 322,
+        "word": "create",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 326,
+        "word": "pass",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 328,
+        "word": "risk",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 344,
+        "word": "product",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 349,
+        "word": "allow",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 350,
+        "word": "culture",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 353,
+        "word": "growth",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 362,
+        "word": "speak",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 371,
+        "word": "funny",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 372,
+        "word": "limit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 376,
+        "word": "require",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 379,
+        "word": "store",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 381,
+        "word": "track",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 410,
+        "word": "certainly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 411,
+        "word": "completely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 413,
+        "word": "credit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 415,
+        "word": "describe",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 420,
+        "word": "individual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 425,
+        "word": "nearly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 431,
+        "word": "sort",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 446,
+        "word": "extra",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 462,
+        "word": "movement",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 469,
+        "word": "announce",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 472,
+        "word": "definitely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_001.jsonl",
+        "line": 489,
+        "word": "generally",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 11,
+        "word": "degree",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 16,
+        "word": "grow",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 24,
+        "word": "reach",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 25,
+        "word": "seriously",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 48,
+        "word": "awesome",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 49,
+        "word": "band",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 56,
+        "word": "imagine",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 71,
+        "word": "anyway",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 72,
+        "word": "choose",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 75,
+        "word": "commission",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 81,
+        "word": "grand",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 84,
+        "word": "luck",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 91,
+        "word": "suppose",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 93,
+        "word": "thus",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 96,
+        "word": "catch",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 104,
+        "word": "establish",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 106,
+        "word": "gay",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 127,
+        "word": "reality",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 129,
+        "word": "spot",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 143,
+        "word": "nation",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 147,
+        "word": "purpose",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 150,
+        "word": "sick",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 191,
+        "word": "appear",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 192,
+        "word": "attempt",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 197,
+        "word": "fell",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/a2/a2_core_002.jsonl",
+        "line": 205,
+        "word": "ride",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 3,
+        "word": "slow",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 4,
+        "word": "speech",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 8,
+        "word": "wonderful",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 29,
+        "word": "worry",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 37,
+        "word": "fourth",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 42,
+        "word": "mostly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 49,
+        "word": "score",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 50,
+        "word": "separate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 54,
+        "word": "tom",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 55,
+        "word": "totally",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 64,
+        "word": "fashion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 72,
+        "word": "mid",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 75,
+        "word": "pull",
+        "detail": "persianMeaning: Hangul script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 80,
+        "word": "target",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 84,
+        "word": "apply",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 86,
+        "word": "basis",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 91,
+        "word": "gain",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 94,
+        "word": "prime",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 101,
+        "word": "weird",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 105,
+        "word": "chairman",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 108,
+        "word": "grade",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 118,
+        "word": "somebody",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 119,
+        "word": "stone",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 134,
+        "word": "extremely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 135,
+        "word": "firm",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 140,
+        "word": "prevent",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 143,
+        "word": "television",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 160,
+        "word": "progress",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 163,
+        "word": "shut",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 182,
+        "word": "possibly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 194,
+        "word": "fellow",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 198,
+        "word": "manage",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 205,
+        "word": "wake",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 215,
+        "word": "exist",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 218,
+        "word": "fix",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 222,
+        "word": "investigation",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 224,
+        "word": "operate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 225,
+        "word": "responsibility",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 226,
+        "word": "roll",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 227,
+        "word": "slightly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 228,
+        "word": "suggest",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 231,
+        "word": "thought",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 232,
+        "word": "treat",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 233,
+        "word": "unique",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 234,
+        "word": "variety",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 239,
+        "word": "discover",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 249,
+        "word": "mad",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 253,
+        "word": "prepare",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 254,
+        "word": "reference",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 255,
+        "word": "religion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 262,
+        "word": "closer",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 289,
+        "word": "clothes",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 292,
+        "word": "entirely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 299,
+        "word": "introduce",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 305,
+        "word": "plane",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 323,
+        "word": "advance",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 324,
+        "word": "alternative",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 332,
+        "word": "fantastic",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 344,
+        "word": "terrible",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 356,
+        "word": "element",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 363,
+        "word": "intend",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 364,
+        "word": "labour",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 383,
+        "word": "honor",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 389,
+        "word": "pm",
+        "detail": "persianMeaning: unexpected foreign script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 402,
+        "word": "contain",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 410,
+        "word": "perform",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 414,
+        "word": "select",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 418,
+        "word": "affair",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 419,
+        "word": "appeal",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 424,
+        "word": "drama",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 437,
+        "word": "muslim",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 453,
+        "word": "discuss",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 459,
+        "word": "holiday",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 464,
+        "word": "jersey",
+        "detail": "examplePersian: Urdu-specific or non-Persian glyph detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 470,
+        "word": "pack",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 485,
+        "word": "commit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 486,
+        "word": "confidence",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 496,
+        "word": "maintain",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 499,
+        "word": "quiet",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_001.jsonl",
+        "line": 500,
+        "word": "reveal",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 3,
+        "word": "task",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 11,
+        "word": "arrest",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 14,
+        "word": "debate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 15,
+        "word": "determine",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 20,
+        "word": "faster",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 21,
+        "word": "fault",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 24,
+        "word": "lay",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 25,
+        "word": "phase",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 32,
+        "word": "secure",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 42,
+        "word": "blame",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 46,
+        "word": "collect",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 54,
+        "word": "inspire",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 58,
+        "word": "mode",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 72,
+        "word": "deliver",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 81,
+        "word": "minor",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 84,
+        "word": "selection",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 89,
+        "word": "theme",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 91,
+        "word": "tiny",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 115,
+        "word": "perfectly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 117,
+        "word": "refer",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 132,
+        "word": "hang",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 142,
+        "word": "scottish",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 146,
+        "word": "appoint",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 148,
+        "word": "assistance",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 150,
+        "word": "blow",
+        "detail": "persianMeaning: Hangul script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 162,
+        "word": "instance",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 163,
+        "word": "kinda",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 168,
+        "word": "reasonable",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 202,
+        "word": "represent",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 217,
+        "word": "category",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 229,
+        "word": "normally",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 230,
+        "word": "occur",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 231,
+        "word": "opposition",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 264,
+        "word": "frequently",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 270,
+        "word": "manufacture",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 272,
+        "word": "pattern",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 273,
+        "word": "personnel",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 274,
+        "word": "perspective",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 291,
+        "word": "crash",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 296,
+        "word": "earn",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 298,
+        "word": "error",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 299,
+        "word": "existence",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 305,
+        "word": "maintenance",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 307,
+        "word": "mate",
+        "detail": "persianMeaning: Urdu-specific or non-Persian glyph detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 311,
+        "word": "origin",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 315,
+        "word": "plate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 328,
+        "word": "bible",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 330,
+        "word": "calm",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 331,
+        "word": "championship",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 336,
+        "word": "dumb",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 348,
+        "word": "refuse",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 357,
+        "word": "broad",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 359,
+        "word": "cake",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 364,
+        "word": "hardly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 367,
+        "word": "invite",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 374,
+        "word": "portion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 378,
+        "word": "raw",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 401,
+        "word": "engage",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 404,
+        "word": "ft",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 408,
+        "word": "introduction",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 415,
+        "word": "recognize",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 419,
+        "word": "survive",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 421,
+        "word": "theatre",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 422,
+        "word": "therapy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 424,
+        "word": "adopt",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 425,
+        "word": "aim",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 446,
+        "word": "organize",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 449,
+        "word": "suspect",
+        "detail": "persianMeaning: CJK or Japanese script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 450,
+        "word": "swear",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 452,
+        "word": "tie",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 453,
+        "word": "trend",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 457,
+        "word": "approval",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 458,
+        "word": "aspect",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 463,
+        "word": "fairly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b1/b1_core_002.jsonl",
+        "line": 466,
+        "word": "found",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 6,
+        "word": "neighborhood",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 10,
+        "word": "reply",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 19,
+        "word": "visual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 26,
+        "word": "celebrate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 41,
+        "word": "initially",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 53,
+        "word": "settlement",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 58,
+        "word": "topic",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 60,
+        "word": "universal",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 61,
+        "word": "vast",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 63,
+        "word": "auto",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 69,
+        "word": "ignore",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 80,
+        "word": "primarily",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 84,
+        "word": "rescue",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 85,
+        "word": "rush",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 92,
+        "word": "temporary",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 103,
+        "word": "consequence",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 104,
+        "word": "defend",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 113,
+        "word": "household",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 124,
+        "word": "province",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 136,
+        "word": "awful",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 146,
+        "word": "founder",
+        "detail": "persianMeaning: ZWNJ adjacent to whitespace detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 153,
+        "word": "offensive",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 159,
+        "word": "ridiculous",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 161,
+        "word": "shock",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 176,
+        "word": "bonus",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 183,
+        "word": "encourage",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 205,
+        "word": "rating",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 220,
+        "word": "chase",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 231,
+        "word": "horrible",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 239,
+        "word": "mood",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 245,
+        "word": "replacement",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 248,
+        "word": "saving",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 275,
+        "word": "naked",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 286,
+        "word": "afterwards",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 301,
+        "word": "employ",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 302,
+        "word": "essentially",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 303,
+        "word": "establishment",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 310,
+        "word": "min",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 334,
+        "word": "bureau",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 344,
+        "word": "evolution",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 349,
+        "word": "lately",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 353,
+        "word": "mum",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 354,
+        "word": "priority",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 355,
+        "word": "promotion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 358,
+        "word": "remote",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 362,
+        "word": "steal",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 365,
+        "word": "acquire",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 374,
+        "word": "conclusion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 386,
+        "word": "forth",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 389,
+        "word": "layer",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 403,
+        "word": "spiritual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 414,
+        "word": "bother",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 418,
+        "word": "consist",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 419,
+        "word": "contribute",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 422,
+        "word": "disaster",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 431,
+        "word": "lifetime",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 438,
+        "word": "observe",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 448,
+        "word": "silly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 460,
+        "word": "commonly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 465,
+        "word": "finding",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 468,
+        "word": "hence",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 474,
+        "word": "occasion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_001.jsonl",
+        "line": 486,
+        "word": "vital",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 4,
+        "word": "instruction",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 13,
+        "word": "regret",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 34,
+        "word": "behaviour",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 42,
+        "word": "doc",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 56,
+        "word": "objective",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 58,
+        "word": "regard",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 60,
+        "word": "roughly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 61,
+        "word": "salary",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 64,
+        "word": "threaten",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 73,
+        "word": "conclude",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 82,
+        "word": "exit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 84,
+        "word": "fancy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 97,
+        "word": "outcome",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 108,
+        "word": "theater",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 118,
+        "word": "delicious",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 121,
+        "word": "flood",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 123,
+        "word": "genetic",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 125,
+        "word": "instant",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 133,
+        "word": "rapidly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 139,
+        "word": "upcoming",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 141,
+        "word": "alert",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 142,
+        "word": "arena",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 153,
+        "word": "difficulty",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 159,
+        "word": "fundamental",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 164,
+        "word": "intention",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 169,
+        "word": "participation",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 170,
+        "word": "precious",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 173,
+        "word": "pretend",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 175,
+        "word": "prominent",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 178,
+        "word": "reward",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 194,
+        "word": "bang",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 200,
+        "word": "desperate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 210,
+        "word": "invest",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 215,
+        "word": "occupy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 219,
+        "word": "punch",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 230,
+        "word": "virtual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 238,
+        "word": "chip",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 242,
+        "word": "distribute",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 244,
+        "word": "domain",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 247,
+        "word": "engagement",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 248,
+        "word": "explore",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 256,
+        "word": "jazz",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 291,
+        "word": "collective",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 293,
+        "word": "craft",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 298,
+        "word": "fortune",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 303,
+        "word": "involvement",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 315,
+        "word": "regime",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 322,
+        "word": "summit",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 323,
+        "word": "talented",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 330,
+        "word": "awkward",
+        "detail": "persianMeaning: ZWNJ adjacent to whitespace detected"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 332,
+        "word": "beef",
+        "detail": "examplePersian: unexpected foreign script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 338,
+        "word": "cite",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 341,
+        "word": "construct",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 354,
+        "word": "framework",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 357,
+        "word": "integrate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 363,
+        "word": "overseas",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 367,
+        "word": "recover",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 370,
+        "word": "rely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 376,
+        "word": "tale",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 386,
+        "word": "characteristic",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 391,
+        "word": "dual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 392,
+        "word": "equip",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 396,
+        "word": "globe",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 403,
+        "word": "knight",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 413,
+        "word": "prevention",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 422,
+        "word": "surprising",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 429,
+        "word": "challenging",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 441,
+        "word": "frequent",
+        "detail": "persianMeaning: Urdu-specific or non-Persian glyph detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 457,
+        "word": "quest",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 460,
+        "word": "stunning",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 462,
+        "word": "tune",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 469,
+        "word": "autumn",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 471,
+        "word": "classical",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 476,
+        "word": "controversy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 491,
+        "word": "mutual",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 497,
+        "word": "rip",
+        "detail": "persianMeaning: Urdu-specific or non-Persian glyph detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 498,
+        "word": "scope",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_002.jsonl",
+        "line": 499,
+        "word": "segment",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 7,
+        "word": "yea",
+        "detail": "examplePersian: CJK or Japanese script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 8,
+        "word": "accompany",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 20,
+        "word": "forgive",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 24,
+        "word": "inquiry",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 28,
+        "word": "lonely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 30,
+        "word": "nevertheless",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 35,
+        "word": "rude",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 45,
+        "word": "vary",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 46,
+        "word": "abc",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 52,
+        "word": "consistently",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 55,
+        "word": "destination",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 57,
+        "word": "diverse",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 59,
+        "word": "exclusively",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 61,
+        "word": "formerly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 67,
+        "word": "jealous",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 77,
+        "word": "neutral",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 78,
+        "word": "noble",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 82,
+        "word": "pussy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 90,
+        "word": "treasury",
+        "detail": "persianMeaning: ZWNJ adjacent to whitespace detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 104,
+        "word": "certify",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 109,
+        "word": "cock",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 122,
+        "word": "instantly",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 139,
+        "word": "serial",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 144,
+        "word": "strict",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 150,
+        "word": "usage",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 161,
+        "word": "cancel",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 167,
+        "word": "custody",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 168,
+        "word": "demonstrate",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 178,
+        "word": "handsome",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 186,
+        "word": "magical",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 199,
+        "word": "slight",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 205,
+        "word": "twist",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 207,
+        "word": "unity",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/b2/b2_core_003.jsonl",
+        "line": 209,
+        "word": "viewer",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 3,
+        "word": "bitter",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 4,
+        "word": "clever",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 11,
+        "word": "criterion",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 30,
+        "word": "legally",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 51,
+        "word": "wealthy",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 69,
+        "word": "hr",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 75,
+        "word": "occupation",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 77,
+        "word": "patch",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 84,
+        "word": "resist",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 85,
+        "word": "solely",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 86,
+        "word": "striking",
+        "detail": "review lemma/inflection and sense"
+      },
+      {
+        "kind": "unexpected_script_or_encoding",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 90,
+        "word": "wrap",
+        "detail": "persianMeaning: Hangul script detected"
+      },
+      {
+        "kind": "target_word_missing_from_example",
+        "file": "cefr/c1/c1_core_001.jsonl",
+        "line": 96,
+        "word": "being",
         "detail": "review lemma/inflection and sense"
       }
     ],

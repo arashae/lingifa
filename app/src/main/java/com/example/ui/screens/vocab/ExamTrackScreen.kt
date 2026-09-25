@@ -3,11 +3,9 @@ package com.example.ui.screens.vocab
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GraphicEq
@@ -42,7 +41,7 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.TrackChanges
-import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -79,7 +78,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -92,8 +90,7 @@ import com.example.data.model.ExamTrackStage
 import com.example.data.model.ExamTrackState
 import com.example.data.model.ExamTrackType
 import com.example.data.model.ExamWordItem
-import com.example.ui.components.MinimalStreakCard
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
@@ -122,7 +119,7 @@ fun ExamTrackScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
@@ -130,11 +127,11 @@ fun ExamTrackScreen(
                     title = {
                         Column {
                             Text(
-                                text = "مسیرهای یادگیری واژگان آزمون‌ها",
+                                text = "Exam Mastery Tracks",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "آیلتس، تافل و جی‌آر‌ای؛ مرحله‌به‌مرحله و روزانه",
+                                text = "IELTS • TOEFL • GRE • Complete Vocabulary Bank",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
@@ -145,7 +142,7 @@ fun ExamTrackScreen(
                         IconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "بازگشت"
+                                contentDescription = "Back"
                             )
                         }
                     },
@@ -166,7 +163,7 @@ fun ExamTrackScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Track Switcher Tabs (IELTS, TOEFL, GRE)
                     ExamTrackSelector(
@@ -174,19 +171,31 @@ fun ExamTrackScreen(
                         onSelect = { viewModel.selectTrack(it) }
                     )
 
-                    // Track Daily Progress & Overall Completion Card
+                    // Track Overview & Stats Card
                     ExamTrackOverviewCard(
                         state = trackState,
                         onSetGoalClick = { showGoalDialog = true }
                     )
 
-                    // Stage-by-Stage Curriculum List
-                    Text(
-                        text = "مراحل یادگیری و سرفصل‌های ${trackState.trackType.titleFa}:",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // Section Title
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${trackState.trackType.name} Curriculum Stages",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "4 Progressive Stages",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
+                    // Stages List
                     trackState.stages.forEach { stage ->
                         ExamStageCard(
                             stage = stage,
@@ -198,7 +207,7 @@ fun ExamTrackScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
 
-                // Interactive Study Session Modal/Viewer
+                // Interactive Study Session Modal
                 uiState.activeStudyStage?.let { stage ->
                     InteractiveStageStudyDialog(
                         stage = stage,
@@ -223,30 +232,30 @@ fun ExamTrackScreen(
             onDismissRequest = { showGoalDialog = false },
             title = {
                 Text(
-                    text = "تعیین هدف روزانه واژگان",
+                    text = "Set Daily Vocabulary Goal",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 17.sp
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
-                        text = "چند لغت در روز مایلید در مسیر ${trackState.trackType.titleFa} یاد بگیرید؟",
+                        text = "How many words would you like to master each day in ${trackState.trackType.name}?",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        listOf(5, 10, 15, 20).forEach { goal ->
+                        listOf(5, 10, 15, 20, 25).forEach { goal ->
                             FilterChip(
                                 selected = trackState.dailyGoalWords == goal,
                                 onClick = {
                                     viewModel.setDailyGoal(goal)
                                     showGoalDialog = false
                                 },
-                                label = { Text("$goal واژه", fontSize = 12.sp) },
+                                label = { Text("$goal words", fontSize = 11.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = Color(trackState.trackType.colorHex),
                                     selectedLabelColor = Color.White
@@ -258,7 +267,7 @@ fun ExamTrackScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showGoalDialog = false }) {
-                    Text("انصراف")
+                    Text("Close")
                 }
             }
         )
@@ -272,46 +281,66 @@ private fun ExamTrackSelector(
 ) {
     val tracks = ExamTrackType.values()
     val selectedIndex = tracks.indexOf(selectedTrack).coerceAtLeast(0)
+    val activeColor = Color(selectedTrack.colorHex)
 
     TabRow(
         selectedTabIndex = selectedIndex,
         containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = Color(selectedTrack.colorHex),
+        contentColor = activeColor,
         indicator = { tabPositions ->
             TabRowDefaults.SecondaryIndicator(
                 Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                color = Color(selectedTrack.colorHex)
+                color = activeColor
             )
         },
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
     ) {
         tracks.forEach { track ->
             val isSelected = selectedTrack == track
+            val trackColor = Color(track.colorHex)
+            val wordTarget = when (track) {
+                ExamTrackType.IELTS -> "9k words"
+                ExamTrackType.TOEFL -> "7k words"
+                ExamTrackType.GRE -> "5k words"
+            }
+
             Tab(
                 selected = isSelected,
                 onClick = { onSelect(track) },
                 text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.padding(vertical = 10.dp)
                     ) {
-                        Icon(
-                            imageVector = when (track) {
-                                ExamTrackType.IELTS -> Icons.Default.School
-                                ExamTrackType.TOEFL -> Icons.Default.MenuBook
-                                ExamTrackType.GRE -> Icons.Default.Psychology
-                            },
-                            contentDescription = null,
-                            tint = if (isSelected) Color(track.colorHex) else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = when (track) {
+                                    ExamTrackType.IELTS -> Icons.Default.School
+                                    ExamTrackType.TOEFL -> Icons.Default.MenuBook
+                                    ExamTrackType.GRE -> Icons.Default.Psychology
+                                },
+                                contentDescription = null,
+                                tint = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(17.dp)
+                            )
+                            Text(
+                                text = track.name,
+                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                color = if (isSelected) trackColor else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Text(
-                            text = track.name,
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                            fontSize = 13.sp,
-                            color = if (isSelected) Color(track.colorHex) else MaterialTheme.colorScheme.onSurfaceVariant
+                            text = wordTarget,
+                            fontSize = 10.sp,
+                            color = if (isSelected) trackColor.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -326,60 +355,72 @@ private fun ExamTrackOverviewCard(
     onSetGoalClick: () -> Unit
 ) {
     val trackColor = Color(state.trackType.colorHex)
+    val scoreBand = when (state.trackType) {
+        ExamTrackType.IELTS -> "Band 6.5 - 9.0 Target"
+        ExamTrackType.TOEFL -> "Score 80 - 120 Target"
+        ExamTrackType.GRE -> "Verbal 150 - 170 Target"
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, trackColor.copy(alpha = 0.25f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Row: Track title + Daily Goal button
+            // Header Row: Track Title + Goal Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = state.trackType.titleFa,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                        text = "${state.trackType.name} Master Bank",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = state.trackType.descriptionFa,
+                        text = scoreBand,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        maxLines = 1
+                        color = trackColor,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp
                     )
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = trackColor.copy(alpha = 0.12f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, trackColor.copy(alpha = 0.25f)),
                     modifier = Modifier.clickable { onSetGoalClick() }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrackChanges,
                             contentDescription = null,
                             tint = trackColor,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Text(
-                            text = "هدف: ${state.dailyGoalWords} لغت/روز",
+                            text = "${state.dailyGoalWords}/day",
                             color = trackColor,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Goal",
+                            tint = trackColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(11.dp)
                         )
                     }
                 }
@@ -387,12 +428,12 @@ private fun ExamTrackOverviewCard(
 
             // Daily Progress Section
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -405,7 +446,7 @@ private fun ExamTrackOverviewCard(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "پیشرفت امروز:",
+                                text = "Today's Study Session",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -416,7 +457,7 @@ private fun ExamTrackOverviewCard(
                                     color = SuccessGreen.copy(alpha = 0.15f)
                                 ) {
                                     Text(
-                                        text = "هدف روزانه محقق شد ✓",
+                                        text = "Goal Reached ✓",
                                         color = SuccessGreen,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -427,7 +468,7 @@ private fun ExamTrackOverviewCard(
                         }
 
                         Text(
-                            text = "${state.wordsStudiedToday} از ${state.dailyGoalWords} واژه (${state.dailyProgressPercentage}٪)",
+                            text = "${state.wordsStudiedToday} of ${state.dailyGoalWords} words",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = trackColor
@@ -463,7 +504,7 @@ private fun ExamTrackOverviewCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "پیشرفت کل دوره:",
+                        text = "Total Track Mastery:",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -471,7 +512,7 @@ private fun ExamTrackOverviewCard(
                 }
 
                 Text(
-                    text = "${state.totalWordsLearned} از ${state.totalWordsInTrack} واژه مسلط (${state.overallPercentage}٪)",
+                    text = "${state.totalWordsLearned} / ${state.totalWordsInTrack} words (${state.overallPercentage}%)",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -491,19 +532,19 @@ private fun ExamStageCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = stage.isUnlocked) { onStartStudy() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
             if (stage.isCompleted) SuccessGreen.copy(alpha = 0.4f)
             else if (stage.isCurrent) trackColor.copy(alpha = 0.5f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Stage Header: Title + Target Score Badge + Status
             Row(
@@ -520,11 +561,11 @@ private fun ExamStageCard(
                         color = if (stage.isCompleted) SuccessGreen else trackColor
                     ) {
                         Text(
-                            text = "مرحله ${stage.stageNumber}",
+                            text = "Stage ${stage.stageNumber}",
                             color = Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
 
@@ -541,9 +582,8 @@ private fun ExamStageCard(
                     shape = RoundedCornerShape(8.dp),
                     color = when {
                         stage.isCompleted -> SuccessGreen.copy(alpha = 0.12f)
-                        !stage.isUnlocked -> MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                         stage.progressPercentage > 0 -> AccentGold.copy(alpha = 0.15f)
-                        else -> trackColor.copy(alpha = 0.1f)
+                        else -> trackColor.copy(alpha = 0.10f)
                     }
                 ) {
                     Row(
@@ -554,30 +594,26 @@ private fun ExamStageCard(
                         Icon(
                             imageVector = when {
                                 stage.isCompleted -> Icons.Default.CheckCircle
-                                !stage.isUnlocked -> Icons.Default.Lock
                                 else -> Icons.Default.PlayArrow
                             },
                             contentDescription = null,
                             tint = when {
                                 stage.isCompleted -> SuccessGreen
-                                !stage.isUnlocked -> MaterialTheme.colorScheme.outline
                                 stage.progressPercentage > 0 -> AccentGold
                                 else -> trackColor
                             },
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = when {
-                                stage.isCompleted -> "تکمیل شد"
-                                !stage.isUnlocked -> "قفل شده"
-                                stage.progressPercentage > 0 -> "${stage.progressPercentage}٪"
-                                else -> "آماده شروع"
+                                stage.isCompleted -> "Completed"
+                                stage.progressPercentage > 0 -> "${stage.progressPercentage}% Done"
+                                else -> "Ready"
                             },
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = when {
                                 stage.isCompleted -> SuccessGreen
-                                !stage.isUnlocked -> MaterialTheme.colorScheme.outline
                                 stage.progressPercentage > 0 -> AccentGold
                                 else -> trackColor
                             }
@@ -587,9 +623,9 @@ private fun ExamStageCard(
             }
 
             // Titles
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = stage.titleFa,
+                    text = stage.titleEn,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -608,12 +644,12 @@ private fun ExamStageCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${stage.masteredCount} از ${stage.totalCount} کلمه مسلط",
+                        text = "${stage.masteredCount} of ${stage.totalCount} words mastered",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${stage.progressPercentage}٪",
+                        text = "${stage.progressPercentage}%",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (stage.isCompleted) SuccessGreen else trackColor
@@ -624,7 +660,7 @@ private fun ExamStageCard(
                     progress = { stage.progressPercentage / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(5.dp)
+                        .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = if (stage.isCompleted) SuccessGreen else trackColor,
                     trackColor = trackColor.copy(alpha = 0.12f)
@@ -649,9 +685,9 @@ private fun ExamStageCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (stage.isCompleted) "مرور مجدد لغات این مرحله" else "شروع تمرین مرحله (${stage.totalCount} واژه)",
+                    text = if (stage.isCompleted) "Review Stage Words" else "Start Practice (${stage.totalCount} words)",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
+                    fontSize = 13.sp
                 )
             }
         }
@@ -684,10 +720,10 @@ private fun InteractiveStageStudyDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .padding(vertical = 24.dp),
-            shape = RoundedCornerShape(24.dp),
+                .padding(vertical = 20.dp),
+            shape = RoundedCornerShape(26.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -695,28 +731,28 @@ private fun InteractiveStageStudyDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Header: Stage Title, Word Index, Close Icon
+                // Header: Stage Title, Progress, Close
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "مرحله ${stage.stageNumber}: ${stage.targetScoreFa}",
+                            text = "Stage ${stage.stageNumber} • ${stage.titleEn}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             color = PrimaryBlue
                         )
                         Text(
-                            text = "واژه ${wordIndex + 1} از ${stage.words.size}",
+                            text = "Card ${wordIndex + 1} of ${stage.words.size}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     IconButton(onClick = onClose) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "بستن")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
                     }
                 }
 
@@ -729,7 +765,7 @@ private fun InteractiveStageStudyDialog(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.2f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.25f))
                 ) {
                     Column(
                         modifier = Modifier.padding(18.dp),
@@ -776,26 +812,34 @@ private fun InteractiveStageStudyDialog(
                                 ) {
                                     Icon(
                                         imageVector = if (isPlayingAudio) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                                        contentDescription = "تلفظ صوتی",
+                                        contentDescription = "Audio pronunciation",
                                         tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
 
-                        // English Example Sentence
-                        Text(
-                            text = "\"${word.exampleEn}\"",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 20.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        // English Example
+                        if (word.exampleEn.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "“${word.exampleEn}”",
+                                    fontSize = 13.sp,
+                                    lineHeight = 19.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
 
-                        // Flipped content: Persian meaning, example translation, tips
+                        // Flipped / Revealed Section (Persian Translation & Academic Tips)
                         if (isCardFlipped) {
+                            // Persian Meaning Card
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = PrimaryBlue.copy(alpha = 0.08f),
@@ -806,17 +850,19 @@ private fun InteractiveStageStudyDialog(
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     Text(
-                                        text = "معنی فارسی: ${word.persianMeaning}",
+                                        text = "Persian: ${word.persianMeaning}",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Text(
-                                        text = "ترجمه مثال: ${word.exampleFa}",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 18.sp
-                                    )
+                                    if (word.exampleFa.isNotBlank()) {
+                                        Text(
+                                            text = "Translation: ${word.exampleFa}",
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            lineHeight = 18.sp
+                                        )
+                                    }
                                     if (word.englishDefinition.isNotBlank()) {
                                         Text(
                                             text = "Definition: ${word.englishDefinition}",
@@ -878,18 +924,30 @@ private fun InteractiveStageStudyDialog(
                                 }
                             }
                         } else {
-                            Text(
-                                text = "👆 برای دیدن ترجمه فارسی، کالوکیشن‌ها و نکات امتحانی کلیک کنید",
-                                fontSize = 11.sp,
-                                color = PrimaryBlue,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Visibility,
+                                    contentDescription = null,
+                                    tint = PrimaryBlue,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Tap to reveal Persian meaning, collocations & tips",
+                                    fontSize = 11.sp,
+                                    color = PrimaryBlue,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
                 }
 
-                // Action Buttons: Review vs Mastered
+                // Action Buttons: Need Review vs Mastered
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -901,7 +959,9 @@ private fun InteractiveStageStudyDialog(
                             .weight(1f)
                             .height(48.dp)
                     ) {
-                        Text("نیاز به مرور", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Icon(imageVector = Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Need Review", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -917,7 +977,7 @@ private fun InteractiveStageStudyDialog(
                     ) {
                         Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("بلدم (تسلط)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Mastered ✓", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

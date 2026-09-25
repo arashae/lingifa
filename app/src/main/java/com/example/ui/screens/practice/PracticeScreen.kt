@@ -41,8 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -58,9 +58,9 @@ fun PracticeScreen(
     onNavigateToMistakes: () -> Unit,
     onNavigateToTutor: () -> Unit
 ) {
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
-            topBar = { LinguaTopAppBar(title = "تمرین") },
+            topBar = { LinguaTopAppBar(title = "Practice Hub") },
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             LazyColumn(
@@ -75,9 +75,9 @@ fun PracticeScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("تمرین هدفمند", style = MaterialTheme.typography.headlineSmall)
+                        Text("Targeted Practice", style = MaterialTheme.typography.headlineSmall)
                         Text(
-                            "هر ابزار برای یک مهارت مشخص طراحی شده است.",
+                            "Specialized tools designed for each language skill.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -85,8 +85,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "مرور هوشمند",
-                        description = "فلش‌کارت، فعال‌سازی حافظه و مرور در فاصله‌های علمی",
+                        title = "Smart SRS Review",
+                        description = "Spaced repetition flashcards, memory recall and active review",
                         icon = Icons.Default.Timer,
                         accent = PrimaryBlue,
                         label = "SRS",
@@ -95,8 +95,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "Speaking",
-                        description = "شبیه‌سازی مصاحبه با بازخورد فارسی و بررسی روانی جمله",
+                        title = "Speaking Simulator",
+                        description = "Interactive IELTS interview simulation with pronunciation feedback",
                         icon = Icons.Default.RecordVoiceOver,
                         accent = SecondaryTeal,
                         label = "IELTS",
@@ -105,8 +105,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "Writing",
-                        description = "ارزیابی ساختار، واژگان و گرامر مقاله با معیارهای آیلتس",
+                        title = "Writing Grader",
+                        description = "Task 1 & Task 2 essay evaluation with Cambridge IELTS scoring",
                         icon = Icons.Default.EditNote,
                         accent = AccentGold,
                         label = "TASK 1 · 2",
@@ -115,8 +115,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "معلم هوشمند",
-                        description = "پاسخ به پرسش‌های گرامر، لغت و تفاوت کلمات مشابه",
+                        title = "AI Language Tutor",
+                        description = "Instant answers to grammar questions, vocab usage, and nuance differences",
                         icon = Icons.Default.Psychology,
                         accent = PrimaryBlue,
                         label = "AI",
@@ -125,8 +125,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "تعیین سطح",
-                        description = "پیدا کردن سطح فعلی و انتخاب تمرین مناسب‌تر",
+                        title = "Level Placement",
+                        description = "Assess current CEFR level and personalize study tracks",
                         icon = Icons.Default.FitnessCenter,
                         accent = SuccessGreen,
                         label = "CEFR",
@@ -135,8 +135,8 @@ fun PracticeScreen(
                 }
                 item {
                     PracticeCard(
-                        title = "دفترچه اشتباهات",
-                        description = "مرور خطاهای ثبت‌شده و تبدیل آن‌ها به نقطه قوت",
+                        title = "Mistake Notebook",
+                        description = "Review past errors and turn weaknesses into strengths",
                         icon = Icons.Default.Warning,
                         accent = ErrorRed,
                         label = "REVIEW",
@@ -158,7 +158,7 @@ fun PracticeScreen(
                         ) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                             Text(
-                                "پیشنهاد: هر روز فقط یک تمرین کوتاه را کامل کن.",
+                                "Daily Habit: Complete at least one focused session every day.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )

@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.example.data.model.VocabularyPack
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.SuccessGreen
 
 @Composable
@@ -56,10 +56,10 @@ fun VocabPacksScreen(
     val state by viewModel.uiState.collectAsState()
     val syncStates by viewModel.packSyncStates.collectAsState()
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = { LinguaTopAppBar(title = "بانک‌های واژگان", onBack = onBack) }
+            topBar = { LinguaTopAppBar(title = "Vocabulary Packs", onBack = onBack) }
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
@@ -75,12 +75,12 @@ fun VocabPacksScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "بانک‌های آزمون و مطالعه",
+                            text = "Exam & Study Packs",
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "یک‌بار دریافت کنید؛ بعد آفلاین مطالعه و مرور کنید.",
+                            text = "Download once, then study and review offline anytime.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -107,9 +107,9 @@ fun VocabPacksScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("همه بانک‌ها", style = MaterialTheme.typography.titleMedium)
+                        Text("All Vocabulary Packs", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            text = "${state.packs.size} بسته",
+                            text = "${state.packs.size} packs",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -140,12 +140,12 @@ private fun CefrLearningPathCard(
     onSelectLevel: (String) -> Unit
 ) {
     val levels = listOf(
-        "A1" to "شروع از پایه",
-        "A2" to "مکالمه روزمره",
-        "B1" to "مستقل",
-        "B2" to "میان‌بالا",
-        "C1" to "پیشرفته",
-        "C2" to "تسلط کامل"
+        "A1" to "Beginner (Core Foundations)",
+        "A2" to "Elementary (Daily Conversation)",
+        "B1" to "Intermediate (Independent Learner)",
+        "B2" to "Upper Intermediate (Fluency)",
+        "C1" to "Advanced (Professional Proficiency)",
+        "C2" to "Mastery (Native Fluency)"
     )
 
     Card(
@@ -160,12 +160,12 @@ private fun CefrLearningPathCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "مسیر عمومی واژگان",
+                text = "General Vocabulary Track",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = "از هر سطحی که می‌خواهی شروع کن؛ داخل هر سطح، کلمات بر اساس اولویت یادگیری مرتب‌اند.",
+                text = "Start at your target CEFR level; words are curated in learning priority order.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
             )
@@ -239,12 +239,12 @@ private fun ExamTracksEntryCard(onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(
-                    text = "مسیر مرحله‌ای آزمون‌ها",
+                    text = "Exam Mastery Tracks",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = "IELTS · TOEFL · GRE",
+                    text = "IELTS 9k · TOEFL 7k · GRE 5k",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
                 )
@@ -304,12 +304,12 @@ private fun VocabPackCard(
                 Spacer(modifier = Modifier.width(11.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(
-                        text = pack.titleFa,
+                        text = pack.titleEn.ifBlank { pack.titleFa },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = pack.titleEn,
+                        text = pack.titleFa,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -318,9 +318,9 @@ private fun VocabPackCard(
                 CefrBadge(level = pack.level)
             }
 
-            if (pack.descriptionFa.isNotBlank()) {
+            if (pack.descriptionEn.isNotBlank() || pack.descriptionFa.isNotBlank()) {
                 Text(
-                    text = pack.descriptionFa,
+                    text = pack.descriptionEn.ifBlank { pack.descriptionFa },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -334,7 +334,7 @@ private fun VocabPackCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isComplete) "آماده برای مطالعه آفلاین" else "پیشرفت دریافت بانک",
+                            text = if (isComplete) "Ready for offline study" else "Download Progress",
                             style = MaterialTheme.typography.labelMedium,
                             color = if (isComplete) SuccessGreen else MaterialTheme.colorScheme.onSurface
                         )
@@ -366,7 +366,7 @@ private fun VocabPackCard(
                     }
                     if ((syncState?.warningCount ?: 0) > 0) {
                         Text(
-                            text = "بخشی از منابع در دسترس نبود؛ دریافت قابل ادامه است.",
+                            text = "Some resources were unavailable; download can continue.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -378,7 +378,7 @@ private fun VocabPackCard(
                     shape = RoundedCornerShape(9.dp)
                 ) {
                     Text(
-                        text = "${pack.wordCount} واژه آموزشی",
+                        text = "${pack.wordCount} words",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
@@ -399,9 +399,9 @@ private fun VocabPackCard(
                     ) {
                         Text(
                             when {
-                                isSyncing -> "در حال دریافت…"
-                                installed > 0 -> "ادامه دریافت"
-                                else -> "دریافت کامل"
+                                isSyncing -> "Downloading…"
+                                installed > 0 -> "Resume Download"
+                                else -> "Download Pack"
                             }
                         )
                     }
@@ -414,7 +414,7 @@ private fun VocabPackCard(
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
-                    Text(if (pack.isCorePack) "مطالعه واژه‌ها" else "مشاهده واژه‌ها")
+                    Text(if (pack.isCorePack) "Study Words" else "View Words")
                 }
             }
         }

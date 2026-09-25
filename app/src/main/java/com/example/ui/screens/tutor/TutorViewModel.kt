@@ -20,17 +20,17 @@ data class TutorUiState(
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             sender = "AI",
-            text = "درود! من معلم هوشمند LinguaFa AI هستم 👋\nمی‌تونید هر سوالی در رابطه با گرامر، لغات آیلتس و تافل، تفاوت کلمات مشابه، یا اشکالات زبانی دارید از من به فارسی بپرسید."
+            text = "Hello! I'm your LinguaFa AI Tutor 👋\nYou can ask any questions regarding grammar rules, IELTS/TOEFL vocabulary nuances, collocations, or writing feedback."
         )
     ),
     val inputText: String = "",
     val isLoading: Boolean = false,
     val suggestedPrompts: List<String> = listOf(
-        "فرق affect و effect چیه؟",
-        "تفاوت economic و economical با مثال",
-        "توضیح زمان حال کامل به زبان ساده",
-        "ازم چند تا لغت سطح C1 آیلتس بپرس",
-        "اشتباهات گرامری رایج ایرانی‌ها در رایتینگ"
+        "Difference between affect and effect?",
+        "Difference between economic and economical with examples",
+        "Explain Present Perfect tense simply",
+        "Quiz me on 3 high-yield IELTS C1 words",
+        "Common writing mistakes and how to fix them"
     )
 )
 

@@ -84,7 +84,7 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
     fun setDailyGoal(goal: Int) {
         viewModelScope.launch {
             trackRepository.updateDailyGoal(_uiState.value.selectedTrack, goal)
-            _uiState.update { it.copy(statusMessage = "هدف روزانه روی $goal واژه تنظیم شد.") }
+            _uiState.update { it.copy(statusMessage = "Daily goal set to $goal words.") }
         }
     }
 
@@ -109,7 +109,7 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
                         activeStudyStage = null,
                         studyWordIndex = 0,
                         isCardFlipped = false,
-                        statusMessage = "همه واژه‌های این مرحله را یاد گرفته‌اید."
+                        statusMessage = "You have mastered all words in this stage!"
                     )
                 }
                 return@launch
@@ -124,7 +124,7 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
                     ),
                     studyWordIndex = 0,
                     isCardFlipped = false,
-                    statusMessage = "جلسه امروز: ${sessionWords.size} واژه از مرحله ${stage.stageNumber}"
+                    statusMessage = "Today's session: ${sessionWords.size} words from Stage ${stage.stageNumber}"
                 )
             }
         }
@@ -184,7 +184,7 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
                         activeStudyStage = null,
                         studyWordIndex = 0,
                         isCardFlipped = false,
-                        statusMessage = "جلسه امروز تمام شد؛ پیشرفت شما ذخیره شد (+۱۵ XP برای هر واژه).",
+                        statusMessage = "Session completed! Progress saved (+15 XP per word).",
                         streakResult = streakResult
                     )
                 }

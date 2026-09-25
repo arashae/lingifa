@@ -66,6 +66,12 @@ object BundledVocabularyImporter {
         var membershipsAdded = 0
         val errors = mutableListOf<String>()
 
+        val existingChunksMap = try {
+            chunkDao.getAll().associateBy { it.chunkId }
+        } catch (_: Exception) {
+            emptyMap()
+        }
+
         for (index in 0 until chunks.length()) {
             val chunk = chunks.getJSONObject(index)
             val chunkId = chunk.getString("id")
@@ -75,7 +81,7 @@ object BundledVocabularyImporter {
             val assetPath = chunk.getString("asset")
             val expectedItems = chunk.optInt("expectedItems", -1)
 
-            val existingChunk = chunkDao.get(chunkId)
+            val existingChunk = existingChunksMap[chunkId]
             if (existingChunk?.version == effectiveVersion &&
                 (expectedItems < 0 || existingChunk.itemCount == expectedItems)
             ) {
@@ -113,6 +119,7 @@ object BundledVocabularyImporter {
                 insertedWords += result.insertedWords
                 updatedWords += result.updatedWords
                 membershipsAdded += result.membershipsAdded
+                kotlinx.coroutines.yield()
             } catch (t: Throwable) {
                 val message = "$chunkId: ${t.message ?: t::class.java.simpleName}"
                 Log.e(TAG, "Failed to import vocabulary chunk $chunkId", t)
@@ -139,11 +146,6 @@ object BundledVocabularyImporter {
         vocabularyDao: VocabularyDao,
         packItemDao: VocabularyPackItemDao
     ): ChunkResult {
-        var inserted = 0
-        var updated = 0
-        var memberships = 0
-        var processed = 0
-
         val lines = context.assets.open(assetPath).bufferedReader().use { reader ->
             reader.lineSequence()
                 .map { it.trim() }
@@ -151,41 +153,71 @@ object BundledVocabularyImporter {
                 .toList()
         }
 
-        database.withTransaction {
-            for (line in lines) {
-                val json = JSONObject(line)
-                val word = json.getString("word").trim()
-                val persianMeaning = json.getString("persianMeaning").trim()
-                require(word.isNotEmpty()) { "Vocabulary word cannot be empty" }
-                require(persianMeaning.isNotEmpty()) { "Persian meaning is required for $word" }
+        if (lines.isEmpty()) {
+            return ChunkResult(0, 0, 0, 0)
+        }
 
-                val normalized = word.lowercase(Locale.US).trim()
-                val incoming = json.toVocabularyItem(
-                    normalizedWord = normalized,
-                    datasetVersion = datasetVersion
-                )
+        val parsedItems = lines.map { line ->
+            val json = JSONObject(line)
+            val word = json.getString("word").trim()
+            val persianMeaning = json.getString("persianMeaning").trim()
+            require(word.isNotEmpty()) { "Vocabulary word cannot be empty" }
+            require(persianMeaning.isNotEmpty()) { "Persian meaning is required for $word" }
 
-                val existing = vocabularyDao.getByNormalizedWord(normalized)
-                val vocabularyId = if (existing == null) {
-                    inserted++
-                    vocabularyDao.insert(incoming)
-                } else {
-                    updated++
-                    vocabularyDao.update(merge(existing, incoming))
-                    existing.id
-                }
+            val normalized = word.lowercase(Locale.US).trim()
+            normalized to json.toVocabularyItem(
+                normalizedWord = normalized,
+                datasetVersion = datasetVersion
+            )
+        }
 
-                packItemDao.insert(VocabularyPackItem(packId = packId, vocabularyId = vocabularyId))
-                memberships++
-                processed++
+        val normalizedWords = parsedItems.map { it.first }
+        val existingMap = vocabularyDao.getByNormalizedWords(normalizedWords).associateBy { it.normalizedWord }
+
+        val toInsert = mutableListOf<VocabularyItem>()
+        val toUpdate = mutableListOf<VocabularyItem>()
+        val incomingList = mutableListOf<Pair<VocabularyItem, Boolean>>()
+
+        for ((normalized, incoming) in parsedItems) {
+            val existing = existingMap[normalized]
+            if (existing == null) {
+                toInsert.add(incoming)
+                incomingList.add(incoming to true)
+            } else {
+                val merged = merge(existing, incoming)
+                toUpdate.add(merged)
+                incomingList.add(merged to false)
             }
         }
 
+        database.withTransaction {
+            val insertedIds = if (toInsert.isNotEmpty()) {
+                vocabularyDao.insertAll(toInsert)
+            } else {
+                emptyList()
+            }
+            if (toUpdate.isNotEmpty()) {
+                vocabularyDao.updateAll(toUpdate)
+            }
+
+            var insertIdx = 0
+            val packItems = ArrayList<VocabularyPackItem>(incomingList.size)
+            for ((item, isInsert) in incomingList) {
+                val vocabId = if (isInsert) {
+                    insertedIds[insertIdx++]
+                } else {
+                    item.id
+                }
+                packItems.add(VocabularyPackItem(packId = packId, vocabularyId = vocabId))
+            }
+            packItemDao.insertAll(packItems)
+        }
+
         return ChunkResult(
-            insertedWords = inserted,
-            updatedWords = updated,
-            membershipsAdded = memberships,
-            processedItems = processed
+            insertedWords = toInsert.size,
+            updatedWords = toUpdate.size,
+            membershipsAdded = parsedItems.size,
+            processedItems = parsedItems.size
         )
     }
 

@@ -21,7 +21,7 @@ data class LearnUiState(
     val grammarTopics: List<GrammarTopic> = emptyList(),
     val readingPassages: List<ReadingPassage> = emptyList(),
     val listeningExercises: List<ListeningExercise> = emptyList(),
-    val selectedCategory: String = "گرامر", // "گرامر", "Reading", "Listening"
+    val selectedCategory: String = "Grammar", // "Grammar", "Reading", "Listening"
     val popupWordDetail: VocabularyItem? = null,
     val isWordSavedStatus: String? = null
 )
@@ -50,11 +50,11 @@ class LearnViewModel(application: Application) : AndroidViewModel(application) {
             val clean = word.lowercase().trim().replace(Regex("[^a-zA-Z]"), "")
             val found = vocabRepo.checkDuplicate(clean)
             if (found != null) {
-                _uiState.value = _uiState.value.copy(popupWordDetail = found, isWordSavedStatus = "این واژه در لغات شما قرار دارد.")
+                _uiState.value = _uiState.value.copy(popupWordDetail = found, isWordSavedStatus = "This word is already in your library.")
             } else {
                 val dummy = VocabularyItem(
                     word = clean,
-                    persianMeaning = "در حال بارگذاری معنی یا افزودن به لغات...",
+                    persianMeaning = "Tap to add to library...",
                     cefrLevel = "B2",
                     source = "Reading Tap"
                 )
@@ -70,7 +70,7 @@ class LearnViewModel(application: Application) : AndroidViewModel(application) {
     fun saveInspectedWord(item: VocabularyItem) {
         viewModelScope.launch {
             vocabRepo.insert(item.copy(id = 0L, source = "Reading Tap"))
-            _uiState.value = _uiState.value.copy(isWordSavedStatus = "واژه به لغات شما افزوده شد!")
+            _uiState.value = _uiState.value.copy(isWordSavedStatus = "Word added to your vocabulary!")
         }
     }
 

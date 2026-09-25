@@ -70,7 +70,7 @@ import com.example.audio.TtsManager
 import com.example.data.ai.AiVocabCardGenerator
 import com.example.data.model.AiVocabCardData
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
@@ -86,14 +86,14 @@ fun AiVocabCardScreen(onBack: () -> Unit, viewModel: AiVocabCardViewModel = view
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.statusMessage) { state.statusMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearStatusMessage() } }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
-                    title = { Text("کارت واژه", style = MaterialTheme.typography.titleMedium) },
-                    navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "بازگشت") } },
+                    title = { Text("AI Word Card", style = MaterialTheme.typography.titleMedium) },
+                    navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
                 )
             }
@@ -103,7 +103,7 @@ fun AiVocabCardScreen(onBack: () -> Unit, viewModel: AiVocabCardViewModel = view
                 SuggestedWords(viewModel::generateCard)
                 state.currentCard?.let { card ->
                     if (!card.isValid) {
-                        InvalidCardNotice(card.errorMessage ?: "اطلاعاتی یافت نشد", Modifier.weight(1f).padding(top = 20.dp))
+                        InvalidCardNotice(card.errorMessage ?: "Word not found", Modifier.weight(1f).padding(top = 20.dp))
                     } else {
                         VocabularyFocusCard(card, state.isPlayingAudio, state.isUkAccent, { viewModel.speakWord(tts) }, { viewModel.speakExample(tts) }, viewModel::toggleAccent, Modifier.weight(1f).padding(top = 20.dp))
                         SaveCardButton(state.isSaved, viewModel::saveCardToLibrary)
@@ -132,7 +132,7 @@ private fun WordSearchBar(query: String, loading: Boolean, onQueryChange: (Strin
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (loading) CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                else Icon(Icons.Default.AutoAwesome, "تولید کارت")
+                else Icon(Icons.Default.AutoAwesome, "Generate card")
             }
         }
     }
@@ -141,7 +141,7 @@ private fun WordSearchBar(query: String, loading: Boolean, onQueryChange: (Strin
 @Composable
 private fun SuggestedWords(onChoose: (String) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 10.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("پیشنهاد:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Suggestions:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         AiVocabCardGenerator.getQuickInspirationWords().take(4).forEach { word ->
             Text(word, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.clickable { onChoose(word) })
         }
@@ -167,21 +167,21 @@ private fun VocabularyFocusCard(card: AiVocabCardData, isPlaying: Boolean, isUkA
                     color = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = PrimaryBlue
                 ) {
-                    Box(contentAlignment = Alignment.Center) { Icon(if (isPlaying) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp, "پخش تلفظ") }
+                    Box(contentAlignment = Alignment.Center) { Icon(if (isPlaying) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp, "Pronounce") }
                 }
                 Text(if (isUkAccent) "British English" else "American English", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.clickable(onClick = onToggleAccent))
             }
             Spacer(Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colorScheme.outlineVariant))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("معنی", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Meaning", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(card.persianTranslation, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
                 if (card.englishDefinition.isNotBlank()) Text(card.englishDefinition, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (card.exampleSentenceEn.isNotBlank()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("مثال", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                        IconButton(onClick = onSpeakExample, modifier = Modifier.size(36.dp)) { Icon(Icons.AutoMirrored.Filled.VolumeUp, "پخش مثال", tint = PrimaryBlue, modifier = Modifier.size(19.dp)) }
+                        Text("Example", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        IconButton(onClick = onSpeakExample, modifier = Modifier.size(36.dp)) { Icon(Icons.AutoMirrored.Filled.VolumeUp, "Play example", tint = PrimaryBlue, modifier = Modifier.size(19.dp)) }
                     }
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Text(card.exampleSentenceEn, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Start) }
                     if (card.exampleSentenceFa.isNotBlank()) Text(card.exampleSentenceFa, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -197,7 +197,7 @@ private fun SaveCardButton(saved: Boolean, onSave: () -> Unit) {
     Button(onClick = onSave, enabled = !saved, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = if (saved) SuccessGreen else PrimaryBlue)) {
         Icon(if (saved) Icons.Default.Check else Icons.Default.Bookmark, null)
         Spacer(Modifier.width(8.dp))
-        Text(if (saved) "در لغات ذخیره شد" else "ذخیره در لغات", fontWeight = FontWeight.Bold)
+        Text(if (saved) "Saved to Vocabulary" else "Save to Vocabulary", fontWeight = FontWeight.Bold)
     }
 }
 
@@ -230,7 +230,7 @@ private fun InvalidCardNotice(message: String, modifier: Modifier = Modifier) {
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "واژه تاییدنشده",
+                text = "Unverified Word",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error

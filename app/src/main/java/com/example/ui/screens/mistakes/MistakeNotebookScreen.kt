@@ -43,8 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.MistakeRecord
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.screens.profile.ProfileViewModel
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -56,27 +56,27 @@ fun MistakeNotebookScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    var selectedSkillFilter by remember { mutableStateOf("همه") }
-    var selectedStatusFilter by remember { mutableStateOf("همه") }
+    var selectedSkillFilter by remember { mutableStateOf("All") }
+    var selectedStatusFilter by remember { mutableStateOf("All") }
 
-    val skills = listOf("همه", "VOCABULARY", "GRAMMAR", "READING", "LISTENING", "SPEAKING", "WRITING")
-    val statuses = listOf("همه", "در انتظار مرور", "حل شده")
+    val skills = listOf("All", "VOCABULARY", "GRAMMAR", "READING", "LISTENING", "SPEAKING", "WRITING")
+    val statuses = listOf("All", "Needs Review", "Resolved")
 
     val filteredMistakes = state.mistakes.filter { mistake ->
-        val matchesSkill = selectedSkillFilter == "همه" || mistake.skillType.equals(selectedSkillFilter, ignoreCase = true)
+        val matchesSkill = selectedSkillFilter == "All" || mistake.skillType.equals(selectedSkillFilter, ignoreCase = true)
         val matchesStatus = when (selectedStatusFilter) {
-            "در انتظار مرور" -> !mistake.isReviewed
-            "حل شده" -> mistake.isReviewed
+            "Needs Review" -> !mistake.isReviewed
+            "Resolved" -> mistake.isReviewed
             else -> true
         }
         matchesSkill && matchesStatus
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "دفترچه اشتباهات من",
+                    title = "Mistake Notebook",
                     onBack = onBack
                 )
             }
@@ -102,11 +102,11 @@ fun MistakeNotebookScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "تحلیل هوشمند الگوهای خطا",
+                                text = "Smart Error Pattern Analysis",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed)
                             )
                             Text(
-                                text = "اشتباهات شما در جلسات مرور لغت و تمرین‌ها ثبت شده تا با تکرار فاصله دار بر آنها مسلط شوید.",
+                                text = "Mistakes from reviews and exercises are recorded for targeted spaced repetition.",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onErrorContainer)
                             )
                         }
@@ -123,19 +123,19 @@ fun MistakeNotebookScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     skills.forEach { sk ->
-                        val faLabel = when (sk) {
-                            "VOCABULARY" -> "لغت"
-                            "GRAMMAR" -> "گرامر"
+                        val label = when (sk) {
+                            "VOCABULARY" -> "Vocabulary"
+                            "GRAMMAR" -> "Grammar"
                             "READING" -> "Reading"
                             "LISTENING" -> "Listening"
                             "SPEAKING" -> "Speaking"
                             "WRITING" -> "Writing"
-                            else -> "همه مهارت‌ها"
+                            else -> "All Skills"
                         }
                         FilterChip(
                             selected = selectedSkillFilter == sk,
                             onClick = { selectedSkillFilter = sk },
-                            label = { Text(faLabel, fontSize = 11.sp) }
+                            label = { Text(label, fontSize = 11.sp) }
                         )
                     }
                 }
@@ -172,7 +172,7 @@ fun MistakeNotebookScreen(
                             Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "در حال حاضر هیچ خطایی در این بخش ثبت نشده است!",
+                                text = "No errors recorded in this section!",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -236,7 +236,7 @@ private fun MistakeCard(
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "حل شده ✓",
+                                text = "Resolved ✓",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
@@ -247,7 +247,7 @@ private fun MistakeCard(
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "نیازمند مرور",
+                                text = "Needs Review",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706)),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
@@ -259,13 +259,13 @@ private fun MistakeCard(
                     IconButton(onClick = onToggleReviewed, modifier = Modifier.size(28.dp)) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = if (mistake.isReviewed) "علامت به عنوان در انتظار مرور" else "علامت به عنوان حل شده",
+                            contentDescription = if (mistake.isReviewed) "Mark as needs review" else "Mark as resolved",
                             tint = if (mistake.isReviewed) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "حذف خطا", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete error", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -287,7 +287,7 @@ private fun MistakeCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text("پاسخ من:", style = MaterialTheme.typography.labelSmall.copy(color = ErrorRed))
+                        Text("My Answer:", style = MaterialTheme.typography.labelSmall.copy(color = ErrorRed))
                         Text(mistake.myAnswer, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed))
                     }
                 }
@@ -298,7 +298,7 @@ private fun MistakeCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text("پاسخ درست:", style = MaterialTheme.typography.labelSmall.copy(color = SuccessGreen))
+                        Text("Correct Answer:", style = MaterialTheme.typography.labelSmall.copy(color = SuccessGreen))
                         Text(mistake.correctAnswer, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen))
                     }
                 }
@@ -307,7 +307,7 @@ private fun MistakeCard(
             if (mistake.explanationFa.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "توضیح فارسی: ${mistake.explanationFa}",
+                    text = "Explanation: ${mistake.explanationFa}",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             }

@@ -27,7 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.screens.exams.DiagnosticTestScreen
 import com.example.ui.screens.exams.ExamsViewModel
 import com.example.ui.screens.exams.SpeakingPracticeScreen
@@ -59,17 +59,17 @@ import com.example.ui.screens.vocab.VocabViewModel
 import com.example.ui.screens.vocab.WordDetailScreen
 
 private data class BottomNavItem(
-    val titleFa: String,
+    val title: String,
     val route: String,
     val icon: ImageVector
 )
 
 private val bottomNavItems = listOf(
-    BottomNavItem("خانه", Screen.Home.route, Icons.Default.Home),
-    BottomNavItem("لغات", Screen.Vocab.route, Icons.Default.AutoStories),
-    BottomNavItem("یادگیری", Screen.Learn.route, Icons.Default.School),
-    BottomNavItem("تمرین", Screen.Practice.route, Icons.Default.FitnessCenter),
-    BottomNavItem("پیشرفت", Screen.Profile.route, Icons.Default.Person)
+    BottomNavItem("Home", Screen.Home.route, Icons.Default.Home),
+    BottomNavItem("Vocab", Screen.Vocab.route, Icons.Default.AutoStories),
+    BottomNavItem("Exams", Screen.ExamTracks.route, Icons.Default.School),
+    BottomNavItem("Review", Screen.SrsReview.route, Icons.Default.FitnessCenter),
+    BottomNavItem("Profile", Screen.Profile.route, Icons.Default.Person)
 )
 
 @Composable
@@ -79,7 +79,7 @@ fun AppNavGraph() {
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute != null && bottomNavItems.any { it.route == currentRoute }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -101,11 +101,11 @@ fun AppNavGraph() {
                                     }
                                 },
                                 icon = {
-                                    Icon(imageVector = item.icon, contentDescription = item.titleFa)
+                                    Icon(imageVector = item.icon, contentDescription = item.title)
                                 },
                                 label = {
                                     Text(
-                                        text = item.titleFa,
+                                        text = item.title,
                                         maxLines = 1
                                     )
                                 },

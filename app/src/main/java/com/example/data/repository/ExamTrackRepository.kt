@@ -190,8 +190,10 @@ class ExamTrackRepository(
 
         var previousStageCompleted = true
 
+        val stageMap = words.groupBy { it.stageNumber }
+
         return stageMeta.map { meta ->
-            val stageWords = words.filter { it.stageNumber == meta.stageNumber }
+            val stageWords = stageMap[meta.stageNumber] ?: emptyList()
             val masteredCount = stageWords.count { it.isMastered }
             val totalCount = stageWords.size
             // Learners can freely start at any band / stage based on their current proficiency

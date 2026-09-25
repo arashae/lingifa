@@ -49,8 +49,8 @@ import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.seed.ReadingListeningSeed
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
@@ -78,11 +78,11 @@ fun ListeningDetailScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = exercise.titleFa,
+                    title = exercise.titleEn,
                     onBack = {
                         tts.stop()
                         onBack()
@@ -143,7 +143,7 @@ fun ListeningDetailScreen(
                         ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) "توقف" else "پخش",
+                                contentDescription = if (isPlaying) "Stop" else "Play",
                                 tint = Color.White,
                                 modifier = Modifier.size(36.dp)
                             )
@@ -152,7 +152,7 @@ fun ListeningDetailScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = if (isPlaying) "صوت در حال پخش است..." else "برای گوش دادن به فایل صوتی کلیک کنید",
+                            text = if (isPlaying) "Audio is playing..." else "Tap to listen to audio passage",
                             style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
 
@@ -165,7 +165,7 @@ fun ListeningDetailScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Subtitles, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (showTranscript) "مخفی‌سازی متن (Transcript)" else "نمایش متن (Transcript)")
+                            Text(if (showTranscript) "Hide Transcript" else "Show Transcript")
                         }
                     }
                 }
@@ -179,7 +179,7 @@ fun ListeningDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Text(
-                                text = "رونوشت انگلیسی (Transcript):",
+                                text = "English Transcript:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = PrimaryBlue)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -190,7 +190,7 @@ fun ListeningDetailScreen(
 
                             Spacer(modifier = Modifier.height(14.dp))
                             Text(
-                                text = "ترجمه فارسی:",
+                                text = "Persian Translation:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
@@ -205,7 +205,7 @@ fun ListeningDetailScreen(
                 // Comprehension Questions
                 if (exercise.questions.isNotEmpty()) {
                     Text(
-                        text = "سوالات درک مطلب شنیداری:",
+                        text = "Listening Comprehension Questions:",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -217,7 +217,7 @@ fun ListeningDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "سوال ${qIdx + 1}: ${q.questionEn}",
+                                    text = "Question ${qIdx + 1}: ${q.questionEn}",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -270,14 +270,14 @@ fun ListeningDetailScreen(
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                                     ) {
-                                        Text("بررسی پاسخ")
+                                        Text("Check Answer", fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 if (isChecked) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "توضیح فارسی: ${q.explanationFa}",
+                                        text = "Explanation: ${q.explanationFa}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium

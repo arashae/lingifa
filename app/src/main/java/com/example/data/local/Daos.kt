@@ -80,14 +80,15 @@ interface VocabularyDao {
         """
         SELECT v.* FROM vocabulary_items AS v
         WHERE (:query = '' OR v.word LIKE '%' || :query || '%' OR v.persianMeaning LIKE '%' || :query || '%')
-          AND (:level = 'همه' OR v.cefrLevel = :level)
+          AND (:level = 'همه' OR :level = 'All' OR v.cefrLevel = :level)
           AND (
               :status = 'همه'
-              OR (:status = 'مرور امروز' AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
-              OR (:status = 'یاد گرفته شده' AND v.mastery >= 70)
-              OR (:status = 'در حال یادگیری' AND v.mastery BETWEEN 1 AND 69)
-              OR (:status = 'جدید' AND v.mastery = 0)
-              OR (:status = 'نشان‌شده‌ها' AND v.isFavorite = 1)
+              OR :status = 'All'
+              OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
+              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70)
+              OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
+              OR (:status IN ('جدید', 'New') AND v.mastery = 0)
+              OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
           )
         ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
                  CASE WHEN v.frequencyRank > 0 THEN v.frequencyRank ELSE 2147483647 END,
@@ -110,14 +111,15 @@ interface VocabularyDao {
             ON membership.vocabularyId = v.id
         WHERE membership.packId = :packId
           AND (:query = '' OR v.word LIKE '%' || :query || '%' OR v.persianMeaning LIKE '%' || :query || '%')
-          AND (:level = 'همه' OR v.cefrLevel = :level)
+          AND (:level = 'همه' OR :level = 'All' OR v.cefrLevel = :level)
           AND (
               :status = 'همه'
-              OR (:status = 'مرور امروز' AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
-              OR (:status = 'یاد گرفته شده' AND v.mastery >= 70)
-              OR (:status = 'در حال یادگیری' AND v.mastery BETWEEN 1 AND 69)
-              OR (:status = 'جدید' AND v.mastery = 0)
-              OR (:status = 'نشان‌شده‌ها' AND v.isFavorite = 1)
+              OR :status = 'All'
+              OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
+              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70)
+              OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
+              OR (:status IN ('جدید', 'New') AND v.mastery = 0)
+              OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
           )
         ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
                  CASE WHEN v.frequencyRank > 0 THEN v.frequencyRank ELSE 2147483647 END,
@@ -142,6 +144,12 @@ interface VocabularyDao {
 
     @Update
     suspend fun update(item: VocabularyItem)
+
+    @Update
+    suspend fun updateAll(items: List<VocabularyItem>)
+
+    @Query("SELECT * FROM vocabulary_items WHERE normalizedWord IN (:normalizedWords)")
+    suspend fun getByNormalizedWords(normalizedWords: List<String>): List<VocabularyItem>
 
     @Delete
     suspend fun delete(item: VocabularyItem)

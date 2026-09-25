@@ -50,8 +50,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 
 @Composable
@@ -60,20 +60,20 @@ fun AiGenerateVocabScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    var promptInput by remember { mutableStateOf("۵۰ لغت مهم آیلتس سطح B2 و C1 درباره محیط زیست و اقتصاد") }
+    var promptInput by remember { mutableStateOf("50 high-yield IELTS words for Environment and Economy") }
 
     val samplePrompts = listOf(
-        "۵۰ لغت مهم آیلتس سطح B2 درباره محیط زیست",
-        "لغات ضروری برای IELTS Writing Task 2 درباره تکنولوژی",
-        "لغات آکادمیک تافل ۲۰۲۶ برای مباحثه دانشگاهی",
-        "کالوکیشن‌های سطح C1 برای افزایش نمره رایتینگ"
+        "50 high-yield IELTS words for Environment",
+        "Essential vocabulary for IELTS Writing Task 2",
+        "TOEFL 2026 Academic Discussion key words",
+        "Advanced C1 Collocations for high band scores"
     )
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "ساخت بسته لغت با AI",
+                    title = "AI Vocabulary Generator",
                     onBack = onBack
                 )
             }
@@ -93,7 +93,7 @@ fun AiGenerateVocabScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "موضوع و سطح واژگان مورد نظر را به فارسی بنویسید:",
+                            text = "Enter your desired vocabulary topic and level:",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -126,7 +126,7 @@ fun AiGenerateVocabScreen(
                         OutlinedTextField(
                             value = promptInput,
                             onValueChange = { promptInput = it },
-                            placeholder = { Text("مثال: ۳۰ لغت آکادمیک برای اسپیکینگ پارت ۳ آیلتس...") },
+                            placeholder = { Text("e.g., 30 academic words for IELTS Speaking Part 3...") },
                             minLines = 2,
                             maxLines = 4,
                             shape = RoundedCornerShape(12.dp),
@@ -149,11 +149,11 @@ fun AiGenerateVocabScreen(
                             if (state.isAiGenerating) {
                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("در حال ساخت بسته لغت با جمینای...", fontSize = 13.sp)
+                                Text("Generating vocabulary with Gemini...", fontSize = 13.sp)
                             } else {
                                 Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("تولید بسته واژگان هوشمند", fontWeight = FontWeight.Bold)
+                                Text("Generate Smart Vocabulary Pack", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -169,7 +169,7 @@ fun AiGenerateVocabScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "پیش‌نمایش (${state.aiGeneratedPreview.count { it.isSelected }} از ${state.aiGeneratedPreview.size} انتخاب‌شده)",
+                            text = "Preview (${state.aiGeneratedPreview.count { it.isSelected }} of ${state.aiGeneratedPreview.size} selected)",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Row {
@@ -177,14 +177,14 @@ fun AiGenerateVocabScreen(
                                 onClick = { viewModel.selectAllAiPreview(true) },
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("همه", fontSize = 11.sp)
+                                Text("All", fontSize = 11.sp)
                             }
                             Spacer(modifier = Modifier.width(6.dp))
                             OutlinedButton(
                                 onClick = { viewModel.selectAllAiPreview(false) },
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("هیچکدام", fontSize = 11.sp)
+                                Text("None", fontSize = 11.sp)
                             }
                         }
                     }
@@ -259,7 +259,7 @@ fun AiGenerateVocabScreen(
                         Icon(imageVector = Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "افزودن ${state.aiGeneratedPreview.count { it.isSelected }} لغت به لغات من",
+                            text = "Add ${state.aiGeneratedPreview.count { it.isSelected }} Words to My Vocabulary",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -272,7 +272,7 @@ fun AiGenerateVocabScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "درخواست خود را بنویسید و دکمه تولید را بزنید تا پیش‌نمایش واژگان هوشمند ظاهر شود.",
+                            text = "Enter a prompt and tap Generate to preview AI-curated vocabulary.",
                             style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
                     }

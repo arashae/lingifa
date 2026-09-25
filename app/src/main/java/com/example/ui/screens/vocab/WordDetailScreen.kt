@@ -54,8 +54,8 @@ import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.srs.ReviewRating
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
 
 @Composable
@@ -73,19 +73,19 @@ fun WordDetailScreen(
     var userSelectedTab by remember(vocabId) { mutableStateOf<Int?>(null) }
     var feedbackMessage by remember(vocabId) { mutableStateOf<String?>(null) }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 LinguaTopAppBar(
-                    title = "جزئیات واژه",
+                    title = "Word Details",
                     onBack = onBack,
                     actions = {
                         item?.let { current ->
                             IconButton(onClick = { viewModel.toggleFavorite(current) }) {
                                 Icon(
                                     imageVector = if (current.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = "نشان‌کردن",
+                                    contentDescription = "Favorite",
                                     tint = if (current.isFavorite) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -100,7 +100,7 @@ fun WordDetailScreen(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("در حال بارگذاری واژه…")
+                    Text("Loading word…")
                 }
                 return@Scaffold
             }
@@ -142,7 +142,7 @@ fun WordDetailScreen(
                 if (currentWord.collocations.isNotEmpty()) {
                     DetailListCard(
                         title = "Collocations",
-                        subtitle = "ترکیب‌های طبیعی و پرتکرار",
+                        subtitle = "High-frequency natural combinations",
                         items = currentWord.collocations
                     )
                 }
@@ -150,15 +150,15 @@ fun WordDetailScreen(
                 if (currentWord.synonyms.isNotEmpty()) {
                     DetailListCard(
                         title = "Synonyms",
-                        subtitle = "واژه‌های نزدیک از نظر معنا",
+                        subtitle = "Related meaning words",
                         items = currentWord.synonyms
                     )
                 }
 
                 if (currentWord.wordFamily.isNotEmpty()) {
                     DetailListCard(
-                        title = "Word family",
-                        subtitle = "اعضای خانواده واژه",
+                        title = "Word Family",
+                        subtitle = "Related forms and derivatives",
                         items = currentWord.wordFamily
                     )
                 }
@@ -177,15 +177,15 @@ fun WordDetailScreen(
                     feedbackMessage = feedbackMessage,
                     onKnown = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD)
-                        feedbackMessage = "ثبت شد؛ این واژه در فاصله مناسب برای مرور برمی‌گردد."
+                        feedbackMessage = "Saved: scheduled for optimal spaced review interval."
                     },
                     onHard = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
-                        feedbackMessage = "ثبت شد؛ این واژه زودتر مرور می‌شود."
+                        feedbackMessage = "Saved: scheduled for early review."
                     },
                     onPractice = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN)
-                        feedbackMessage = "ثبت شد؛ این واژه به مرور نزدیک اضافه شد."
+                        feedbackMessage = "Saved: added to upcoming review queue."
                     }
                 )
 
@@ -252,7 +252,7 @@ private fun WordHeroCard(item: VocabularyItem, onPronounce: () -> Unit) {
                 ) {
                     Icon(Icons.Default.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(7.dp))
-                    Text("پخش تلفظ", style = MaterialTheme.typography.labelLarge)
+                    Text("Pronounce", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -277,7 +277,7 @@ private fun LanguageTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
         Tab(
             selected = selectedTab == 0,
             onClick = { onSelected(0) },
-            text = { Text("فارسی", style = MaterialTheme.typography.labelLarge) }
+            text = { Text("Persian", style = MaterialTheme.typography.labelLarge) }
         )
         Tab(
             selected = selectedTab == 1,
@@ -289,7 +289,7 @@ private fun LanguageTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
 
 @Composable
 private fun DefinitionCard(item: VocabularyItem, englishFirst: Boolean) {
-    SectionCard(title = if (englishFirst) "English definition" else "معنی و تعریف") {
+    SectionCard(title = if (englishFirst) "English Definition" else "Meaning & Definition") {
         if (englishFirst) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Text(
@@ -333,12 +333,12 @@ private fun DefinitionCard(item: VocabularyItem, englishFirst: Boolean) {
 @Composable
 private fun ExampleCard(example: String, translation: String, onPronounce: () -> Unit) {
     SectionCard(
-        title = "Example in context",
+        title = "Example in Context",
         trailing = {
             IconButton(onClick = onPronounce, modifier = Modifier.size(34.dp)) {
                 Icon(
                     Icons.Default.VolumeUp,
-                    contentDescription = "پخش مثال",
+                    contentDescription = "Play example",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(19.dp)
                 )
@@ -402,7 +402,7 @@ private fun CommonMistakeCard(text: String) {
                     modifier = Modifier.size(19.dp)
                 )
                 Spacer(modifier = Modifier.width(7.dp))
-                Text("اشتباه رایج", style = MaterialTheme.typography.titleSmall)
+                Text("Common Mistake", style = MaterialTheme.typography.titleSmall)
             }
             Text(text, style = MaterialTheme.typography.bodyMedium)
         }
@@ -411,7 +411,7 @@ private fun CommonMistakeCard(text: String) {
 
 @Composable
 private fun ExamRelevanceCard(ielts: String, toefl: String, gre: String) {
-    SectionCard(title = "کاربرد در آزمون‌ها") {
+    SectionCard(title = "Exam Usage & Relevance") {
         ExamRow("IELTS", ielts)
         Spacer(modifier = Modifier.height(7.dp))
         ExamRow("TOEFL", toefl)
@@ -455,21 +455,21 @@ private fun ReviewActionCard(
             modifier = Modifier.padding(15.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("وضعیت یادگیری", style = MaterialTheme.typography.titleMedium)
+            Text("SRS Learning Status", style = MaterialTheme.typography.titleMedium)
             Text(
-                "این ارزیابی برای زمان‌بندی مرورهای بعدی استفاده می‌شود.",
+                "This assessment calibrates future spaced review intervals.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Button(onClick = onKnown, modifier = Modifier.fillMaxWidth()) {
-                Text("بلدم — برنامه‌ریزی مرور بعدی")
+                Text("Mastered (Schedule Next Review)")
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = onHard, modifier = Modifier.weight(1f)) {
-                    Text("سخت بود")
+                    Text("Hard")
                 }
                 OutlinedButton(onClick = onPractice, modifier = Modifier.weight(1f)) {
-                    Text("نیاز به مرور")
+                    Text("Needs Practice")
                 }
             }
             feedbackMessage?.let {

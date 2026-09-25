@@ -50,7 +50,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,16 +60,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.SuccessGreen
 
@@ -101,7 +99,7 @@ fun VocabLibraryScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -111,7 +109,7 @@ fun VocabLibraryScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("افزودن واژه") }
+                    text = { Text("Add Word", fontWeight = FontWeight.Bold) }
                 )
             }
         ) { paddingValues ->
@@ -129,12 +127,12 @@ fun VocabLibraryScreen(
                     OutlinedTextField(
                         value = state.searchQuery,
                         onValueChange = viewModel::onSearchQueryChanged,
-                        placeholder = { Text("واژه یا معنی فارسی را جستجو کنید") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "جستجو") },
+                        placeholder = { Text("Search English words or Persian meanings...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                         trailingIcon = {
                             if (state.searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "پاک کردن جستجو")
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear search")
                                 }
                             }
                         },
@@ -162,7 +160,7 @@ fun VocabLibraryScreen(
                         selectedStatus = state.selectedStatus,
                         onLevelSelected = viewModel::onLevelFilterChanged,
                         onStatusSelected = { status ->
-                            viewModel.onStatusFilterChanged(if (state.selectedStatus == status) "همه" else status)
+                            viewModel.onStatusFilterChanged(if (state.selectedStatus == status) "All" else status)
                         }
                     )
 
@@ -172,12 +170,13 @@ fun VocabLibraryScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "کتابخانه واژگان",
+                            text = "Vocabulary Bank",
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${state.words.size} از ${state.totalCount}",
+                            text = "${state.words.size} of ${state.totalCount} words",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -217,12 +216,12 @@ private fun LibraryHeader(totalCount: Int) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "واژگان",
-                style = MaterialTheme.typography.headlineSmall,
+                text = "Vocabulary Bank",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "مرور، جستجو و مدیریت بانک شخصی شما",
+                text = "Browse, search and manage your master lexicon",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -233,9 +232,9 @@ private fun LibraryHeader(totalCount: Int) {
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "$totalCount واژه",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp)
+                text = "$totalCount Words",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
             )
         }
     }
@@ -257,35 +256,35 @@ private fun QuickActions(
     ) {
         QuickActionChip(
             icon = Icons.Default.School,
-            label = "مسیر آزمون‌ها",
-            badge = "IELTS / TOEFL",
+            label = "Exam Tracks",
+            badge = "IELTS • TOEFL • GRE",
             onClick = onNavigateToExamTracks,
             highlight = true
         )
         QuickActionChip(
             icon = Icons.Default.Timer,
-            label = "مرور هوشمند",
-            badge = null,
+            label = "Smart Review",
+            badge = "SRS",
             onClick = onNavigateToReview,
             highlight = false
         )
         QuickActionChip(
             icon = Icons.Default.Inventory2,
-            label = "بانک بسته‌ها",
+            label = "Curriculum Packs",
             badge = null,
             onClick = onNavigateToPacks,
             highlight = false
         )
         QuickActionChip(
             icon = Icons.Default.AutoAwesome,
-            label = "کارت AI",
+            label = "AI Flashcard",
             badge = null,
             onClick = onNavigateToAiVocabCard,
             highlight = false
         )
         QuickActionChip(
             icon = Icons.Default.FileUpload,
-            label = "ورود واژه",
+            label = "Import",
             badge = null,
             onClick = onNavigateToImportCenter,
             highlight = false
@@ -358,7 +357,7 @@ private fun FilterStrip(
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        listOf("همه", "B1", "B2", "C1", "C2").forEach { level ->
+        listOf("All", "B1", "B2", "C1", "C2").forEach { level ->
             FilterChip(
                 selected = selectedLevel == level,
                 onClick = { onLevelSelected(level) },
@@ -371,7 +370,7 @@ private fun FilterStrip(
                 )
             )
         }
-        listOf("مرور امروز", "یاد گرفته شده", "در حال یادگیری", "نشان‌شده‌ها").forEach { status ->
+        listOf("Due Today", "Mastered", "Learning", "Favorites").forEach { status ->
             FilterChip(
                 selected = selectedStatus == status,
                 onClick = { onStatusSelected(status) },
@@ -398,33 +397,31 @@ fun WordLibraryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(15.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = item.word,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (item.ipa.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = item.word,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = item.ipa,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            if (item.ipa.isNotEmpty()) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = item.ipa,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(5.dp))
@@ -443,7 +440,7 @@ fun WordLibraryCard(
                     IconButton(onClick = onToggleFavorite, modifier = Modifier.size(34.dp)) {
                         Icon(
                             imageVector = if (item.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = "نشان‌کردن",
+                            contentDescription = "Favorite",
                             tint = if (item.isFavorite) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(19.dp)
                         )
@@ -452,17 +449,15 @@ fun WordLibraryCard(
             }
 
             if (item.example.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(9.dp))
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Text(
-                        text = item.example,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = item.example,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -479,19 +474,19 @@ fun WordLibraryCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "تسلط ${item.mastery}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "${item.mastery}% Mastery",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (item.mastery >= 70) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (item.intervalDays > 0) {
                             Text(
-                                text = "مرور بعدی: ${item.intervalDays} روز",
+                                text = "Next: ${item.intervalDays}d",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     LinearProgressIndicator(
                         progress = { (item.mastery / 100f).coerceIn(0f, 1f) },
                         modifier = Modifier
@@ -506,7 +501,7 @@ fun WordLibraryCard(
                 IconButton(onClick = onDelete, modifier = Modifier.size(34.dp)) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "حذف واژه",
+                        contentDescription = "Delete word",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )

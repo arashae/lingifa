@@ -32,8 +32,8 @@ data class VocabLibraryUiState(
     val learnedCount: Int = 0,
     val packs: List<VocabularyPack> = emptyList(),
     val searchQuery: String = "",
-    val selectedLevel: String = "همه",
-    val selectedStatus: String = "همه",
+    val selectedLevel: String = "All",
+    val selectedStatus: String = "All",
     val selectedPackId: String? = null,
     val learningLevel: String = "B2",
     val isLoading: Boolean = false,
@@ -66,8 +66,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     )
 
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedLevel = MutableStateFlow("همه")
-    private val _selectedStatus = MutableStateFlow("همه")
+    private val _selectedLevel = MutableStateFlow("All")
+    private val _selectedStatus = MutableStateFlow("All")
     private val _selectedPackId = MutableStateFlow<String?>(null)
     private val _isAiGenerating = MutableStateFlow(false)
     private val _aiPreview = MutableStateFlow<List<ParsedImportItem>>(emptyList())
@@ -77,9 +77,14 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeMasterSyncPackId = MutableStateFlow<String?>(null)
     val packSyncStates: StateFlow<Map<String, PackSyncUiState>> = _packSyncStates.asStateFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
     private val filteredWordsFlow: Flow<List<VocabularyItem>> =
-        combine(_searchQuery, _selectedLevel, _selectedStatus, _selectedPackId) { query, level, status, packId ->
+        combine(
+            _searchQuery.debounce { query -> if (query.isBlank()) 0L else 200L },
+            _selectedLevel,
+            _selectedStatus,
+            _selectedPackId
+        ) { query, level, status, packId ->
             FilterParams(query, level, status, packId)
         }.flatMapLatest { params ->
             repo.getFilteredVocabularies(

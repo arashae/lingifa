@@ -45,12 +45,12 @@ import com.example.data.model.GrammarTopic
 import com.example.data.model.ListeningExercise
 import com.example.data.model.ReadingPassage
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SecondaryTeal
 
-private val learnTabs = listOf("گرامر", "Reading", "Listening")
+private val learnTabs = listOf("Grammar", "Reading", "Listening")
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -63,9 +63,9 @@ fun LearnHomeScreen(
     val state by viewModel.uiState.collectAsState()
     val selectedIndex = learnTabs.indexOf(state.selectedCategory).coerceAtLeast(0)
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
-            topBar = { LinguaTopAppBar(title = "یادگیری") },
+            topBar = { LinguaTopAppBar(title = "Learn & Practice") },
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             Column(
@@ -78,11 +78,11 @@ fun LearnHomeScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "یک قدم کوچک، هر روز",
+                        text = "Small Steps Every Day",
                         style = MaterialTheme.typography.headlineSmall
                     )
                     Text(
-                        text = "مسیرهای کوتاه و کاربردی برای تقویت زبان",
+                        text = "Bite-sized structured modules for language mastery",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -109,7 +109,7 @@ fun LearnHomeScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 when (state.selectedCategory) {
-                    "گرامر" -> GrammarList(
+                    "Grammar" -> GrammarList(
                         topics = state.grammarTopics,
                         onClick = onNavigateToGrammarDetail
                     )
@@ -139,7 +139,7 @@ private fun GrammarList(
     ) {
         item {
             Text(
-                text = "گرامر کاربردی با توضیح فارسی و نکته‌های رایج",
+                text = "Practical grammar modules with explanations and common mistakes",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -163,7 +163,7 @@ private fun ReadingList(
     ) {
         item {
             Text(
-                text = "متن‌های آکادمیک با تمرکز بر لغات کاربردی آزمون",
+                text = "Academic reading passages with interactive vocabulary lookup",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -187,7 +187,7 @@ private fun ListeningList(
     ) {
         item {
             Text(
-                text = "تمرین شنیداری با پخش صوت، تست و رونوشت",
+                text = "Listening comprehension exercises with audio player, tests and transcripts",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

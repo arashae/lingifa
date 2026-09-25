@@ -1,6 +1,10 @@
 package com.example.ui.screens.review
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Visibility
@@ -23,15 +28,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,10 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
@@ -53,12 +59,12 @@ import com.example.srs.ReviewRating
 import com.example.srs.SpacedRepetitionSystem
 import com.example.ui.components.AudioSpeakerButton
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SrsReviewScreen(
     viewModel: ReviewViewModel,
@@ -71,12 +77,35 @@ fun SrsReviewScreen(
         onDispose { tts.shutdown() }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
-                LinguaTopAppBar(
-                    title = "مرور هوشمند روزانه",
-                    onBack = onBack
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "Smart Spaced Review",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "Spaced Repetition System (SRS)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
             }
         ) { paddingValues ->
@@ -93,10 +122,29 @@ fun SrsReviewScreen(
             val currentWord = state.queue.getOrNull(state.currentIndex)
             if (currentWord == null) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("در حال آماده‌سازی کارت‌های مرور…")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "No cards due for review right now! 🎉",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = "Explore the Exam Tracks or Vocabulary Bank to add more words.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onBack) {
+                            Text("Back to Home")
+                        }
+                    }
                 }
                 return@Scaffold
             }
@@ -108,31 +156,36 @@ fun SrsReviewScreen(
                     .padding(paddingValues)
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
+                // Header with card progress and mastery
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "مرور امروز • ${state.currentIndex + 1} از ${state.queue.size}",
+                        text = "Card ${state.currentIndex + 1} of ${state.queue.size}",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "${currentWord.mastery}% تسلط",
+                        text = "${currentWord.mastery}% Mastery",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { ((state.currentIndex + 1).toFloat() / state.queue.size).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
                     color = PrimaryBlue,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 when (state.currentExerciseType) {
                     ReviewExerciseType.FLASHCARD -> FlashcardExercise(
@@ -183,66 +236,78 @@ private fun FinishedSessionCard(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.fillMaxSize().padding(24.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            shape = RoundedCornerShape(26.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier.padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
-                    modifier = Modifier.size(72.dp).clip(CircleShape).background(Color(0xFFFEF3C7)),
+                    modifier = Modifier
+                        .size(76.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.EmojiEvents,
                         contentDescription = null,
                         tint = Color(0xFFD97706),
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(44.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    text = if (total == 0) "هنوز واژه‌ای برای مرور نداری" else "مرور امروز تکمیل شد 🎉",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    text = if (total == 0) "All Caught Up!" else "Review Session Complete! 🎉",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = if (total == 0) {
-                        "از مسیر CEFR یا بانک واژگان چند کلمه را وارد یادگیری کن؛ مرور بعدی خودکار برنامه‌ریزی می‌شود."
+                        "You don't have any due cards for review today. Great consistency!"
                     } else {
-                        "$total کارت مرور شد و زمان مرور بعدی هر واژه بر اساس عملکردت تنظیم شد."
+                        "You reviewed $total cards today. Your memory intervals have been updated."
                     },
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(14.dp))
-                Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(12.dp)) {
+
+                Surface(
+                    color = SuccessGreen.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("+$xp XP", fontWeight = FontWeight.Bold, color = SuccessGreen)
+                        Text("+$xp XP Earned", fontWeight = FontWeight.Bold, color = SuccessGreen)
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Button(
                     onClick = onBack,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
                 ) {
-                    Text("بازگشت به خانه", fontWeight = FontWeight.Bold)
+                    Text("Return to Home", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }
@@ -261,18 +326,23 @@ private fun FlashcardExercise(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.SpaceBetween) {
         Card(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            shape = RoundedCornerShape(28.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            shape = RoundedCornerShape(26.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(26.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = if (isRevealed) "پاسخ را با چیزی که در ذهنت بود مقایسه کن" else "قبل از نمایش پاسخ، معنی یا کاربرد را در ذهنت بازیابی کن",
+                    text = if (isRevealed) "Compare with your recall:" else "Recall meaning before revealing:",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -283,7 +353,7 @@ private fun FlashcardExercise(
                 Text(
                     text = item.word,
                     style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
@@ -296,97 +366,101 @@ private fun FlashcardExercise(
                         )
                     )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-                AudioSpeakerButton(onClick = onPlayAudio, size = 44)
+                Spacer(modifier = Modifier.height(14.dp))
+                AudioSpeakerButton(onClick = onPlayAudio, size = 46)
 
-                if (isRevealed) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(1.dp)
-                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    if (item.englishDefinition.isNotBlank()) {
-                        Text(
-                            text = "Definition",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
+                AnimatedVisibility(
+                    visible = isRevealed,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Spacer(modifier = Modifier.height(18.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         )
-                        Spacer(modifier = Modifier.height(5.dp))
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // English Definition
+                        if (item.englishDefinition.isNotBlank()) {
                             Text(
                                 text = item.englishDefinition,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center
                             )
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
-                    }
 
-                    if (item.example.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Surface(
-                            onClick = onPlayExample,
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        // Example sentence
+                        if (item.example.isNotBlank()) {
+                            Surface(
+                                onClick = onPlayExample,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 Text(
                                     text = "“${item.example}”",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
                                     textAlign = TextAlign.Center
                                 )
                             }
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                    }
 
-                    if (item.collocations.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(14.dp))
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            Text(
-                                text = item.collocations.take(3).joinToString("  •  "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
+                        // Persian Meaning Card
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = PrimaryBlue.copy(alpha = 0.08f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = item.persianMeaning,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    textAlign = TextAlign.Center
+                                )
+                                if (item.examplePersian.isNotBlank()) {
+                                    Text(
+                                        text = item.examplePersian,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Text(
-                        text = item.persianMeaning,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.Center
-                    )
-                    if (item.examplePersian.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = item.examplePersian,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            textAlign = TextAlign.Center
-                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         if (!isRevealed) {
             Button(
                 onClick = onReveal,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
             ) {
                 Icon(Icons.Default.Visibility, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("نمایش پاسخ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Show Answer", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         } else {
             RatingRow(item = item, onRate = onRate)
@@ -398,31 +472,31 @@ private fun FlashcardExercise(
 private fun RatingRow(item: VocabularyItem, onRate: (ReviewRating) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(7.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         ResponseRatingButton(
-            label = "یادم نبود",
+            label = "Again",
             sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.AGAIN),
             color = ErrorRed,
             onClick = { onRate(ReviewRating.AGAIN) },
             modifier = Modifier.weight(1f)
         )
         ResponseRatingButton(
-            label = "سخت",
+            label = "Hard",
             sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD),
             color = Color(0xFFD97706),
             onClick = { onRate(ReviewRating.HARD) },
             modifier = Modifier.weight(1f)
         )
         ResponseRatingButton(
-            label = "بلد بودم",
+            label = "Good",
             sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD),
             color = PrimaryBlue,
             onClick = { onRate(ReviewRating.GOOD) },
             modifier = Modifier.weight(1f)
         )
         ResponseRatingButton(
-            label = "خیلی راحت",
+            label = "Easy",
             sub = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY),
             color = SuccessGreen,
             onClick = { onRate(ReviewRating.EASY) },
@@ -446,13 +520,13 @@ private fun ResponseRatingButton(
             containerColor = color.copy(alpha = 0.10f),
             contentColor = color
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.32f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.35f)),
         modifier = modifier.height(62.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp, vertical = 5.dp)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 6.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = label, fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.Center)
-            Text(text = sub, fontSize = 8.sp, color = color.copy(alpha = 0.78f))
+            Text(text = label, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, textAlign = TextAlign.Center)
+            Text(text = sub, fontSize = 9.sp, color = color.copy(alpha = 0.85f))
         }
     }
 }
@@ -472,22 +546,33 @@ private fun MultipleChoiceExercise(
     Column(modifier = modifier, verticalArrangement = Arrangement.SpaceBetween) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (exerciseType) {
                     ReviewExerciseType.LISTENING_CHOOSE -> {
-                        Text("به تلفظ گوش کن و معنی درست را انتخاب کن:")
+                        Text(
+                            text = "Listen and choose the matching meaning:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         Spacer(modifier = Modifier.height(14.dp))
                         AudioSpeakerButton(onClick = onPlayAudio, size = 56)
                     }
                     ReviewExerciseType.MULTIPLE_CHOICE_EN_FA -> {
-                        Text("معنی صحیح واژه زیر چیست؟")
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "What is the correct meaning of this word?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 item.word,
@@ -497,12 +582,16 @@ private fun MultipleChoiceExercise(
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            AudioSpeakerButton(onClick = onPlayAudio, size = 32)
+                            AudioSpeakerButton(onClick = onPlayAudio, size = 34)
                         }
                     }
                     else -> {
-                        Text("کدام واژه انگلیسی با این معنی هماهنگ است؟")
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Which English word matches this meaning?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             item.persianMeaning,
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
@@ -530,14 +619,16 @@ private fun MultipleChoiceExercise(
                     !isChecked && isSelected -> androidx.compose.foundation.BorderStroke(2.dp, PrimaryBlue)
                     isChecked && isCorrect -> androidx.compose.foundation.BorderStroke(2.dp, SuccessGreen)
                     isChecked && isSelected -> androidx.compose.foundation.BorderStroke(2.dp, ErrorRed)
-                    else -> androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                    else -> androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
 
                 Surface(
                     color = background,
                     shape = RoundedCornerShape(14.dp),
                     border = border,
-                    modifier = Modifier.fillMaxWidth().clickable(enabled = !isChecked) { onSelectOption(idx) }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !isChecked) { onSelectOption(idx) }
                 ) {
                     Text(
                         text = optionText,
@@ -557,9 +648,11 @@ private fun MultipleChoiceExercise(
                 onClick = onNext,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text("واژه بعدی", fontWeight = FontWeight.Bold)
+                Text("Next Word →", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }
@@ -579,15 +672,18 @@ private fun TypeWordExercise(
     Column(modifier = modifier, verticalArrangement = Arrangement.SpaceBetween) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "تمرین تکمیلی املا و تولید واژه",
+                    text = "Spelling & Recall Practice",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -604,30 +700,14 @@ private fun TypeWordExercise(
                 if (isCorrect != null) {
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(
-                        text = if (isCorrect) "املای درست ✓" else "پاسخ صحیح: ${item.word}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = if (isCorrect) "Correct Spelling ✓" else "Correct Answer: ${item.word}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = if (isCorrect) SuccessGreen else ErrorRed
+                        )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    AudioSpeakerButton(onClick = onPlayAudio, size = 30)
-                    if (item.englishDefinition.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            Text(
-                                text = item.englishDefinition,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "این تمرین به‌تنهایی وضعیت حافظه را تعیین نمی‌کند؛ حالا خودت میزان یادآوری را ثبت کن.",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        textAlign = TextAlign.Center
-                    )
+                    AudioSpeakerButton(onClick = onPlayAudio, size = 32)
                 }
             }
         }
@@ -637,7 +717,7 @@ private fun TypeWordExercise(
             value = typedInput,
             onValueChange = onInputChanged,
             enabled = isCorrect == null,
-            placeholder = { Text("Enter English word…") },
+            placeholder = { Text("Type English word...") },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
@@ -650,9 +730,11 @@ private fun TypeWordExercise(
                 enabled = typedInput.isNotBlank(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text("بررسی املا", fontWeight = FontWeight.Bold)
+                Text("Check Spelling", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         } else {
             RatingRow(item = item, onRate = onRate)

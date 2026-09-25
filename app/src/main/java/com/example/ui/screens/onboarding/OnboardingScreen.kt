@@ -46,7 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.screens.profile.ProfileViewModel
 import com.example.ui.theme.PrimaryBlue
 
@@ -57,13 +57,13 @@ fun OnboardingScreen(
 ) {
     var step by remember { mutableStateOf(1) } // 1: Goal, 2: Level, 3: Daily Time, 4: Weakest Skill, 5: Target Band
 
-    var selectedGoal by remember { mutableStateOf("آیلتس") }
+    var selectedGoal by remember { mutableStateOf("IELTS Exam") }
     var selectedLevel by remember { mutableStateOf("B1") }
     var selectedTimeMinutes by remember { mutableStateOf(30) }
     var selectedWeakestSkill by remember { mutableStateOf("Speaking") }
     var targetScoreInput by remember { mutableStateOf("7.5") }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold { paddingValues ->
             Column(
                 modifier = Modifier
@@ -82,11 +82,11 @@ fun OnboardingScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "گام $step از ۵",
+                            text = "Step $step of 5",
                             style = MaterialTheme.typography.titleSmall.copy(color = PrimaryBlue, fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "شخصی‌سازی یادگیری",
+                            text = "Personalize Your Plan",
                             style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
                     }
@@ -108,17 +108,17 @@ fun OnboardingScreen(
                     when (step) {
                         1 -> {
                             Text(
-                                text = "هدفت از یادگیری زبان چیه؟",
+                                text = "What is your main language learning goal?",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "برنامه آموزشی و لغات پیشنهادی بر اساس هدف شما بهینه‌سازی خواهند شد.",
+                                text = "Your study path and vocabulary recommendations will be personalized to your target.",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            val goals = listOf("آیلتس", "تافل", "مهاجرت", "دانشگاه", "کار", "مکالمه", "زبان عمومی", "افزایش دایره لغات")
+                            val goals = listOf("IELTS Exam", "TOEFL Exam", "GRE Exam", "Immigration", "University Study", "Career & Work", "Daily Conversation", "Vocabulary Mastery")
                             goals.forEach { g ->
                                 SelectableOptionCard(
                                     title = g,
@@ -130,24 +130,24 @@ fun OnboardingScreen(
                         }
                         2 -> {
                             Text(
-                                text = "سطح تقریبی فعلی‌ات چقدره؟",
+                                text = "What is your approximate English level?",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "در صورتی که مطمئن نیستید، می‌توانید گزینه 'نمی‌دانم' را انتخاب کرده و آزمون تعیین سطح بدهید.",
+                                text = "If you are unsure, you can choose 'Not Sure' and take the Smart Placement Test.",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
 
                             val levels = listOf(
-                                "مبتدی (Beginner)" to "A1",
-                                "پایه (Elementary)" to "A2",
-                                "متوسط (Intermediate)" to "B1",
-                                "متوسط رو به بالا (Upper-Intermediate)" to "B2",
-                                "پیشرفته (Advanced)" to "C1",
-                                "حرفه‌ای (Mastery)" to "C2",
-                                "دقیقاً نمی‌دانم (آزمون تعیین سطح)" to "B1"
+                                "A1 - Beginner" to "A1",
+                                "A2 - Elementary" to "A2",
+                                "B1 - Intermediate" to "B1",
+                                "B2 - Upper-Intermediate" to "B2",
+                                "C1 - Advanced" to "C1",
+                                "C2 - Mastery" to "C2",
+                                "Not Sure (Placement Test)" to "B1"
                             )
                             levels.forEach { (label, code) ->
                                 SelectableOptionCard(
@@ -160,22 +160,22 @@ fun OnboardingScreen(
                         }
                         3 -> {
                             Text(
-                                text = "روزانه چقدر زمان برای مطالعه داری؟",
+                                text = "How much time can you study daily?",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "برنامه هوشمند مرور و درس‌ها طبق این زمان به بازه‌های کوتاه تقسیم می‌شوند.",
+                                text = "Your smart SRS reviews and lessons will be scheduled into manageable daily bite-sized sessions.",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
 
                             val times = listOf(
-                                "۱۵ دقیقه در روز" to 15,
-                                "۳۰ دقیقه در روز" to 30,
-                                "۴۵ دقیقه در روز" to 45,
-                                "۶۰ دقیقه در روز" to 60,
-                                "بیشتر از یک ساعت" to 75
+                                "15 minutes per day" to 15,
+                                "30 minutes per day" to 30,
+                                "45 minutes per day" to 45,
+                                "60 minutes per day" to 60,
+                                "More than 1 hour" to 75
                             )
                             times.forEach { (label, mins) ->
                                 SelectableOptionCard(
@@ -188,29 +188,29 @@ fun OnboardingScreen(
                         }
                         4 -> {
                             Text(
-                                text = "کدام مهارتت ضعیف‌تر است و نیاز به تمرکز دارد؟",
+                                text = "Which skill needs the most improvement?",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            val skills = listOf("لغت (Vocabulary)", "گرامر (Grammar)", "Reading", "Listening", "Speaking", "Writing", "همه مهارت‌ها یکسان")
+                            val skills = listOf("Vocabulary", "Grammar", "Reading", "Listening", "Speaking", "Writing", "All Balanced")
                             skills.forEach { sk ->
                                 SelectableOptionCard(
                                     title = sk,
-                                    isSelected = selectedWeakestSkill == sk.takeWhile { it != ' ' },
-                                    onClick = { selectedWeakestSkill = sk.takeWhile { it != ' ' } }
+                                    isSelected = selectedWeakestSkill == sk,
+                                    onClick = { selectedWeakestSkill = sk }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
                         5 -> {
                             Text(
-                                text = "نمره هدف شما در آزمون چقدر است؟",
+                                text = "What is your target exam score / band?",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "مثال: نمره ۷.۵ در آیلتس، نمره ۱۰۰ در تافل یا سطح C1",
+                                text = "Example: Band 7.5 in IELTS, 100 in TOEFL, or CEFR C1",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -218,7 +218,7 @@ fun OnboardingScreen(
                             OutlinedTextField(
                                 value = targetScoreInput,
                                 onValueChange = { targetScoreInput = it },
-                                label = { Text("نمره هدف (Target Score / Band)") },
+                                label = { Text("Target Score / Band") },
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
@@ -240,7 +240,7 @@ fun OnboardingScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("مرحله قبل")
+                                Text("Previous")
                             }
                         }
 
@@ -250,7 +250,7 @@ fun OnboardingScreen(
                                     step += 1
                                 } else {
                                     profileViewModel.updateProfile(
-                                        name = "کاربر عزیز",
+                                        name = "Learner",
                                         goal = selectedGoal,
                                         level = selectedLevel,
                                         dailyMinutes = selectedTimeMinutes,
@@ -264,7 +264,7 @@ fun OnboardingScreen(
                             modifier = Modifier.weight(if (step > 1) 2f else 1f)
                         ) {
                             Text(
-                                text = if (step == 5) "ورود به LinguaFa AI" else "مرحله بعد",
+                                text = if (step == 5) "Get Started with LinguaFa" else "Next Step",
                                 fontWeight = FontWeight.Bold
                             )
                         }

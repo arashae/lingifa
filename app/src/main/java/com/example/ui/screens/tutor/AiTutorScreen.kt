@@ -43,8 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 
 @Composable
@@ -61,11 +61,11 @@ fun AiTutorScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "معلم هوشمند من (AI Tutor)",
+                    title = "AI Tutor & Language Assistant",
                     onBack = onBack
                 )
             }
@@ -98,7 +98,7 @@ fun AiTutorScreen(
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "معلم هوشمند در حال نوشتن پاسخ است...",
+                                    text = "AI Tutor is typing a response...",
                                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 )
                             }
@@ -145,7 +145,7 @@ fun AiTutorScreen(
                         OutlinedTextField(
                             value = state.inputText,
                             onValueChange = { viewModel.onInputChanged(it) },
-                            placeholder = { Text("سوال گرامری، لغت یا رفع اشکال...") },
+                            placeholder = { Text("Ask a grammar question, word meaning, or check errors...") },
                             maxLines = 3,
                             shape = RoundedCornerShape(24.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -167,7 +167,7 @@ fun AiTutorScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "ارسال پیام",
+                                contentDescription = "Send Message",
                                 tint = Color.White
                             )
                         }

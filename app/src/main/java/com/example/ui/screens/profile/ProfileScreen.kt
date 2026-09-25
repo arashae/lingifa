@@ -64,9 +64,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
-import com.example.ui.components.PersianSectionHeader
 import com.example.ui.components.StatCard
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.PrimaryBlue
@@ -94,12 +93,12 @@ fun ProfileScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 LinguaTopAppBar(
-                    title = "پروفایل و پیشرفت تحصیلی",
+                    title = "Profile & Academic Progress",
                     actions = {
                         IconButton(onClick = {
                             editName = state.profile.userName
@@ -107,7 +106,7 @@ fun ProfileScreen(
                             editTargetScore = state.profile.targetBandOrScore
                             showEditProfileDialog = true
                         }) {
-                            Icon(imageVector = Icons.Default.Edit, contentDescription = "ویرایش مشخصات")
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Profile")
                         }
                     }
                 )
@@ -152,7 +151,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "هدف: ${state.profile.targetGoal} ${state.profile.targetBandOrScore}",
+                                text = "Goal: ${state.profile.targetGoal} ${state.profile.targetBandOrScore}",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
@@ -168,21 +167,21 @@ fun ProfileScreen(
                     StatCard(
                         icon = Icons.Default.Bolt,
                         value = "${state.profile.xp} XP",
-                        label = "مجموع امتیازات",
+                        label = "Total Points",
                         color = AccentGold,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
                         icon = Icons.Default.LocalFireDepartment,
-                        value = "${state.profile.streakDays} روز",
-                        label = "زنجیره مطالعه",
+                        value = "${state.profile.streakDays} days",
+                        label = "Daily Streak",
                         color = AccentGold,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
                         icon = Icons.Default.AutoStories,
                         value = "${state.totalWordsCount}",
-                        label = "واژگان ذخیره‌شده",
+                        label = "Saved Words",
                         color = PrimaryBlue,
                         modifier = Modifier.weight(1f)
                     )
@@ -197,7 +196,7 @@ fun ProfileScreen(
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "تسلط و پایداری در یادگیری واژگان:",
+                            text = "Vocabulary Mastery & Retention:",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -210,7 +209,7 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = "درصد تثبیت در حافظه بلندمدت", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Long-Term Retention Rate", style = MaterialTheme.typography.bodySmall)
                             Text(text = "$retentionRate%", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen))
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -226,8 +225,8 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = "لغات تسلط‌یافته (Mastered): ${state.learnedWordsCount}", fontSize = 12.sp)
-                            Text(text = "در حال یادگیری: ${state.totalWordsCount - state.learnedWordsCount}", fontSize = 12.sp)
+                            Text(text = "Mastered: ${state.learnedWordsCount}", fontSize = 12.sp)
+                            Text(text = "In Learning: ${state.totalWordsCount - state.learnedWordsCount}", fontSize = 12.sp)
                         }
                     }
                 }
@@ -259,11 +258,11 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "دفترچه اشتباهات من",
+                                    text = "Mistake Notebook",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Text(
-                                    text = "${state.mistakes.size} خطای ثبت‌شده برای مرور",
+                                    text = "${state.mistakes.size} recorded errors to review",
                                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 )
                             }
@@ -274,16 +273,23 @@ fun ProfileScreen(
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                         ) {
-                            Text("مشاهده خطاها", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Review Mistakes", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
-                // Export Center (خروجی گرفتن از واژگان)
-                PersianSectionHeader(
-                    title = "پشتیبان‌گیری و خروجی واژگان (Export)",
-                    subtitle = "دریافت فایل لغات برای استفاده در هوش مصنوعی یا تهیه نسخه پشتیبان"
-                )
+                // Export Center
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Backup & Export Vocabulary",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = "Export your vocabulary library for backups or AI training workflows.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -293,7 +299,7 @@ fun ProfileScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "خروجی با فرمت دلخواه:",
+                            text = "Export Format:",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -309,7 +315,7 @@ fun ProfileScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.Description, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("خروجی CSV", fontSize = 12.sp)
+                                Text("CSV Export", fontSize = 12.sp)
                             }
 
                             OutlinedButton(
@@ -319,11 +325,11 @@ fun ProfileScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.DataObject, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("خروجی JSON", fontSize = 12.sp)
+                                Text("JSON Export", fontSize = 12.sp)
                             }
                         }
 
-                        // Display Export preview dialog or box
+                        // Display Export preview
                         state.exportedContent?.let { content ->
                             Spacer(modifier = Modifier.height(14.dp))
                             Surface(
@@ -337,7 +343,7 @@ fun ProfileScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("محتوای خروجی ${state.exportFormat}:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Text("${state.exportFormat} Export Content:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                         IconButton(
                                             onClick = {
                                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -345,12 +351,12 @@ fun ProfileScreen(
                                             },
                                             modifier = Modifier.size(28.dp)
                                         ) {
-                                            Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "کپی", modifier = Modifier.size(16.dp))
+                                            Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(16.dp))
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = content.take(300) + if (content.length > 300) "\n... [متن کامل کپی شد]" else "",
+                                        text = content.take(300) + if (content.length > 300) "\n... [Full content copied to clipboard]" else "",
                                         fontSize = 11.sp,
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                                         maxLines = 6
@@ -368,27 +374,27 @@ fun ProfileScreen(
             if (showEditProfileDialog) {
                 AlertDialog(
                     onDismissRequest = { showEditProfileDialog = false },
-                    title = { Text("ویرایش مشخصات زبان‌آموز", fontWeight = FontWeight.Bold) },
+                    title = { Text("Edit Learner Profile", fontWeight = FontWeight.Bold) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
                                 value = editName,
                                 onValueChange = { editName = it },
-                                label = { Text("نام") },
+                                label = { Text("Full Name") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedTextField(
                                 value = editGoal,
                                 onValueChange = { editGoal = it },
-                                label = { Text("هدف یادگیری (آیلتس، تافل، مهاجرت...)") },
+                                label = { Text("Target Goal (IELTS, TOEFL, Academic...)") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedTextField(
                                 value = editTargetScore,
                                 onValueChange = { editTargetScore = it },
-                                label = { Text("نمره هدف (مثلاً 7.5 یا 100)") },
+                                label = { Text("Target Score (e.g. 7.5 or 105)") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -408,12 +414,12 @@ fun ProfileScreen(
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                         ) {
-                            Text("ذخیره تغییرات")
+                            Text("Save Changes")
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showEditProfileDialog = false }) {
-                            Text("انصراف")
+                            Text("Cancel")
                         }
                     }
                 )

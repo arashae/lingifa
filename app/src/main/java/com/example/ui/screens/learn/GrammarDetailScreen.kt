@@ -45,8 +45,8 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.GrammarTopic
 import com.example.data.seed.GrammarSeed
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
@@ -63,11 +63,11 @@ fun GrammarDetailScreen(
     var selectedOptionIndices by remember { mutableStateOf(mutableMapOf<Int, Int>()) }
     var isAnswerChecked by remember { mutableStateOf(mutableMapOf<Int, Boolean>()) }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = topic.titleFa,
+                    title = topic.titleEn,
                     onBack = onBack
                 )
             }
@@ -118,7 +118,7 @@ fun GrammarDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "قواعد و ساختار گرامری:",
+                            text = "Grammar Rules & Structure:",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -140,7 +140,7 @@ fun GrammarDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "مثال‌های آکادمیک و کاربردی:",
+                            text = "Academic & Practical Examples:",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -168,7 +168,7 @@ fun GrammarDetailScreen(
                                     if (exFa.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "ترجمه: $exFa",
+                                            text = "Translation: $exFa",
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -192,7 +192,7 @@ fun GrammarDetailScreen(
                                 Icon(imageVector = Icons.Default.PriorityHigh, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "اشتباهات رایج زبان‌آموزان ایرانی:",
+                                    text = "Common Pitfalls for Persian Speakers:",
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = ErrorRed
@@ -211,7 +211,7 @@ fun GrammarDetailScreen(
                 // Interactive Quiz
                 if (topic.quizQuestions.isNotEmpty()) {
                     Text(
-                        text = "آزمونک تثبیت گرامر:",
+                        text = "Grammar Practice Quiz:",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -223,7 +223,7 @@ fun GrammarDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "سوال ${qIndex + 1}: ${q.questionEn}",
+                                    text = "Question ${qIndex + 1}: ${q.questionEn}",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -277,14 +277,14 @@ fun GrammarDetailScreen(
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                                     ) {
-                                        Text("بررسی پاسخ", fontWeight = FontWeight.Bold)
+                                        Text("Check Answer", fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 if (checked) {
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "توضیح فارسی: ${q.explanationFa}",
+                                        text = "Explanation: ${q.explanationFa}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium

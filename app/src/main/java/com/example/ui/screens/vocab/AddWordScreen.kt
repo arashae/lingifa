@@ -40,8 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,10 +58,10 @@ fun AddWordScreen(
     var selectedLevel by remember { mutableStateOf("B2") }
     var levelDropdownExpanded by remember { mutableStateOf(false) }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = { LinguaTopAppBar(title = "افزودن واژه", onBack = onBack) }
+            topBar = { LinguaTopAppBar(title = "Add Vocabulary Word", onBack = onBack) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -73,31 +73,31 @@ fun AddWordScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
-                        text = "واژه جدید",
+                        text = "New Word",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "فقط خود واژه اجباری است؛ بقیه اطلاعات را می‌توانی دستی یا با AI تکمیل کنی.",
+                        text = "Only the word is required; fill additional details manually or enrich with AI.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                FormCard(title = "اطلاعات اصلی") {
+                FormCard(title = "Core Information") {
                     AppTextField(
                         value = wordInput,
                         onValueChange = { wordInput = it },
-                        label = "واژه انگلیسی *",
-                        placeholder = "مثال: mitigate",
+                        label = "English Word *",
+                        placeholder = "e.g., mitigate",
                         singleLine = true
                     )
 
                     AppTextField(
                         value = meaningInput,
                         onValueChange = { meaningInput = it },
-                        label = "معنی فارسی",
-                        placeholder = "مثال: کاهش دادن، تعدیل کردن",
+                        label = "Persian Meaning",
+                        placeholder = "e.g., کاهش دادن، تعدیل کردن",
                         singleLine = true
                     )
 
@@ -127,7 +127,7 @@ fun AddWordScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("در حال تکمیل اطلاعات…")
+                            Text("Enriching with AI…")
                         } else {
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
@@ -135,31 +135,31 @@ fun AddWordScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(7.dp))
-                            Text("تکمیل خودکار با AI")
+                            Text("Auto-Enrich with AI")
                         }
                     }
                 }
 
-                FormCard(title = "جزئیات آموزشی", subtitle = "اختیاری") {
+                FormCard(title = "Educational Details", subtitle = "Optional") {
                     AppTextField(
                         value = definitionInput,
                         onValueChange = { definitionInput = it },
-                        label = "تعریف انگلیسی",
+                        label = "English Definition",
                         placeholder = "Short, clear definition"
                     )
 
                     AppTextField(
                         value = exampleInput,
                         onValueChange = { exampleInput = it },
-                        label = "مثال انگلیسی",
+                        label = "English Example",
                         placeholder = "Example sentence"
                     )
 
                     AppTextField(
                         value = exampleFaInput,
                         onValueChange = { exampleFaInput = it },
-                        label = "ترجمه مثال",
-                        placeholder = "ترجمه فارسی جمله"
+                        label = "Example Persian Translation",
+                        placeholder = "Persian sentence translation"
                     )
 
                     ExposedDropdownMenuBox(
@@ -170,7 +170,7 @@ fun AddWordScreen(
                             value = selectedLevel,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("سطح CEFR") },
+                            label = { Text("CEFR Level") },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelDropdownExpanded)
                             },
@@ -190,13 +190,10 @@ fun AddWordScreen(
                             onDismissRequest = { levelDropdownExpanded = false }
                         ) {
                             listOf("A1", "A2", "B1", "B2", "C1", "C2").forEach { level ->
-                                DropdownMenuItem(
-                                    text = { Text(level) },
-                                    onClick = {
-                                        selectedLevel = level
-                                        levelDropdownExpanded = false
-                                    }
-                                )
+                                DropMenuItem(level) {
+                                    selectedLevel = level
+                                    levelDropdownExpanded = false
+                                }
                             }
                         }
                     }
@@ -206,7 +203,7 @@ fun AddWordScreen(
                     onClick = {
                         viewModel.addWordManually(
                             word = wordInput,
-                            meaning = meaningInput.ifEmpty { "بدون ترجمه اولیه" },
+                            meaning = meaningInput.ifEmpty { "Manual addition" },
                             definition = definitionInput,
                             example = exampleInput,
                             exampleFa = exampleFaInput,
@@ -224,13 +221,21 @@ fun AddWordScreen(
                         modifier = Modifier.size(19.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("ذخیره واژه")
+                    Text("Save Word")
                 }
 
                 Spacer(modifier = Modifier.height(22.dp))
             }
         }
     }
+}
+
+@Composable
+private fun DropMenuItem(text: String, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text) },
+        onClick = onClick
+    )
 }
 
 @Composable

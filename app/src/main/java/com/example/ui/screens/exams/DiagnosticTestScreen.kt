@@ -39,8 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
@@ -51,11 +51,11 @@ fun DiagnosticTestScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "آزمون تعیین سطح هوشمند",
+                    title = "Smart Level Placement Test",
                     onBack = onBack
                 )
             }
@@ -98,14 +98,14 @@ fun DiagnosticTestScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
-                                text = "آزمون تعیین سطح به پایان رسید!",
+                                text = "Level Placement Completed!",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = "سطح تخمینی شما بر اساس چارچوب اروپایی CEFR:",
+                                text = "Your estimated level based on CEFR:",
                                 style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
 
@@ -122,7 +122,7 @@ fun DiagnosticTestScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "امتیاز: ${state.diagnosticScore} از ${state.diagnosticQuestions.size} پاسخ صحیح",
+                                text = "Score: ${state.diagnosticScore} of ${state.diagnosticQuestions.size} correct answers",
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
 
@@ -133,7 +133,7 @@ fun DiagnosticTestScreen(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    text = "سطح پروفایل شما به‌روزرسانی شد و تمرین‌ها بر این اساس شخصی‌سازی می‌شوند.",
+                                    text = "Your profile level has been updated and lessons are personalized accordingly.",
                                     style = MaterialTheme.typography.bodySmall.copy(color = PrimaryBlue),
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                                 )
@@ -147,7 +147,7 @@ fun DiagnosticTestScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("تایید و بازگشت به یادگیری", fontWeight = FontWeight.Bold)
+                                Text("Continue to Learning", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -170,7 +170,7 @@ fun DiagnosticTestScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "سوال ${state.diagnosticCurrentIndex + 1} از ${state.diagnosticQuestions.size}",
+                                text = "Question ${state.diagnosticCurrentIndex + 1} of ${state.diagnosticQuestions.size}",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             CefrBadge(level = currentQ.testedLevel)

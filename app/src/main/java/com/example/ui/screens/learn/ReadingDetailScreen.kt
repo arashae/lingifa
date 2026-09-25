@@ -49,8 +49,8 @@ import androidx.compose.ui.unit.sp
 import com.example.audio.TtsManager
 import com.example.data.seed.ReadingListeningSeed
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SuccessGreen
 
@@ -74,11 +74,11 @@ fun ReadingDetailScreen(
     var userAnswers by remember { mutableStateOf(mutableMapOf<String, Int>()) }
     var checkedAnswers by remember { mutableStateOf(mutableMapOf<String, Boolean>()) }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = passage.titleFa,
+                    title = passage.titleEn,
                     onBack = onBack
                 )
             }
@@ -112,7 +112,7 @@ fun ReadingDetailScreen(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "💡 راهنما: روی هر کلمه در متن که معنی آن را نمی‌دانید ضربه بزنید تا معنی، تلفظ و گزینه افزودن به لغات شما نمایان شود.",
+                            text = "💡 Tip: Tap any word in the passage to view its definition, pronunciation, and add it to your vocabulary.",
                             style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
                     }
@@ -126,7 +126,7 @@ fun ReadingDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "متن آکادمیک (${passage.exam}):",
+                            text = "Academic Passage (${passage.exam}):",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = PrimaryBlue)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -146,7 +146,7 @@ fun ReadingDetailScreen(
                 // Comprehension Questions
                 if (passage.questions.isNotEmpty()) {
                     Text(
-                        text = "سوالات درک مطلب (Comprehension Questions):",
+                        text = "Comprehension Questions:",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -158,7 +158,7 @@ fun ReadingDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "سوال ${qIdx + 1}: ${q.questionEn}",
+                                    text = "Question ${qIdx + 1}: ${q.questionEn}",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -211,14 +211,14 @@ fun ReadingDetailScreen(
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                                     ) {
-                                        Text("بررسی پاسخ")
+                                        Text("Check Answer", fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 if (isChecked) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "تحلیل فارسی: ${q.explanationFa}",
+                                        text = "Explanation: ${q.explanationFa}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium
@@ -245,7 +245,7 @@ fun ReadingDetailScreen(
                         ) {
                             Text(text = detail.word, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                             IconButton(onClick = { tts.speak(detail.word) }) {
-                                Icon(imageVector = Icons.Default.VolumeUp, contentDescription = "پخش تلفظ")
+                                Icon(imageVector = Icons.Default.VolumeUp, contentDescription = "Play pronunciation")
                             }
                         }
                     },
@@ -256,12 +256,12 @@ fun ReadingDetailScreen(
                                 Spacer(modifier = Modifier.height(6.dp))
                             }
                             Text(
-                                text = "معنی: ${detail.persianMeaning}",
+                                text = "Meaning: ${detail.persianMeaning}",
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                             )
                             if (detail.englishDefinition.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "تعریف: ${detail.englishDefinition}", style = MaterialTheme.typography.bodySmall)
+                                Text(text = "Definition: ${detail.englishDefinition}", style = MaterialTheme.typography.bodySmall)
                             }
                             if (state.isWordSavedStatus != null) {
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -280,12 +280,12 @@ fun ReadingDetailScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("افزودن به لغات من")
+                            Text("Add to My Vocab")
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { viewModel.dismissWordPopup() }) {
-                            Text("بستن")
+                            Text("Close")
                         }
                     }
                 )

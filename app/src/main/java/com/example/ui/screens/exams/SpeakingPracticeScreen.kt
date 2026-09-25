@@ -97,8 +97,8 @@ import com.example.audio.TtsManager
 import com.example.data.model.IeltsSpeakingFeedback
 import com.example.data.model.IeltsSpeakingPrompt
 import com.example.data.model.IeltsSpeakingSessionRecord
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.MinimalStreakCard
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.SecondaryTeal
@@ -134,7 +134,7 @@ fun SpeakingPracticeScreen(
         }
     }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
@@ -142,11 +142,11 @@ fun SpeakingPracticeScreen(
                     title = {
                         Column {
                             Text(
-                                text = "شبیه‌ساز آزمون اسپیکینگ آیلتس",
+                                text = "IELTS Speaking Simulator",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "ممتحن هوش مصنوعی با بازخورد فارسی و تحلیل تلفظ",
+                                text = "AI Examiner with band scoring & pronunciation analysis",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
@@ -157,7 +157,7 @@ fun SpeakingPracticeScreen(
                         IconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "بازگشت"
+                                contentDescription = "Back"
                             )
                         }
                     },
@@ -183,7 +183,7 @@ fun SpeakingPracticeScreen(
                         IconButton(onClick = { showHistorySheet = !showHistorySheet }) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "تاریخچه آزمون‌ها",
+                                contentDescription = "Exam History",
                                 tint = if (showHistorySheet) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -237,7 +237,7 @@ fun SpeakingPracticeScreen(
                         onClick = { ieltsViewModel.selectPart(1) },
                         text = {
                             Text(
-                                text = "Part 1 (مصاحبه)",
+                                text = "Part 1 (Interview)",
                                 fontWeight = if (state.selectedPart == 1) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 12.sp
                             )
@@ -248,7 +248,7 @@ fun SpeakingPracticeScreen(
                         onClick = { ieltsViewModel.selectPart(2) },
                         text = {
                             Text(
-                                text = "Part 2 (کیو کارت)",
+                                text = "Part 2 (Cue Card)",
                                 fontWeight = if (state.selectedPart == 2) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 12.sp
                             )
@@ -259,7 +259,7 @@ fun SpeakingPracticeScreen(
                         onClick = { ieltsViewModel.selectPart(3) },
                         text = {
                             Text(
-                                text = "Part 3 (بحث تحلیلی)",
+                                text = "Part 3 (Discussion)",
                                 fontWeight = if (state.selectedPart == 3) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 12.sp
                             )
@@ -306,13 +306,13 @@ fun SpeakingPracticeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "پاسخ گفتاری شما (Speaking Response):",
+                                text = "Your Speaking Response:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
 
                             // Populate sample button
                             Text(
-                                text = "نمونه آزمایشی",
+                                text = "Sample Answer",
                                 color = PrimaryBlue,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -329,7 +329,7 @@ fun SpeakingPracticeScreen(
                             onValueChange = { ieltsViewModel.onTranscriptChanged(it) },
                             placeholder = {
                                 Text(
-                                    text = if (state.isRecording) "در حال ضبط صحبت‌های شما... بگویید و سپس متن را بررسی فرمایید." else "متن پاسخ خود را بگویید یا در این کادر بنویسید..."
+                                    text = if (state.isRecording) "Recording your speech... Speak clearly and review text." else "Speak your response or type here..."
                                 )
                             },
                             minLines = 4,
@@ -349,13 +349,13 @@ fun SpeakingPracticeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "تعداد کلمات: $wordCount",
+                                text = "Word count: $wordCount",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            val targetWords = if (state.selectedPart == 2) "۱۵۰ تا ۲۲۰ کلمه برای ۲ دقیقه" else "۴۰ تا ۷۰ کلمه"
+                            val targetWords = if (state.selectedPart == 2) "150 - 220 words for 2 min" else "40 - 70 words"
                             Text(
-                                text = "هدف پیشنهادی: $targetWords",
+                                text = "Target: $targetWords",
                                 fontSize = 11.sp,
                                 color = if (wordCount >= 60) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -381,12 +381,12 @@ fun SpeakingPracticeScreen(
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("در حال ارزیابی با ۴ معیار رسمی آیلتس...", fontSize = 12.sp)
+                                Text("Evaluating across 4 official IELTS criteria...", fontSize = 12.sp)
                             } else {
                                 Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "ارزیابی هوشمند و تحلیل کارنامه ممتحن (+۳۵ XP)",
+                                    text = "Evaluate with AI Examiner (+35 XP)",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
@@ -486,7 +486,7 @@ private fun IeltsCueCardView(
                     ) {
                         Icon(
                             imageVector = if (isExaminerSpeaking) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = "پخش سوال ممتحن",
+                            contentDescription = "Play examiner prompt",
                             tint = if (isExaminerSpeaking) Color.White else PrimaryBlue,
                             modifier = Modifier.size(20.dp)
                         )
@@ -551,7 +551,7 @@ private fun IeltsCueCardView(
             if (prompt.recommendedVocab.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "واژگان و کالوکیشن‌های پیشنهادی برای نمره ۷.۵+:",
+                        text = "Recommended Vocab & Collocations (Band 7.5+):",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -603,7 +603,7 @@ private fun IeltsCueCardView(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "تولید با هوش مصنوعی:",
+                    text = "AI Topics:",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue
@@ -662,7 +662,7 @@ private fun IeltsTimerSection(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "زمان آماده‌سازی (۱ دقیقه)",
+                        text = "Prep Timer (1 min)",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -692,7 +692,7 @@ private fun IeltsTimerSection(
                         ) {
                             Icon(
                                 imageVector = if (isPrepRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = "آماده‌سازی",
+                                contentDescription = "Prep Timer",
                                 tint = AccentGold
                             )
                         }
@@ -702,7 +702,7 @@ private fun IeltsTimerSection(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Replay,
-                                contentDescription = "ریست",
+                                contentDescription = "Reset",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -741,7 +741,7 @@ private fun IeltsTimerSection(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = "زمان صحبت شما",
+                    text = "Speaking Duration",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -767,14 +767,14 @@ private fun IeltsTimerSection(
                 ) {
                     Icon(
                         imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                        contentDescription = "ضبط صحبت",
+                        contentDescription = "Record Speech",
                         tint = Color.White,
                         modifier = Modifier.size(22.dp)
                     )
                 }
 
                 Text(
-                    text = if (isRecording) "در حال ضبط... (برای توقف کلیک کنید)" else "برای شروع ضبط کلیک کنید",
+                    text = if (isRecording) "Recording... (tap to stop)" else "Tap mic to start speaking",
                     fontSize = 9.sp,
                     color = if (isRecording) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -807,12 +807,12 @@ private fun IeltsSpeakingFeedbackDashboard(
             ) {
                 Column {
                     Text(
-                        text = "کارنامه و نمره تخمینی ممتحن آیلتس",
+                        text = "IELTS Examiner Scorecard",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "بر اساس ۴ معیار ارزیابی استاندارد کمبریج",
+                        text = "Based on Cambridge 4 Assessment Criteria",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -910,7 +910,7 @@ private fun IeltsSpeakingFeedbackDashboard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "اصلاح اشتباهات متداول زبان‌آموزان ایرانی:",
+                                text = "Key Pitfalls & Pronunciation for Persian Speakers:",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 color = Color(0xFFB45309)
@@ -933,7 +933,7 @@ private fun IeltsSpeakingFeedbackDashboard(
             if (feedback.vocabUpgrades.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "ارتقای واژگان شما به نمره بالای ۸ (Vocabulary Upgrades):",
+                        text = "Band 8+ Vocabulary Upgrades:",
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1006,7 +1006,7 @@ private fun IeltsSpeakingFeedbackDashboard(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "نمونه پاسخ استاندارد ممتحن (Band 8.5 Model Answer):",
+                                    text = "Band 8.5 Model Answer:",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
                                     color = PrimaryBlue
@@ -1019,7 +1019,7 @@ private fun IeltsSpeakingFeedbackDashboard(
                             ) {
                                 Icon(
                                     imageVector = if (isModelSpeaking) Icons.Default.GraphicEq else Icons.AutoMirrored.Filled.VolumeUp,
-                                    contentDescription = "پخش صوتی نمونه پاسخ",
+                                    contentDescription = "Play Model Answer",
                                     tint = PrimaryBlue,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1076,7 +1076,7 @@ private fun IeltsCriterionScoreCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = titleFa,
+                    text = titleEn,
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -1089,7 +1089,7 @@ private fun IeltsCriterionScoreCard(
                 )
             }
             Text(
-                text = titleEn,
+                text = titleFa,
                 fontSize = 9.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1127,12 +1127,12 @@ private fun IeltsSpeakingHistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "آزمون‌های اسپیکینگ پیشین در دیتابیس (${sessions.size} مورد):",
+                    text = "Previous Speaking Sessions (${sessions.size}):",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "بستن ✕",
+                    text = "Close ✕",
                     fontSize = 11.sp,
                     color = PrimaryBlue,
                     modifier = Modifier.clickable { onClose() }

@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.StreakInfo
 import com.example.ui.components.CefrBadge
-import com.example.ui.components.PersianRtlLayout
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -77,7 +77,7 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     val streakInfo by viewModel.streakInfo.collectAsState()
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,10 +85,10 @@ fun HomeScreen(
             contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Streamlined Header with Name, Level, and Streak Pill
+            // 1. Header with Name, Level, and Streak Pill
             item {
                 HomeHeader(
-                    name = state.userProfile.userName,
+                    name = state.userProfile.userName.ifBlank { "Learner" },
                     goal = state.userProfile.targetGoal,
                     level = state.userProfile.currentLevel,
                     streakInfo = streakInfo
@@ -117,8 +117,8 @@ fun HomeScreen(
             // 4. Primary Learning Hub (2x2 Grid)
             item {
                 Text(
-                    text = "بخش‌های اصلی یادگیری",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    text = "Core Learning Modules",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -145,7 +145,7 @@ fun HomeScreen(
             // 6. Auxiliary Quick Tools Strip
             item {
                 Text(
-                    text = "ابزارهای کمکی",
+                    text = "Smart AI Tools",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -176,12 +176,12 @@ private fun HomeHeader(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "سلام، $name",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                text = "Welcome, $name",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "مسیر هدف: $goal",
+                text = "Target Goal: $goal",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -198,9 +198,9 @@ private fun HomeHeader(
                 border = BorderStroke(1.dp, AccentGold.copy(alpha = 0.35f))
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocalFireDepartment,
@@ -209,7 +209,7 @@ private fun HomeHeader(
                         modifier = Modifier.size(15.dp)
                     )
                     Text(
-                        text = "${streakInfo.currentStreak} روز",
+                        text = "${streakInfo.currentStreak} Days",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFB45309)
@@ -233,7 +233,7 @@ private fun ModernFocusHeroCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (hasDue) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
@@ -243,7 +243,7 @@ private fun ModernFocusHeroCard(
             if (hasDue) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
             else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -256,14 +256,14 @@ private fun ModernFocusHeroCard(
             ) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
-                        text = if (hasDue) "مرور هوشمند امروز (SRS)" else "برنامه امروز تکمیل است! 🎉",
+                        text = if (hasDue) "Smart Spaced Review (SRS)" else "All Caught Up! 🎉",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (hasDue) "$dueCount واژه برای تثبیت حافظه آماده مرور است."
-                        else "تمام واژه‌های موعد امروز را مرور کرده‌اید. آماده کلمات جدید هستید؟",
+                        text = if (hasDue) "$dueCount cards are ready for memory consolidation today."
+                        else "You have reviewed all cards due today. Ready to explore new words?",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         else MaterialTheme.colorScheme.onSurfaceVariant
@@ -276,7 +276,7 @@ private fun ModernFocusHeroCard(
                     contentColor = Color.White
                 ) {
                     Text(
-                        text = if (hasDue) "$dueCount واژه" else "انجام شد",
+                        text = if (hasDue) "$dueCount Due" else "Done",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
@@ -301,7 +301,7 @@ private fun ModernFocusHeroCard(
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (hasDue) "شروع مرور هوشمند" else "تمرین آزاد واژگان",
+                        text = if (hasDue) "Start SRS Review" else "Free Practice",
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
@@ -315,7 +315,7 @@ private fun ModernFocusHeroCard(
                 ) {
                     Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(15.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("معلم AI", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("AI Tutor", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -335,21 +335,21 @@ private fun MinimalStatsBar(
         CompactStatPill(
             icon = Icons.Default.AutoStories,
             value = words.toString(),
-            label = "بانک واژگان",
+            label = "Total Vocab",
             color = PrimaryBlue,
             modifier = Modifier.weight(1f)
         )
         CompactStatPill(
             icon = Icons.Default.School,
             value = learned.toString(),
-            label = "مسلط شده",
+            label = "Mastered",
             color = SuccessGreen,
             modifier = Modifier.weight(1f)
         )
         CompactStatPill(
             icon = Icons.Default.FitnessCenter,
             value = "$xp",
-            label = "امتیاز XP",
+            label = "XP Points",
             color = AccentGold,
             modifier = Modifier.weight(1f)
         )
@@ -413,7 +413,7 @@ private fun PrimaryActionGrid(
         ) {
             ModernActionTile(
                 icon = Icons.Default.School,
-                title = "مسیر آزمون‌ها",
+                title = "Exam Tracks",
                 subtitle = "IELTS · TOEFL · GRE",
                 accentColor = PrimaryBlue,
                 onClick = onNavigateToExamTracks,
@@ -421,8 +421,8 @@ private fun PrimaryActionGrid(
             )
             ModernActionTile(
                 icon = Icons.Default.RecordVoiceOver,
-                title = "اسپیکینگ & مکالمه",
-                subtitle = "شبیه‌ساز هوشمند صوتی",
+                title = "Speaking AI",
+                subtitle = "Fluency & Voice AI",
                 accentColor = SuccessGreen,
                 onClick = onNavigateToSpeaking,
                 modifier = Modifier.weight(1f)
@@ -434,16 +434,16 @@ private fun PrimaryActionGrid(
         ) {
             ModernActionTile(
                 icon = Icons.Default.EditNote,
-                title = "رایتینگ & نگارش",
-                subtitle = "تصحیح و نمره‌دهی فوری",
+                title = "Writing Grader",
+                subtitle = "Instant Scoring & Tips",
                 accentColor = Color(0xFF8B5CF6),
                 onClick = onNavigateToWriting,
                 modifier = Modifier.weight(1f)
             )
             ModernActionTile(
                 icon = Icons.Default.Warning,
-                title = "دفترچه اشتباهات",
-                subtitle = "مرور و حل خطاهای قبلی",
+                title = "Mistake Log",
+                subtitle = "Target Weak Points",
                 accentColor = ErrorRed,
                 onClick = onNavigateToMistakes,
                 modifier = Modifier.weight(1f)
@@ -527,12 +527,12 @@ private fun CompactDailyPlanBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "برنامه روزانه: $completedMinutes از $plannedMinutes دقیقه",
+                    text = "Daily Target: $completedMinutes of $plannedMinutes mins",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${(progress * 100).toInt()}٪",
+                    text = "${(progress * 100).toInt()}%",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -565,7 +565,7 @@ private fun CompactDailyPlanBar(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(Icons.Default.AutoStories, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
-                        Text("کتابخانه واژگان", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        Text("Vocabulary Bank", fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
@@ -581,7 +581,7 @@ private fun CompactDailyPlanBar(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(Icons.Default.School, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
-                        Text("درس‌های مهارت", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        Text("Skills & Grammar", fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -603,17 +603,17 @@ private fun QuickToolsHorizontalStrip(
     ) {
         QuickToolChip(
             icon = Icons.Default.Psychology,
-            title = "معلم AI",
+            title = "AI Tutor",
             onClick = onNavigateToTutor
         )
         QuickToolChip(
             icon = Icons.Default.AutoAwesome,
-            title = "کارت واژه هوشمند",
+            title = "AI Vocab Card",
             onClick = onNavigateToAiVocabCard
         )
         QuickToolChip(
             icon = Icons.Default.FitnessCenter,
-            title = "آزمون تعیین سطح",
+            title = "Diagnostic Test",
             onClick = onNavigateToDiagnostic
         )
     }

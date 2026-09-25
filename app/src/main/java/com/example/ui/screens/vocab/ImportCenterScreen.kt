@@ -64,9 +64,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.importer.DuplicateAction
 import com.example.ui.components.CefrBadge
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
-import com.example.ui.components.PersianSectionHeader
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -87,11 +86,11 @@ fun ImportCenterScreen(
     var selectedDuplicateAction by remember { mutableStateOf(DuplicateAction.MERGE) }
     var duplicateDropdownExpanded by remember { mutableStateOf(false) }
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "ورود متمرکز لغات (Import Center)",
+                    title = "Vocabulary Import Center",
                     onBack = onBack
                 )
             }
@@ -118,7 +117,7 @@ fun ImportCenterScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "پیش‌نمایش استخراج لغات (${state.fileImportPreview.count { it.isSelected }} از ${state.fileImportPreview.size})",
+                                    text = "Import Preview (${state.fileImportPreview.count { it.isSelected }} of ${state.fileImportPreview.size})",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Row {
@@ -126,14 +125,14 @@ fun ImportCenterScreen(
                                         onClick = { viewModel.selectAllFilePreview(true) },
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("انتخاب همه", fontSize = 11.sp)
+                                        Text("Select All", fontSize = 11.sp)
                                     }
                                     Spacer(modifier = Modifier.width(6.dp))
                                     OutlinedButton(
                                         onClick = { viewModel.selectAllFilePreview(false) },
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("عدم انتخاب", fontSize = 11.sp)
+                                        Text("None", fontSize = 11.sp)
                                     }
                                 }
                             }
@@ -147,14 +146,14 @@ fun ImportCenterScreen(
                             ) {
                                 OutlinedTextField(
                                     value = when (selectedDuplicateAction) {
-                                        DuplicateAction.MERGE -> "ادغام با لغات قبلی (Merge - پیشنهادی)"
-                                        DuplicateAction.SKIP -> "نادیده‌گرفتن تکراری‌ها (Skip)"
-                                        DuplicateAction.UPDATE -> "به‌روزرسانی با اطلاعات جدید (Update)"
-                                        DuplicateAction.KEEP_BOTH -> "ثبت مجدد هر دو نسخه (Keep Both)"
+                                        DuplicateAction.MERGE -> "Merge with existing words (Recommended)"
+                                        DuplicateAction.SKIP -> "Skip duplicates (Skip)"
+                                        DuplicateAction.UPDATE -> "Update with new data (Update)"
+                                        DuplicateAction.KEEP_BOTH -> "Keep both copies (Keep Both)"
                                     },
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("شیوه مدیریت لغات تکراری") },
+                                    label = { Text("Duplicate Handling Strategy") },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = duplicateDropdownExpanded) },
                                     modifier = Modifier
                                         .menuAnchor()
@@ -165,28 +164,28 @@ fun ImportCenterScreen(
                                     onDismissRequest = { duplicateDropdownExpanded = false }
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("ادغام با لغات قبلی (Merge - پیشنهادی)") },
+                                        text = { Text("Merge with existing words (Recommended)") },
                                         onClick = {
                                             selectedDuplicateAction = DuplicateAction.MERGE
                                             duplicateDropdownExpanded = false
                                         }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("نادیده‌گرفتن تکراری‌ها (Skip)") },
+                                        text = { Text("Skip duplicates (Skip)") },
                                         onClick = {
                                             selectedDuplicateAction = DuplicateAction.SKIP
                                             duplicateDropdownExpanded = false
                                         }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("به‌روزرسانی با اطلاعات جدید (Update)") },
+                                        text = { Text("Update with new data (Update)") },
                                         onClick = {
                                             selectedDuplicateAction = DuplicateAction.UPDATE
                                             duplicateDropdownExpanded = false
                                         }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("ثبت مجدد هر دو نسخه (Keep Both)") },
+                                        text = { Text("Keep both copies (Keep Both)") },
                                         onClick = {
                                             selectedDuplicateAction = DuplicateAction.KEEP_BOTH
                                             duplicateDropdownExpanded = false
@@ -243,7 +242,7 @@ fun ImportCenterScreen(
                                                     shape = RoundedCornerShape(6.dp)
                                                 ) {
                                                     Text(
-                                                        text = "قبلاً ثبت شده",
+                                                        text = "Duplicate",
                                                         color = Color(0xFFB45309),
                                                         fontSize = 10.sp,
                                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -277,7 +276,7 @@ fun ImportCenterScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("انصراف")
+                            Text("Cancel")
                         }
 
                         Button(
@@ -290,7 +289,7 @@ fun ImportCenterScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Check, contentDescription = null)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("تایید و واردسازی (${state.fileImportPreview.count { it.isSelected }} واژه)", fontWeight = FontWeight.Bold)
+                            Text("Import (${state.fileImportPreview.count { it.isSelected }} Words)", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -313,7 +312,7 @@ fun ImportCenterScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "روش‌های افزودن سریع:",
+                                text = "Quick Add Options:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -323,21 +322,21 @@ fun ImportCenterScreen(
                             ) {
                                 QuickMethodButton(
                                     icon = Icons.Default.Add,
-                                    title = "افزودن دستی",
+                                    title = "Manual Add",
                                     color = PrimaryBlue,
                                     onClick = onNavigateToAddManual,
                                     modifier = Modifier.weight(1f)
                                 )
                                 QuickMethodButton(
                                     icon = Icons.Default.AutoAwesome,
-                                    title = "ساخت با AI",
+                                    title = "AI Generate",
                                     color = PrimaryBlue,
                                     onClick = onNavigateToAiGenerate,
                                     modifier = Modifier.weight(1f)
                                 )
                                 QuickMethodButton(
                                     icon = Icons.Default.Inventory2,
-                                    title = "بسته‌های لغت",
+                                    title = "Word Packs",
                                     color = PrimaryBlue,
                                     onClick = onNavigateToPacks,
                                     modifier = Modifier.weight(1f)
@@ -354,7 +353,7 @@ fun ImportCenterScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "واردسازی از فایل و متن:",
+                                text = "Import from text or file:",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
@@ -365,7 +364,7 @@ fun ImportCenterScreen(
                             ) {
                                 FormatTabButton(
                                     icon = Icons.Default.ContentPaste,
-                                    label = "Paste متن",
+                                    label = "Paste Text",
                                     isSelected = selectedMethod == "PASTE",
                                     onClick = {
                                         selectedMethod = "PASTE"
@@ -375,7 +374,7 @@ fun ImportCenterScreen(
                                 )
                                 FormatTabButton(
                                     icon = Icons.Default.Description,
-                                    label = "فایل CSV",
+                                    label = "CSV File",
                                     isSelected = selectedMethod == "CSV",
                                     onClick = {
                                         selectedMethod = "CSV"
@@ -385,7 +384,7 @@ fun ImportCenterScreen(
                                 )
                                 FormatTabButton(
                                     icon = Icons.Default.DataObject,
-                                    label = "فایل JSON",
+                                    label = "JSON File",
                                     isSelected = selectedMethod == "JSON",
                                     onClick = {
                                         selectedMethod = "JSON"
@@ -403,9 +402,9 @@ fun ImportCenterScreen(
 
                             // Format Hint
                             val hintText = when (selectedMethod) {
-                                "PASTE" -> "می‌توانید کلمات را خط به خط، یا با فرمت 'word = معنی' کپی و جای‌گذاری نمایید."
-                                "CSV" -> "فرمت استاندارد: word,persianMeaning,level ستون‌ها به طور خودکار شناسایی می‌شوند."
-                                "JSON" -> "فرمت استاندارد تولیدشده توسط ChatGPT، Gemini یا خروجی همین اپلیکیشن."
+                                "PASTE" -> "You can paste words line-by-line, or in 'word = meaning' format."
+                                "CSV" -> "Standard format: word,persianMeaning,level. Columns are auto-detected."
+                                "JSON" -> "Standard JSON format generated by ChatGPT, Gemini, or exported from this app."
                                 else -> ""
                             }
                             Text(
@@ -419,7 +418,7 @@ fun ImportCenterScreen(
                             OutlinedTextField(
                                 value = rawInputText,
                                 onValueChange = { rawInputText = it },
-                                placeholder = { Text("محتوای متنی یا فایل خود را اینجا بچسبانید (Paste)...") },
+                                placeholder = { Text("Paste your raw vocabulary text or JSON/CSV content here...") },
                                 minLines = 7,
                                 maxLines = 14,
                                 modifier = Modifier.fillMaxWidth(),
@@ -441,7 +440,7 @@ fun ImportCenterScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.FileUpload, contentDescription = null)
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("پردازش و نمایش پیش‌نمایش", fontWeight = FontWeight.Bold)
+                                Text("Process & Preview Words", fontWeight = FontWeight.Bold)
                             }
                         }
                     }

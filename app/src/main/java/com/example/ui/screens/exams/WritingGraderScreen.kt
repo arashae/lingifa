@@ -44,8 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.EnglishLtrLayout
 import com.example.ui.components.LinguaTopAppBar
-import com.example.ui.components.PersianRtlLayout
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.PrimaryBlue
@@ -59,11 +59,11 @@ fun WritingGraderScreen(
     val state by viewModel.uiState.collectAsState()
     val activePrompt = state.prompts.getOrNull(state.selectedPromptIndex)
 
-    PersianRtlLayout {
+    EnglishLtrLayout {
         Scaffold(
             topBar = {
                 LinguaTopAppBar(
-                    title = "تصحیح و ارزیابی رایتینگ هوشمند",
+                    title = "IELTS Writing Evaluator",
                     onBack = onBack
                 )
             }
@@ -88,7 +88,7 @@ fun WritingGraderScreen(
                         FilterChip(
                             selected = state.selectedPromptIndex == index,
                             onClick = { viewModel.selectPrompt(index) },
-                            label = { Text(prompt.titleFa.take(28) + "...", fontSize = 11.sp) }
+                            label = { Text(prompt.titleEn.take(28) + "...", fontSize = 11.sp) }
                         )
                     }
                 }
@@ -110,11 +110,13 @@ fun WritingGraderScreen(
                                 text = activePrompt.promptTextEn,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "راهنمای فارسی: ${activePrompt.guideFa}",
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            )
+                            if (activePrompt.guideFa.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Guide: ${activePrompt.guideFa}",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                )
+                            }
                         }
                     }
 
@@ -131,11 +133,11 @@ fun WritingGraderScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "متن مقاله شما (Essay):",
+                                    text = "Your Essay Submission:",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Text(
-                                    text = "تعداد واژگان: ${state.wordCount} کلمه (حداقل ۲۵۰ کلمه)",
+                                    text = "Word Count: ${state.wordCount} words (Min 250)",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = if (state.wordCount >= 250) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
@@ -166,11 +168,11 @@ fun WritingGraderScreen(
                                 if (state.isEvaluatingWriting) {
                                     CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("در حال ارزیابی طبق ۴ معیار رسمی آیلتس...", fontSize = 12.sp)
+                                    Text("Evaluating with 4 official IELTS criteria...", fontSize = 12.sp)
                                 } else {
                                     Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("ارزیابی و نمره‌دهی با هوش مصنوعی", fontWeight = FontWeight.Bold)
+                                    Text("Evaluate & Grade with AI", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -192,14 +194,14 @@ fun WritingGraderScreen(
                                 ) {
                                     Column {
                                         Text(
-                                            text = "نمره تخمینی آیلتس: Band ${result.estimatedBand}",
+                                            text = "Estimated IELTS Score: Band ${result.estimatedBand}",
                                             style = MaterialTheme.typography.titleLarge.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = PrimaryBlue
                                             )
                                         )
                                         Text(
-                                            text = "⚠️ این نمره تخمینی هوش مصنوعی است و نمره رسمی IELTS نیست.",
+                                            text = "⚠️ This is an AI assessment and not an official IELTS score.",
                                             style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         )
                                     }
@@ -222,7 +224,7 @@ fun WritingGraderScreen(
 
                                 // Feedback Text
                                 Text(
-                                    text = "ارزیابی کلی به فارسی:",
+                                    text = "Overall Evaluation:",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -234,7 +236,7 @@ fun WritingGraderScreen(
                                 if (result.strengthsFa.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = "نقاط قوت مقاله:",
+                                        text = "Essay Strengths:",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = SuccessGreen)
                                     )
                                     result.strengthsFa.forEach { s ->
@@ -245,7 +247,7 @@ fun WritingGraderScreen(
                                 if (result.mainIssuesFa.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = "مشکلات اصلی نیازمند اصلاح:",
+                                        text = "Areas for Improvement:",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ErrorRed)
                                     )
                                     result.mainIssuesFa.forEach { issue ->
@@ -256,7 +258,7 @@ fun WritingGraderScreen(
                                 if (result.sentenceCorrections.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Text(
-                                        text = "جملاتی که باید اصلاح شوند:",
+                                        text = "Sentence Corrections & Better Alternatives:",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
@@ -267,10 +269,10 @@ fun WritingGraderScreen(
                                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                                         ) {
                                             Column(modifier = Modifier.padding(10.dp)) {
-                                                Text("جمله اصلی: ${corr.original}", style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed))
-                                                Text("شکل اصلاح‌شده: ${corr.corrected}", style = MaterialTheme.typography.bodySmall.copy(color = SuccessGreen, fontWeight = FontWeight.Bold))
+                                                Text("Original: ${corr.original}", style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed))
+                                                Text("Improved: ${corr.corrected}", style = MaterialTheme.typography.bodySmall.copy(color = SuccessGreen, fontWeight = FontWeight.Bold))
                                                 if (corr.explanationFa.isNotEmpty()) {
-                                                    Text("دلیل به فارسی: ${corr.explanationFa}", style = MaterialTheme.typography.labelSmall)
+                                                    Text("Explanation: ${corr.explanationFa}", style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
                                         }

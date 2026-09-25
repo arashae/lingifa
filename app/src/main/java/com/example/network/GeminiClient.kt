@@ -59,8 +59,8 @@ object GeminiClient {
         ""
     }
 
-    /** Gemini validity must only inspect the Gemini credential.
-     * Calling AiPreferences.hasValidAiKey() here caused infinite mutual recursion when no DeepSeek key existed.
+    /** Gemini validity only inspects Gemini's own credential.
+     * DeepSeek availability is handled separately to avoid recursive key checks.
      */
     fun hasValidApiKey(): Boolean {
         val key = getApiKey()
@@ -68,9 +68,19 @@ object GeminiClient {
     }
 
     suspend fun generateVocabularyList(userPrompt: String): Result<List<VocabularyItem>> = withContext(Dispatchers.IO) {
+        val deepSeekKey = AiPreferences.getDeepSeekApiKey()
+        if (deepSeekKey.isNotBlank()) {
+            val deepSeekResult = DeepSeekClient.generateVocabularyList(
+                apiKey = deepSeekKey,
+                userPrompt = userPrompt,
+                model = AiPreferences.getDeepSeekModel()
+            )
+            if (deepSeekResult.isSuccess) return@withContext deepSeekResult
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.failure(Exception("Gemini fallback is not configured."))
+            return@withContext Result.failure(Exception("AI service is not configured. Add a DeepSeek key in Profile."))
         }
 
         val systemInstruction = """
@@ -155,6 +165,17 @@ object GeminiClient {
     }
 
     suspend fun enrichWord(word: String, optionalPersian: String = ""): Result<VocabularyItem> = withContext(Dispatchers.IO) {
+        val deepSeekKey = AiPreferences.getDeepSeekApiKey()
+        if (deepSeekKey.isNotBlank()) {
+            val deepSeekResult = DeepSeekClient.enrichWord(
+                apiKey = deepSeekKey,
+                word = word,
+                optionalPersian = optionalPersian,
+                model = AiPreferences.getDeepSeekModel()
+            )
+            if (deepSeekResult.isSuccess) return@withContext deepSeekResult
+        }
+
         generateVocabularyList(
             "Word: '$word'. Optional Persian context: '$optionalPersian'. Return one accurate learner-dictionary entry."
         ).mapCatching { list ->
@@ -163,9 +184,30 @@ object GeminiClient {
     }
 
     suspend fun askTutor(userQuestion: String, conversationContext: String = ""): Result<String> = withContext(Dispatchers.IO) {
+        val deepSeekKey = AiPreferences.getDeepSeekApiKey()
+        if (deepSeekKey.isNotBlank()) {
+            val systemInstruction = """
+                You are LinguaFa's English tutor for Persian speakers preparing for IELTS, TOEFL, and GRE.
+                Explain primarily in fluent Persian, keep English examples natural, and encourage active recall,
+                accurate collocation, paraphrasing, and self-correction.
+            """.trimIndent()
+            val userText = if (conversationContext.isBlank()) {
+                userQuestion
+            } else {
+                "Context:\n$conversationContext\n\nStudent question:\n$userQuestion"
+            }
+            val deepSeekResult = DeepSeekClient.chat(
+                apiKey = deepSeekKey,
+                systemPrompt = systemInstruction,
+                userMessage = userText,
+                model = AiPreferences.getDeepSeekModel()
+            )
+            if (deepSeekResult.isSuccess) return@withContext deepSeekResult
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.failure(Exception("Gemini fallback is not configured."))
+            return@withContext Result.failure(Exception("AI service is not configured. Add a DeepSeek key in Profile."))
         }
 
         val systemInstruction = """
@@ -182,9 +224,20 @@ object GeminiClient {
     }
 
     suspend fun evaluateEssay(taskPrompt: String, essayText: String): Result<WritingEvaluationResult> = withContext(Dispatchers.IO) {
+        val deepSeekKey = AiPreferences.getDeepSeekApiKey()
+        if (deepSeekKey.isNotBlank()) {
+            val deepSeekResult = DeepSeekClient.evaluateEssay(
+                apiKey = deepSeekKey,
+                taskPrompt = taskPrompt,
+                essayText = essayText,
+                model = AiPreferences.getDeepSeekModel()
+            )
+            if (deepSeekResult.isSuccess) return@withContext deepSeekResult
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.failure(Exception("Gemini fallback is not configured."))
+            return@withContext Result.failure(Exception("AI evaluation is not configured. Add a DeepSeek key in Profile."))
         }
 
         val prompt = """

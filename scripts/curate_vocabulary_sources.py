@@ -563,14 +563,57 @@ def make_missing_card(word: str, ngsl: dict[str, dict], nawl: dict[str, dict], c
     return row
 
 
+def load_existing_general_cards() -> dict[str, dict]:
+    """Read existing cards from general core packs to preserve manual curation."""
+    out_dir = ASSET_ROOT / GENERAL_DIR
+    existing: dict[str, dict] = {}
+    if not out_dir.exists():
+        return existing
+    for path in sorted(out_dir.glob(f"{GENERAL_PREFIX}_*.jsonl")):
+        if not path.is_file():
+            continue
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                item = json.loads(line)
+                word = norm(item.get("word"))
+                if word and word not in existing:
+                    existing[word] = item
+        except Exception:
+            continue
+    return existing
+
+
 def write_general_pack(rows: list[dict]) -> list[dict]:
     out_dir = ASSET_ROOT / GENERAL_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
+    existing_cards = load_existing_general_cards()
+
+    # Safeguard: preserve existing manual curation edits in general core packs.
+    # Existing curated cards take precedence over upstream raw/unreviewed cards.
+    final_rows: list[dict] = []
+    seen: set[str] = set()
+    for row in rows:
+        w = norm(row.get("word"))
+        if w in existing_cards:
+            final_rows.append(existing_cards[w])
+        else:
+            final_rows.append(row)
+        seen.add(w)
+
+    for w, card in existing_cards.items():
+        if w not in seen:
+            final_rows.append(card)
+
+    final_rows.sort(key=lambda x: (int(x.get("learningOrder") or 99999), norm(x.get("word"))))
+
     for old in out_dir.glob(f"{GENERAL_PREFIX}_*.jsonl"):
         old.unlink()
     chunks = []
-    for chunk_index, start in enumerate(range(0, len(rows), CHUNK_SIZE), start=1):
-        part = rows[start:start + CHUNK_SIZE]
+    for chunk_index, start in enumerate(range(0, len(final_rows), CHUNK_SIZE), start=1):
+        part = final_rows[start:start + CHUNK_SIZE]
         path = out_dir / f"{GENERAL_PREFIX}_{chunk_index:03d}.jsonl"
         path.write_text("".join(json.dumps(x, ensure_ascii=False, separators=(",", ":")) + "\n" for x in part), encoding="utf-8")
         chunks.append({
@@ -618,20 +661,27 @@ def main() -> None:
 
         # Build a General Core pack from the union of NGSL and NAWL. Existing cards
         # are copied and re-leveled with CEFR-J; missing words are admitted only with
-        # a real Persian dictionary entry.
+        # a real Persian dictionary entry. Existing manual curation edits in general
+        # core packs are preserved.
+        existing_general = load_existing_general_cards()
         words = sorted(set(ngsl) | set(nawl), key=lambda w: (0 if w in ngsl else 1, ngsl.get(w, {}).get("rank", 99999), nawl.get(w, {}).get("rank", 99999), w))
         general: list[dict] = []
         new_cards = 0
         for order, word in enumerate(words, start=1):
-            base = best.get(word)
-            if base:
-                card = json.loads(json.dumps(base, ensure_ascii=False))
-                card = add_source_metadata(card, ngsl, nawl, cefrj, general=True)
-                card["learningOrder"] = order
+            if word in existing_general:
+                card = json.loads(json.dumps(existing_general[word], ensure_ascii=False))
+                if "learningOrder" not in card or not card["learningOrder"]:
+                    card["learningOrder"] = order
             else:
-                card = make_missing_card(word, ngsl, nawl, cefrj, persian, openjam_ipa, order)
-                if card:
-                    new_cards += 1
+                base = best.get(word)
+                if base:
+                    card = json.loads(json.dumps(base, ensure_ascii=False))
+                    card = add_source_metadata(card, ngsl, nawl, cefrj, general=True)
+                    card["learningOrder"] = order
+                else:
+                    card = make_missing_card(word, ngsl, nawl, cefrj, persian, openjam_ipa, order)
+                    if card:
+                        new_cards += 1
             if card:
                 general.append(card)
 

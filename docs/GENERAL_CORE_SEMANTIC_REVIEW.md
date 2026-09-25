@@ -39,6 +39,13 @@
 - Added only high-confidence collocations and removed stale `needs-collocation` tags.
 - Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.
 
+## Batch 7: `general_core_002` cards 1–50
+
+- Reviewed every card in source order and replaced rare, technical, or mismatched senses with one deliberate general or academic sense per card.
+- Corrected POS conflicts, dictionary fragments, empty closed-class cards, Persian gloss drift, and non-aligned bilingual examples.
+- Added only high-confidence collocations and removed stale `needs-collocation` tags.
+- Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.
+
 ## Batch 6: cards 451–500
 
 - Reviewed every card in source order and selected dominant learner senses over rare gaming, anatomy, technical, or positional senses.

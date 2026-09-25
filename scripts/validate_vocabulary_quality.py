@@ -322,7 +322,7 @@ def _persian_person_categories(text: str) -> set[str]:
 
 def _number_values(text: str, persian: bool) -> set[int]:
     normalized = str(text).translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
-    values = {int(char) for char in normalized if char.isdigit()}
+    values = {int(value) for value in re.findall(r"\d+", normalized)}
     words = re.findall(r"[\u0600-\u06ff]+", normalized) if persian else re.findall(r"[a-z]+", normalized.lower())
     mapping = PERSIAN_NUMBERS if persian else ENGLISH_NUMBERS
     values.update(mapping[word] for word in words if word in mapping)

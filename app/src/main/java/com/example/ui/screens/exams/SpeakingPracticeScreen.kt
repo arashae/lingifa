@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.example.ui.screens.exams
 
 import androidx.compose.animation.core.FastOutSlowInEasing

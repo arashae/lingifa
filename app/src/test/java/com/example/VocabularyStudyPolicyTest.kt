@@ -101,6 +101,45 @@ class VocabularyStudyPolicyTest {
     }
 
     @Test
+    fun `daily plan counts match per-session queue caps`() {
+        val now = 2_000_000L
+        val due = (1..45).map { index ->
+            VocabularyItem(
+                id = index.toLong(),
+                word = "due$index",
+                persianMeaning = "مرور $index",
+                correctCount = 1,
+                mastery = 20,
+                nextReview = now - 1
+            )
+        }
+        val weak = (46..70).map { index ->
+            VocabularyItem(
+                id = index.toLong(),
+                word = "weak$index",
+                persianMeaning = "ضعیف $index",
+                correctCount = 2,
+                mastery = 40,
+                nextReview = now + 100_000
+            )
+        }
+        val unseen = (71..100).map { index ->
+            VocabularyItem(
+                id = index.toLong(),
+                word = "new$index",
+                persianMeaning = "جدید $index"
+            )
+        }
+
+        val plan = VocabularyStudyPolicy.dailyPlan(due + weak + unseen, newWordLimit = 15, now = now)
+
+        assertEquals(VocabularyStudyPolicy.MAX_DUE_REVIEWS_PER_SESSION, plan.dueReviews)
+        assertEquals(VocabularyStudyPolicy.MAX_WEAK_WORDS_PER_SESSION, plan.weakWords)
+        assertEquals(15, plan.newWords)
+        assertEquals(55, plan.total)
+    }
+
+    @Test
     fun `spelling and context mastery stay independent from semantic mastery`() {
         val original = VocabularyItem(
             word = "environment",

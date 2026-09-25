@@ -52,6 +52,10 @@ object VocabularyStudyPolicy {
     const val KEY_DAILY_NEW_LIMIT = "daily_new_word_limit"
     val DAILY_NEW_LIMIT_OPTIONS = listOf(10, 15, 20, 25)
 
+    // Keep the dashboard counts identical to what ReviewViewModel actually schedules per session.
+    const val MAX_DUE_REVIEWS_PER_SESSION = 30
+    const val MAX_WEAK_WORDS_PER_SESSION = 10
+
     const val IELTS_CORE_LIMIT = 2_000
     const val TOEFL_CORE_LIMIT = 2_500
     const val GRE_CORE_LIMIT = 2_000
@@ -170,7 +174,7 @@ object VocabularyStudyPolicy {
             .filter { it.correctCount + it.incorrectCount > 0 && it.nextReview <= now }
             .map { it.id }
             .toSet()
-        val weak = items.count {
+        val weakAvailable = items.count {
             it.correctCount + it.incorrectCount > 0 &&
                 it.id !in dueIds &&
                 it.mastery < 50 &&
@@ -178,8 +182,8 @@ object VocabularyStudyPolicy {
         }
         val unseen = items.count { lifecycle(it) == LearningLifecycle.UNSEEN }
         return VocabularyDailyPlan(
-            dueReviews = dueIds.size,
-            weakWords = weak,
+            dueReviews = minOf(MAX_DUE_REVIEWS_PER_SESSION, dueIds.size),
+            weakWords = minOf(MAX_WEAK_WORDS_PER_SESSION, weakAvailable),
             newWords = minOf(safeLimit, unseen),
             newAvailable = unseen,
             newWordLimit = safeLimit

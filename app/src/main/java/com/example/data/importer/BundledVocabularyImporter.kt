@@ -15,15 +15,17 @@ import org.json.JSONObject
 import java.util.Locale
 
 /**
- * Streaming importer for the large bundled IELTS/TOEFL/GRE vocabulary banks.
+ * Streaming importer for the bundled CEFR / IELTS / TOEFL / GRE banks.
  *
- * Dataset files are JSONL (one JSON object per line) so a 5k-9k word bank does not
- * have to be materialized in memory. The manifest is versioned and each chunk is
- * recorded after a successful import, making imports resumable and updateable.
+ * Besides importing, this layer performs conservative card-quality cleanup so old bootstrap rows
+ * do not permanently override richer bundled definitions/examples. The quality revision is part of
+ * the stored chunk version, therefore an app update can re-import all existing chunks once without
+ * changing the source dataset files themselves.
  */
 object BundledVocabularyImporter {
     private const val TAG = "BundledVocabImporter"
     private const val CATALOG_ASSET = "vocabulary/master_catalog.json"
+    private const val IMPORT_QUALITY_VERSION = "q2-english-first"
 
     data class ImportSummary(
         val importedChunks: Int = 0,
@@ -51,7 +53,6 @@ object BundledVocabularyImporter {
         val catalogText = try {
             context.assets.open(CATALOG_ASSET).bufferedReader().use { it.readText() }
         } catch (_: Exception) {
-            // The app can still run with Kotlin bootstrap data when no bundled catalog exists.
             return ImportSummary()
         }
 
@@ -68,13 +69,14 @@ object BundledVocabularyImporter {
         for (index in 0 until chunks.length()) {
             val chunk = chunks.getJSONObject(index)
             val chunkId = chunk.getString("id")
-            val version = chunk.getString("version")
+            val sourceVersion = chunk.getString("version")
+            val effectiveVersion = "$sourceVersion+$IMPORT_QUALITY_VERSION"
             val packId = chunk.getString("packId")
             val assetPath = chunk.getString("asset")
             val expectedItems = chunk.optInt("expectedItems", -1)
 
             val existingChunk = chunkDao.get(chunkId)
-            if (existingChunk?.version == version &&
+            if (existingChunk?.version == effectiveVersion &&
                 (expectedItems < 0 || existingChunk.itemCount == expectedItems)
             ) {
                 skippedChunks++
@@ -87,7 +89,7 @@ object BundledVocabularyImporter {
                     database = database,
                     assetPath = assetPath,
                     packId = packId,
-                    datasetVersion = version,
+                    datasetVersion = effectiveVersion,
                     vocabularyDao = vocabularyDao,
                     packItemDao = packItemDao
                 )
@@ -102,7 +104,7 @@ object BundledVocabularyImporter {
                     VocabularyDatasetChunk(
                         chunkId = chunkId,
                         packId = packId,
-                        version = version,
+                        version = effectiveVersion,
                         itemCount = result.processedItems
                     )
                 )
@@ -173,12 +175,7 @@ object BundledVocabularyImporter {
                     existing.id
                 }
 
-                packItemDao.insert(
-                    VocabularyPackItem(
-                        packId = packId,
-                        vocabularyId = vocabularyId
-                    )
-                )
+                packItemDao.insert(VocabularyPackItem(packId = packId, vocabularyId = vocabularyId))
                 memberships++
                 processed++
             }
@@ -196,25 +193,37 @@ object BundledVocabularyImporter {
         normalizedWord: String,
         datasetVersion: String
     ): VocabularyItem {
+        val word = getString("word").trim()
+        val partOfSpeech = optString("partOfSpeech", "word").trim().ifBlank { "word" }
+        val definition = cleanDefinition(optString("englishDefinition"))
+        val example = cleanExample(optString("example"))
+        val rawTags = stringList("tags")
+        val qualityTags = buildList {
+            if (definition.isBlank()) add("needs-definition")
+            if (example.isBlank()) add("needs-example")
+        }
+        val collocations = sanitizeCollocations(word, partOfSpeech, stringList("collocations"))
+        val finalQualityTags = if (collocations.isEmpty()) qualityTags + "needs-collocation" else qualityTags
+
         return VocabularyItem(
-            word = getString("word").trim(),
+            word = word,
             normalizedWord = normalizedWord,
-            ipa = optString("ipa"),
-            persianMeaning = getString("persianMeaning").trim(),
-            englishDefinition = optString("englishDefinition"),
-            partOfSpeech = optString("partOfSpeech", "word"),
-            example = optString("example"),
-            examplePersian = optString("examplePersian"),
-            cefrLevel = optString("cefrLevel", "B2"),
-            synonyms = stringList("synonyms"),
-            antonyms = stringList("antonyms"),
-            collocations = stringList("collocations"),
-            wordFamily = stringList("wordFamily"),
-            commonMistakes = optString("commonMistakes"),
+            ipa = cleanInlineText(optString("ipa")),
+            persianMeaning = cleanInlineText(getString("persianMeaning")),
+            englishDefinition = definition,
+            partOfSpeech = partOfSpeech,
+            example = example,
+            examplePersian = cleanExample(optString("examplePersian")),
+            cefrLevel = optString("cefrLevel", "B2").trim().uppercase(Locale.US),
+            synonyms = sanitizeLexicalList(word, stringList("synonyms")),
+            antonyms = sanitizeLexicalList(word, stringList("antonyms")),
+            collocations = collocations,
+            wordFamily = sanitizeLexicalList(word, stringList("wordFamily"), removeHeadword = false),
+            commonMistakes = cleanInlineText(optString("commonMistakes")),
             ieltsRelevance = optString("ieltsRelevance", "Medium"),
             toeflRelevance = optString("toeflRelevance", "Medium"),
             greRelevance = optString("greRelevance", "Medium"),
-            tags = stringList("tags"),
+            tags = (rawTags + finalQualityTags).distinct(),
             source = optString("source", "LinguaFa Bundled"),
             sourceLicense = optString("sourceLicense", "Original"),
             datasetVersion = datasetVersion,
@@ -235,25 +244,50 @@ object BundledVocabularyImporter {
     }
 
     private fun merge(existing: VocabularyItem, incoming: VocabularyItem): VocabularyItem {
+        val bestDefinition = chooseBetterEnglish(existing.englishDefinition, incoming.englishDefinition, isExample = false)
+        val bestExample = chooseBetterEnglish(existing.example, incoming.example, isExample = true)
+        val mergedCollocations = sanitizeCollocations(
+            incoming.word,
+            incoming.partOfSpeech,
+            existing.collocations + incoming.collocations
+        )
+        val mergedSynonyms = sanitizeLexicalList(incoming.word, existing.synonyms + incoming.synonyms)
+        val mergedAntonyms = sanitizeLexicalList(incoming.word, existing.antonyms + incoming.antonyms)
+        val mergedWordFamily = sanitizeLexicalList(
+            incoming.word,
+            existing.wordFamily + incoming.wordFamily,
+            removeHeadword = false
+        )
+
+        val qualityTags = buildList {
+            if (bestDefinition.isBlank()) add("needs-definition")
+            if (bestExample.isBlank()) add("needs-example")
+            if (mergedCollocations.isEmpty()) add("needs-collocation")
+        }
+        val oldTagsWithoutQualityFlags = existing.tags.filterNot { it.startsWith("needs-") }
+        val incomingTagsWithoutQualityFlags = incoming.tags.filterNot { it.startsWith("needs-") }
+
         return existing.copy(
-            ipa = existing.ipa.ifBlank { incoming.ipa },
+            word = incoming.word.ifBlank { existing.word },
+            normalizedWord = incoming.normalizedWord,
+            ipa = chooseBetterInline(existing.ipa, incoming.ipa),
             persianMeaning = mergeMeaning(existing.persianMeaning, incoming.persianMeaning),
-            englishDefinition = existing.englishDefinition.ifBlank { incoming.englishDefinition },
-            partOfSpeech = existing.partOfSpeech.takeUnless { it == "word" || it.isBlank() }
-                ?: incoming.partOfSpeech,
-            example = existing.example.ifBlank { incoming.example },
-            examplePersian = existing.examplePersian.ifBlank { incoming.examplePersian },
-            cefrLevel = existing.cefrLevel.ifBlank { incoming.cefrLevel },
-            synonyms = (existing.synonyms + incoming.synonyms).distinct(),
-            antonyms = (existing.antonyms + incoming.antonyms).distinct(),
-            collocations = (existing.collocations + incoming.collocations).distinct(),
-            wordFamily = (existing.wordFamily + incoming.wordFamily).distinct(),
-            commonMistakes = existing.commonMistakes.ifBlank { incoming.commonMistakes },
+            englishDefinition = bestDefinition,
+            partOfSpeech = choosePartOfSpeech(existing.partOfSpeech, incoming.partOfSpeech),
+            example = bestExample,
+            examplePersian = chooseBetterPersian(existing.examplePersian, incoming.examplePersian),
+            cefrLevel = chooseCefr(existing.cefrLevel, incoming.cefrLevel),
+            synonyms = mergedSynonyms,
+            antonyms = mergedAntonyms,
+            collocations = mergedCollocations,
+            wordFamily = mergedWordFamily,
+            commonMistakes = chooseBetterInline(existing.commonMistakes, incoming.commonMistakes),
             ieltsRelevance = strongerRelevance(existing.ieltsRelevance, incoming.ieltsRelevance),
             toeflRelevance = strongerRelevance(existing.toeflRelevance, incoming.toeflRelevance),
             greRelevance = strongerRelevance(existing.greRelevance, incoming.greRelevance),
-            tags = (existing.tags + incoming.tags).distinct(),
-            sourceLicense = existing.sourceLicense.ifBlank { incoming.sourceLicense },
+            tags = (oldTagsWithoutQualityFlags + incomingTagsWithoutQualityFlags + qualityTags).distinct(),
+            source = mergeSource(existing.source, incoming.source),
+            sourceLicense = mergeSource(existing.sourceLicense, incoming.sourceLicense),
             datasetVersion = incoming.datasetVersion,
             frequencyRank = chooseFrequencyRank(existing.frequencyRank, incoming.frequencyRank),
             examPriority = maxOf(existing.examPriority, incoming.examPriority),
@@ -262,10 +296,175 @@ object BundledVocabularyImporter {
         )
     }
 
+    private fun cleanDefinition(value: String): String {
+        var cleaned = cleanInlineText(value)
+        cleaned = cleaned.replace(Regex("\\s*;\\s*(?:;\\s*)+.*$"), "")
+        cleaned = cleaned.replace(Regex("(?:\\s*;\\s*){3,}"), "; ")
+        cleaned = cleaned.trim(' ', ';', ',')
+        if (cleaned.isBlank()) return ""
+        return ensureSentencePunctuation(cleaned)
+    }
+
+    private fun cleanExample(value: String): String {
+        val cleaned = cleanInlineText(value).trim(' ', '"', '“', '”')
+        if (cleaned.isBlank()) return ""
+        return ensureSentencePunctuation(cleaned)
+    }
+
+    private fun cleanInlineText(value: String): String = value
+        .replace(Regex("\\s+"), " ")
+        .replace("�", "")
+        .trim()
+
+    private fun ensureSentencePunctuation(value: String): String {
+        if (value.lastOrNull() in listOf('.', '!', '?', ':', ';')) return value
+        return "$value."
+    }
+
+    private fun englishQuality(value: String, isExample: Boolean): Int {
+        val text = cleanInlineText(value)
+        if (text.isBlank()) return Int.MIN_VALUE
+        val words = text.split(' ').count { it.isNotBlank() }
+        var score = 0
+        score += minOf(words, 30) * 2
+        if (text.length in 25..220) score += 18
+        if (text.firstOrNull()?.isUpperCase() == true) score += 4
+        if (text.lastOrNull() in listOf('.', '!', '?')) score += 4
+        if (text.contains(Regex("[A-Za-z]{3,}"))) score += 8
+        if (text.contains("; ;") || text.contains(";;")) score -= 60
+        if (text.contains("�")) score -= 80
+        if (isExample && words < 4) score -= 25
+        if (!isExample && words < 3) score -= 20
+        return score
+    }
+
+    private fun chooseBetterEnglish(existing: String, incoming: String, isExample: Boolean): String {
+        val cleanExisting = if (isExample) cleanExample(existing) else cleanDefinition(existing)
+        val cleanIncoming = if (isExample) cleanExample(incoming) else cleanDefinition(incoming)
+        return if (englishQuality(cleanIncoming, isExample) > englishQuality(cleanExisting, isExample)) {
+            cleanIncoming
+        } else {
+            cleanExisting
+        }
+    }
+
+    private fun chooseBetterInline(existing: String, incoming: String): String {
+        val old = cleanInlineText(existing)
+        val new = cleanInlineText(incoming)
+        return when {
+            old.isBlank() -> new
+            new.isBlank() -> old
+            new.length > old.length && new.length <= 240 -> new
+            else -> old
+        }
+    }
+
+    private fun chooseBetterPersian(existing: String, incoming: String): String {
+        val old = cleanInlineText(existing)
+        val new = cleanInlineText(incoming)
+        return when {
+            old.isBlank() -> new
+            new.isBlank() -> old
+            new.length in 8..240 && new.length > old.length -> new
+            else -> old
+        }
+    }
+
+    private fun sanitizeLexicalList(
+        word: String,
+        values: List<String>,
+        removeHeadword: Boolean = true
+    ): List<String> {
+        val normalizedWord = word.lowercase(Locale.US).trim()
+        return values
+            .map(::cleanInlineText)
+            .filter { it.isNotBlank() }
+            .filterNot { removeHeadword && it.lowercase(Locale.US) == normalizedWord }
+            .distinctBy { it.lowercase(Locale.US) }
+            .take(8)
+    }
+
+    /**
+     * Earlier asset builders used POS templates when no sourced collocation existed. If most of a
+     * row matches that exact template family, we discard the synthetic entries instead of showing
+     * confident-looking but unnatural phrases. Sourced/curated collocations are preserved.
+     */
+    private fun sanitizeCollocations(word: String, partOfSpeech: String, values: List<String>): List<String> {
+        val w = word.lowercase(Locale.US).trim()
+        val cleaned = values
+            .map(::cleanInlineText)
+            .filter { it.length in 3..100 }
+            .distinctBy { it.lowercase(Locale.US) }
+
+        if (cleaned.isEmpty()) return emptyList()
+
+        val generatedTemplates = when {
+            partOfSpeech.contains("verb", ignoreCase = true) -> setOf(
+                "$w the process", "$w effectively", "$w a solution", "attempt to $w", "seek to $w", "$w rapidly",
+                "effectively $w", "fail to $w", "ability to $w"
+            )
+            partOfSpeech.contains("adj", ignoreCase = true) -> setOf(
+                "highly $w", "increasingly $w", "$w factor", "$w importance", "$w impact", "particularly $w"
+            )
+            partOfSpeech.contains("adv", ignoreCase = true) -> setOf(
+                "$w important", "$w significant", "$w different", "$w associated", "$w evident",
+                "$w observed", "$w apparent"
+            )
+            else -> setOf(
+                "crucial $w", "significant $w", "play a role in $w", "development of $w", "high level of $w",
+                "fundamental $w", "key $w", "underlying $w", "role of $w"
+            )
+        }
+
+        val generatedCount = cleaned.count { it.lowercase(Locale.US) in generatedTemplates }
+        val mostlyGenerated = generatedCount >= 3 && generatedCount * 2 >= cleaned.size
+        val selected = if (mostlyGenerated) {
+            cleaned.filterNot { it.lowercase(Locale.US) in generatedTemplates }
+        } else {
+            cleaned
+        }
+        return selected.take(6)
+    }
+
+    private fun choosePartOfSpeech(existing: String, incoming: String): String {
+        val old = existing.trim()
+        val new = incoming.trim()
+        return when {
+            old.isBlank() || old.equals("word", ignoreCase = true) -> new.ifBlank { "word" }
+            new.isBlank() || new.equals("word", ignoreCase = true) -> old
+            new.length > old.length -> new
+            else -> old
+        }
+    }
+
+    private fun chooseCefr(existing: String, incoming: String): String {
+        val levels = setOf("A1", "A2", "B1", "B2", "C1", "C2")
+        val old = existing.trim().uppercase(Locale.US)
+        val new = incoming.trim().uppercase(Locale.US)
+        return when {
+            new in levels && old !in levels -> new
+            old in levels -> old
+            new in levels -> new
+            else -> "B2"
+        }
+    }
+
     private fun mergeMeaning(existing: String, incoming: String): String {
-        if (existing.isBlank()) return incoming
-        if (incoming.isBlank() || existing.contains(incoming, ignoreCase = true)) return existing
-        return "$existing / $incoming"
+        val old = cleanInlineText(existing)
+        val new = cleanInlineText(incoming)
+        if (old.isBlank()) return new
+        if (new.isBlank() || old.contains(new, ignoreCase = true)) return old
+        if (new.contains(old, ignoreCase = true)) return new
+        return "$old / $new"
+    }
+
+    private fun mergeSource(existing: String, incoming: String): String {
+        val old = cleanInlineText(existing)
+        val new = cleanInlineText(incoming)
+        if (old.isBlank()) return new
+        if (new.isBlank() || old.contains(new, ignoreCase = true)) return old
+        if (new.contains(old, ignoreCase = true)) return new
+        return "$old + $new"
     }
 
     private fun chooseFrequencyRank(existing: Int, incoming: Int): Int = when {
@@ -281,7 +480,7 @@ object BundledVocabularyImporter {
     }
 
     private fun strongerRelevance(a: String, b: String): String {
-        fun rank(value: String): Int = when (value.trim().lowercase()) {
+        fun rank(value: String): Int = when (value.trim().lowercase(Locale.US)) {
             "very high", "essential" -> 4
             "high" -> 3
             "medium" -> 2

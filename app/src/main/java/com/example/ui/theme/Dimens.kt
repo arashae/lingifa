@@ -69,3 +69,4 @@ val radiusSm: Dp get() = Dimens.radiusSm
 val radiusMd: Dp get() = Dimens.radiusMd
 val radiusLg: Dp get() = Dimens.radiusLg
 val radiusXl: Dp get() = Dimens.radiusXl
+val radiusPill: Dp get() = Dimens.radiusPill

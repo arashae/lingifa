@@ -31,15 +31,20 @@ from sanitize_vocabulary_assets import looks_like_c2_proper_noun
 
 from validate_vocabulary_quality import (
     POS_OK,
+    collocation_target_risk,
     REPORT_PATH,
     RISKY_SENSES,
     URDU_NON_PERSIAN_GLYPHS,
     VALID_CEFR,
     VOCAB_ROOT,
+    definition_meaning_alignment_risk,
     detect_script_or_encoding_defect,
+    example_translation_alignment_risk,
     generate_inflections,
     is_generated_family,
+    metadata_outlier_risks,
     parse_args,
+    placeholder_definition_risk,
     parse_range,
     resolve_file,
     run_validation,
@@ -284,6 +289,61 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
             "learningOrder": 5000,
         }
         self.assertFalse(looks_like_c2_proper_noun(non_proper_row))
+
+    def test_definition_persian_pos_alignment_heuristic(self) -> None:
+        self.assertEqual(
+            definition_meaning_alignment_risk("noun", "رسیدن به؛ به دست آوردن", "to arrive at a place or goal"),
+            "Persian meaning is verbal but partOfSpeech is noun",
+        )
+        self.assertIsNone(
+            definition_meaning_alignment_risk("verb", "ماندن؛ باقی ماندن", "to remain in a place or state")
+        )
+
+    def test_example_translation_pronoun_and_number_heuristic(self) -> None:
+        self.assertEqual(
+            example_translation_alignment_risk(
+                "She has already seen that film.",
+                "من قبلاً آن فیلم را دیده‌ام.",
+            ),
+            "English third-person subject conflicts with Persian first-person subject",
+        )
+        self.assertEqual(
+            example_translation_alignment_risk(
+                "Figure 2 shows how the system works.",
+                "شکل ۳ نشان می‌دهد سیستم چگونه کار می‌کند.",
+            ),
+            "numeric content differs between English and Persian examples",
+        )
+        self.assertIsNone(
+            example_translation_alignment_risk(
+                "She has blue eyes.",
+                "او چشمان آبی دارد.",
+            )
+        )
+
+    def test_collocation_definition_placeholder_and_metadata_heuristics(self) -> None:
+        self.assertIsNone(collocation_target_risk("evidence", ["strong evidence", "provide evidence"]))
+        self.assertEqual(
+            collocation_target_risk("evidence", ["provide data", "gather facts"]),
+            "no collocation contains the target lemma",
+        )
+        self.assertIsNone(placeholder_definition_risk("a short written message sent to someone"))
+        self.assertIsNotNone(placeholder_definition_risk("A word used in everyday or academic English: real."))
+        self.assertIsNotNone(placeholder_definition_risk("not illusory; ; ; - Longfellow"))
+        self.assertTrue(metadata_outlier_risks("general", {"cefrLevel": "C2", "frequencyRank": 42, "tags": []}))
+        self.assertFalse(metadata_outlier_risks("general", {"cefrLevel": "A2", "frequencyRank": 42, "tags": []}))
+        self.assertTrue(metadata_outlier_risks("general", {
+            "tags": ["NGSL"],
+            "ieltsRelevance": "High",
+            "toeflRelevance": "High",
+            "greRelevance": "High",
+        }))
+        self.assertFalse(metadata_outlier_risks("general", {
+            "tags": ["NAWL"],
+            "ieltsRelevance": "High",
+            "toeflRelevance": "High",
+            "greRelevance": "High",
+        }))
 
     def test_file_resolver(self) -> None:
         """Verify resolve_file correctly resolves filename, relative path, and absolute path."""

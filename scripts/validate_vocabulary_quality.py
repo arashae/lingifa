@@ -52,6 +52,37 @@ RISKY_SENSES = {
     "it": "pronoun", "or": "conjunction", "may": "modal", "can": "modal",
     "might": "modal", "must": "modal", "he": "pronoun"
 }
+PERSIAN_VERB_MARKERS = (
+    "آمدن", "ایستادن", "باقی ماندن", "بودن", "توانستن", "جستن", "خواستن", "خوردن",
+    "دادن", "داشتن", "دیدن", "رفتن", "رسیدن", "رویدادن", "زدن", "شدن", "گرفتن", "گفتن",
+    "ماندن", "نشستن", "نوشیدن", "یافتن", "کردن",
+)
+ENGLISH_PRONOUNS = {
+    "first": {"i", "me", "my", "mine", "myself", "we", "us", "our", "ours", "ourselves"},
+    "second": {"you", "your", "yours", "yourself", "yourselves"},
+    "third": {
+        "he", "him", "his", "himself", "she", "her", "hers", "herself", "they", "them",
+        "their", "theirs", "themselves",
+    },
+}
+PERSIAN_PRONOUNS = {
+    "first": {"من", "ما", "خودم", "خودمان"},
+    "second": {"تو", "شما", "خودت", "خودتان"},
+    "third": {"او", "ایشان", "آنها", "خودش", "خودشان"},
+}
+ENGLISH_NUMBERS = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
+    "eighteen": 18, "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40,
+    "fifty": 50, "sixty": 60,
+}
+PERSIAN_NUMBERS = {
+    "صفر": 0, "یک": 1, "دو": 2, "سه": 3, "چهار": 4, "پنج": 5, "شش": 6,
+    "هفت": 7, "هشت": 8, "نه": 9, "ده": 10, "یازده": 11, "دوازده": 12,
+    "سیزده": 13, "چهارده": 14, "پانزده": 15, "شانزده": 16, "هفده": 17,
+    "هجده": 18, "نوزده": 19, "بیست": 20, "سی": 30, "چهل": 40, "پنجاه": 50, "شصت": 60,
+}
 
 # High-frequency irregular forms and inflection dictionaries
 IRREGULAR_FORMS: dict[str, set[str]] = {
@@ -264,6 +295,89 @@ def detect_script_or_encoding_defect(text: str) -> str | None:
     return None
 
 
+def definition_meaning_alignment_risk(part_of_speech: str, persian_meaning: str, definition: str) -> str | None:
+    pos = part_of_speech.strip().lower()
+    if pos not in {"noun", "adjective", "adverb", "pronoun", "preposition", "conjunction"}:
+        return None
+    segments = [segment.strip() for segment in re.split(r"[؛,،/|]", persian_meaning)]
+    verbal = [
+        segment
+        for segment in segments
+        if any(segment == marker or segment.startswith(marker + " ") or segment.endswith(marker) for marker in PERSIAN_VERB_MARKERS)
+    ]
+    if verbal and definition:
+        return f"Persian meaning is verbal but partOfSpeech is {pos}"
+    return None
+
+
+def _english_person_categories(tokens: set[str]) -> set[str]:
+    return {category for category, words in ENGLISH_PRONOUNS.items() if tokens.intersection(words)}
+
+
+def _persian_person_categories(text: str) -> set[str]:
+    normalized = text.replace("\u200c", "")
+    tokens = set(re.findall(r"[\u0600-\u06ff]+", normalized))
+    return {category for category, words in PERSIAN_PRONOUNS.items() if tokens.intersection(words)}
+
+
+def _number_values(text: str, persian: bool) -> set[int]:
+    normalized = str(text).translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
+    values = {int(char) for char in normalized if char.isdigit()}
+    words = re.findall(r"[\u0600-\u06ff]+", normalized) if persian else re.findall(r"[a-z]+", normalized.lower())
+    mapping = PERSIAN_NUMBERS if persian else ENGLISH_NUMBERS
+    values.update(mapping[word] for word in words if word in mapping)
+    return values
+
+
+def example_translation_alignment_risk(example: str, example_persian: str) -> str | None:
+    if not example or not example_persian:
+        return None
+    english_tokens = set(re.findall(r"[a-z]+", example.lower()))
+    english_people = _english_person_categories(english_tokens)
+    persian_people = _persian_person_categories(example_persian)
+    if len(english_people) == 1 and len(persian_people) == 1 and english_people != persian_people:
+        english_person = next(iter(english_people))
+        persian_person = next(iter(persian_people))
+        return f"English {english_person}-person subject conflicts with Persian {persian_person}-person subject"
+    english_numbers = _number_values(example, False)
+    persian_numbers = _number_values(example_persian, True)
+    if english_numbers and persian_numbers and english_numbers.isdisjoint(persian_numbers):
+        return "numeric content differs between English and Persian examples"
+    return None
+
+
+def placeholder_definition_risk(definition: str) -> str | None:
+    normalized = " ".join(definition.lower().split()).strip(" .")
+    if normalized in {"", "word", "a word", "placeholder", "definition"}:
+        return "empty or generic definition"
+    if normalized.startswith("a word used in everyday or academic english:"):
+        return "generated lemma-echo definition"
+    if "vocabulary item in the" in normalized:
+        return "dictionary category placeholder"
+    if re.search(r";\s*;", definition) or re.search(r";\s*-\s*[A-Z][A-Za-z'-]+\s*$", definition):
+        return "definition contains repeated delimiters or source attribution"
+    return None
+
+
+def collocation_target_risk(word: str, collocations: list[str]) -> str | None:
+    values = [str(value).strip() for value in collocations if str(value).strip()]
+    if values and not any(target_present(word, value) for value in values):
+        return "no collocation contains the target lemma"
+    return None
+
+
+def metadata_outlier_risks(bank: str, row: dict) -> list[str]:
+    risks: list[str] = []
+    rank = int(row.get("frequencyRank") or 0)
+    if bank == "general" and str(row.get("cefrLevel", "")).upper() == "C2" and 0 < rank < 1000:
+        risks.append("high-frequency C2 outlier")
+    tags = {str(tag).strip().lower() for tag in row.get("tags", [])}
+    relevance = [str(row.get(field, "")).strip().lower() for field in ("ieltsRelevance", "toeflRelevance", "greRelevance")]
+    if bank == "general" and "nawl" not in tags and any(value == "high" for value in relevance):
+        risks.append("High exam relevance without NAWL evidence")
+    return risks
+
+
 def parse_range(range_spec: str) -> tuple[int, int]:
     delim = ":" if ":" in range_spec else "-"
     parts = range_spec.split(delim)
@@ -410,12 +524,16 @@ def run_validation(
             expected_pos = RISKY_SENSES.get(word.lower())
             if expected_pos and expected_pos not in pos:
                 flag("closed_class_sense_review", path, line_no, word, "expected %s; got %s" % (expected_pos, pos))
-            if definition.lower() in {"", "word", "a word", "placeholder", "definition"}:
-                flag("placeholder_definition", path, line_no, word, definition or "(empty)")
+            placeholder = placeholder_definition_risk(definition)
+            if placeholder:
+                flag("placeholder_definition", path, line_no, word, placeholder)
+            meaning_alignment = definition_meaning_alignment_risk(pos, meaning, definition)
+            if meaning_alignment:
+                flag("definition_meaning_alignment_review", path, line_no, word, meaning_alignment)
             if bank == "general" and row.get("frequencyRank") == 0:
                 flag("zero_frequency_rank", path, line_no, word, "frequencyRank is 0")
-            if bank == "general" and cefr == "C2" and int(row.get("frequencyRank") or 0) < 500:
-                flag("early_c2_outlier", path, line_no, word, "C2 card appears early in General bank")
+            for metadata_risk in metadata_outlier_risks(bank, row):
+                flag("metadata_outlier_review", path, line_no, word, metadata_risk)
 
             example_persian = str(row.get("examplePersian", "")).strip()
             # Enhanced foreign script, encoding, and ZWNJ detection
@@ -429,6 +547,12 @@ def run_validation(
                 flag("missing_example_translation", path, line_no, word, "English example has no translation")
             if example and not target_present(word, example):
                 flag("target_word_missing_from_example", path, line_no, word, "review lemma/inflection and sense")
+            alignment_risk = example_translation_alignment_risk(example, example_persian)
+            if alignment_risk:
+                flag("example_translation_alignment_review", path, line_no, word, alignment_risk)
+            collocation_risk = collocation_target_risk(word, [str(value) for value in row.get("collocations", [])])
+            if collocation_risk:
+                flag("collocation_target_review", path, line_no, word, collocation_risk)
             if word.lower() in {"it", "or", "may", "can", "might", "must", "chess", "metabolism",
                                 "replicate", "orient", "corpus", "novice"}:
                 flag("priority_sense_review", path, line_no, word, "high-risk lemma from editorial checklist")

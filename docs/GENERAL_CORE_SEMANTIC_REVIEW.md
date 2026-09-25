@@ -17,3 +17,8 @@
 ## Semantic validator
 
 `scripts/validate_vocabulary_quality.py` now emits human-review flags for placeholder definitions, missing example translations, examples without the target lemma/likely inflection, unreviewed POS labels, selected closed-class sense risks, unexpected scripts/encoding, General-bank rank zero, and early C2 outliers. These are advisory findings; they do not synthesize replacements or count as semantic correctness proof.
+
+## Batch 3: cards 201–300
+
+- Reviewed in source order and corrected high-confidence sense/POS errors and mismatched or awkward bilingual examples.
+- Editorial definitions, glosses, examples, and translations remain distinct from carried-forward lemma/frequency provenance.

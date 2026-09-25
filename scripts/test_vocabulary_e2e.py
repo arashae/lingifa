@@ -45,6 +45,7 @@ from validate_vocabulary_quality import (
     metadata_outlier_risks,
     parse_args,
     placeholder_definition_risk,
+    priority_sense_review_risk,
     parse_range,
     resolve_file,
     run_validation,
@@ -289,6 +290,18 @@ class Tier3CrossFeatureCombinationsTests(unittest.TestCase):
             "learningOrder": 5000,
         }
         self.assertFalse(looks_like_c2_proper_noun(non_proper_row))
+
+    def test_corrected_novice_sense_does_not_trigger_priority_flag(self) -> None:
+        self.assertIsNone(priority_sense_review_risk(
+            "novice",
+            "a person who is new to an activity or has little experience",
+            "تازه‌کار؛ فردی با تجربه کم",
+        ))
+        self.assertIsNotNone(priority_sense_review_risk(
+            "novice",
+            "a member of a religious order who has not taken final vows",
+            "عضو تازهوارد صومعه",
+        ))
 
     def test_definition_persian_pos_alignment_heuristic(self) -> None:
         self.assertEqual(

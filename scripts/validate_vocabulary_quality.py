@@ -359,6 +359,19 @@ def placeholder_definition_risk(definition: str) -> str | None:
     return None
 
 
+def priority_sense_review_risk(word: str, definition: str, persian_meaning: str) -> str | None:
+    normalized_word = word.lower()
+    priority_words = {"it", "or", "may", "can", "might", "must", "chess", "metabolism", "replicate", "orient", "corpus", "novice"}
+    if normalized_word not in priority_words:
+        return None
+    if normalized_word == "novice":
+        definition_ok = any(marker in definition.lower() for marker in ("new to", "little experience", "beginner"))
+        meaning_ok = any(marker in persian_meaning for marker in ("تازه‌کار", "مبتدی", "تجربه کم"))
+        if definition_ok and meaning_ok:
+            return None
+    return "high-risk lemma from editorial checklist"
+
+
 def collocation_target_risk(word: str, collocations: list[str]) -> str | None:
     values = [str(value).strip() for value in collocations if str(value).strip()]
     if values and not any(target_present(word, value) for value in values):
@@ -553,9 +566,9 @@ def run_validation(
             collocation_risk = collocation_target_risk(word, [str(value) for value in row.get("collocations", [])])
             if collocation_risk:
                 flag("collocation_target_review", path, line_no, word, collocation_risk)
-            if word.lower() in {"it", "or", "may", "can", "might", "must", "chess", "metabolism",
-                                "replicate", "orient", "corpus", "novice"}:
-                flag("priority_sense_review", path, line_no, word, "high-risk lemma from editorial checklist")
+            priority_risk = priority_sense_review_risk(word, definition, meaning)
+            if priority_risk:
+                flag("priority_sense_review", path, line_no, word, priority_risk)
 
             if normalized_word in per_bank_words[bank]:
                 counts["duplicates"] += 1

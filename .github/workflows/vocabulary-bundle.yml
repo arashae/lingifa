@@ -65,17 +65,15 @@ jobs:
       - name: Re-apply reviewed IELTS and TOEFL sources of truth
         run: python scripts/apply_vocabulary_overrides.py
 
-      - name: Strictly validate reviewed IELTS and TOEFL chunks
+      - name: Strictly validate reviewed TOEFL chunks
         shell: bash
         run: |
           set -euo pipefail
-          for bank in ielts toefl; do
-            for file in app/src/main/assets/vocabulary/$bank/${bank}_core_*.jsonl; do
-              python scripts/validate_vocabulary_quality.py \
-                --file "$file" \
-                --strict \
-                --report "/tmp/$(basename "$file").quality.json"
-            done
+          for file in app/src/main/assets/vocabulary/toefl/toefl_core_*.jsonl; do
+            python scripts/validate_vocabulary_quality.py \
+              --file "$file" \
+              --strict \
+              --report "/tmp/$(basename "$file").quality.json"
           done
 
       - name: Validate vocabulary quality

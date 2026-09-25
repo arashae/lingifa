@@ -1,6 +1,7 @@
 package com.example.ui.screens.review
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
@@ -10,6 +11,8 @@ import com.example.data.repository.MistakeRepository
 import com.example.data.repository.UserProfileRepository
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
+import com.example.vocab.VocabularySkillAxis
+import com.example.vocab.VocabularyStudyPolicy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -20,6 +23,7 @@ enum class ReviewExerciseType {
     FLASHCARD,
     MULTIPLE_CHOICE_EN_FA,
     MULTIPLE_CHOICE_FA_EN,
+    CONTEXT_CLOZE,
     TYPE_WORD,
     LISTENING_CHOOSE
 }
@@ -28,6 +32,7 @@ data class ReviewSessionUiState(
     val queue: List<VocabularyItem> = emptyList(),
     val currentIndex: Int = 0,
     val currentExerciseType: ReviewExerciseType = ReviewExerciseType.FLASHCARD,
+    val contextPrompt: String = "",
     val isAnswerRevealed: Boolean = false,
     val multipleChoiceOptions: List<String> = emptyList(),
     val selectedOptionIndex: Int? = null,
@@ -48,6 +53,10 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     private val mistakeRepo = MistakeRepository(db.mistakeDao())
     private val profileRepo = UserProfileRepository(db.userProfileDao())
     private val streakRepo = DailyStreakRepository(db.dailyStreakDao(), db.userProfileDao())
+    private val studyPreferences = application.getSharedPreferences(
+        VocabularyStudyPolicy.PREFS_NAME,
+        Context.MODE_PRIVATE
+    )
 
     private val _uiState = MutableStateFlow(ReviewSessionUiState())
     val uiState: StateFlow<ReviewSessionUiState> = _uiState
@@ -60,18 +69,32 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val profile = profileRepo.getProfileSync()
             val userLevel = profile.currentLevel.ifEmpty { "B2" }
+            val newWordLimit = studyPreferences
+                .getInt(VocabularyStudyPolicy.KEY_DAILY_NEW_LIMIT, 15)
+                .takeIf { it in VocabularyStudyPolicy.DAILY_NEW_LIMIT_OPTIONS }
+                ?: 15
 
             val sessionItems = if (forceNewWordsOnly) {
-                vocabRepo.getNewVocabulariesForLearning(userLevel, limit = 15)
+                vocabRepo.getNewVocabulariesForLearning(userLevel, limit = newWordLimit)
             } else {
-                val due = vocabRepo.getDueVocabulariesForReview(limit = 30).first()
-                if (due.isNotEmpty()) {
-                    due.take(15)
-                } else {
-                    val newWords = vocabRepo.getNewVocabulariesForLearning(userLevel, limit = 10)
-                    if (newWords.isNotEmpty()) newWords
-                    else vocabRepo.getStudiedVocabulariesForReview(limit = 10)
-                }
+                val due = vocabRepo.getDueVocabulariesForReview(limit = 40).first().take(30)
+                val dueIds = due.mapTo(hashSetOf()) { it.id }
+
+                val studied = vocabRepo.getStudiedVocabulariesForReview(limit = 120)
+                val weak = studied
+                    .asSequence()
+                    .filter { it.id !in dueIds && it.mastery < 50 }
+                    .sortedWith(compareBy<VocabularyItem> { it.mastery }.thenBy { it.lastReview })
+                    .take(10)
+                    .toList()
+                val usedIds = (due + weak).mapTo(hashSetOf()) { it.id }
+
+                val newWords = vocabRepo.getNewVocabulariesForLearning(userLevel, limit = newWordLimit)
+                    .filterNot { it.id in usedIds }
+
+                val planned = (due + weak + newWords).distinctBy { it.id }
+                if (planned.isNotEmpty()) planned
+                else studied.take(10)
             }
 
             if (sessionItems.isNotEmpty()) {
@@ -91,27 +114,30 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Retrieval-first review policy.
      *
-     * The main learning signal is silent/mental recall followed by reveal and self-rating.
-     * Recognition, listening and spelling are useful secondary probes, but they should not
-     * dominate scheduling. In particular, exact typing is kept deliberately rare so a learner
-     * is not marked as having forgotten a concept merely because a synonym came to mind or the
-     * spelling was imperfect.
+     * Learn/Recall remains the main semantic signal. Once a word has been seen, contextual cloze
+     * becomes a meaningful secondary probe. Exact spelling stays diagnostic and has its own
+     * persisted mastery axis, so a typo never wipes semantic memory.
      */
     private suspend fun setupCurrentExercise(item: VocabularyItem) {
         val roll = Random.nextInt(100)
+        val isUnseen = item.correctCount == 0 && item.incorrectCount == 0
+        val cloze = if (isUnseen) null else VocabularyStudyPolicy.clozeSentence(item)
+
         val chosenType = when {
-            item.correctCount == 0 && item.incorrectCount == 0 -> ReviewExerciseType.FLASHCARD
+            isUnseen -> ReviewExerciseType.FLASHCARD
             item.correctCount <= 2 -> when {
-                roll < 72 -> ReviewExerciseType.FLASHCARD
-                roll < 84 -> ReviewExerciseType.LISTENING_CHOOSE
-                roll < 94 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
+                roll < 62 -> ReviewExerciseType.FLASHCARD
+                cloze != null && roll < 76 -> ReviewExerciseType.CONTEXT_CLOZE
+                roll < 86 -> ReviewExerciseType.LISTENING_CHOOSE
+                roll < 95 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
                 else -> ReviewExerciseType.MULTIPLE_CHOICE_FA_EN
             }
             else -> when {
-                roll < 68 -> ReviewExerciseType.FLASHCARD
+                roll < 52 -> ReviewExerciseType.FLASHCARD
+                cloze != null && roll < 70 -> ReviewExerciseType.CONTEXT_CLOZE
                 roll < 80 -> ReviewExerciseType.LISTENING_CHOOSE
-                roll < 90 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
-                roll < 96 -> ReviewExerciseType.MULTIPLE_CHOICE_FA_EN
+                roll < 89 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
+                roll < 95 -> ReviewExerciseType.MULTIPLE_CHOICE_FA_EN
                 else -> ReviewExerciseType.TYPE_WORD
             }
         }
@@ -127,7 +153,8 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 ).map { it.persianMeaning }
                 (distractors + item.persianMeaning).distinct().shuffled()
             }
-            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> {
+            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
+            ReviewExerciseType.CONTEXT_CLOZE -> {
                 val distractors = vocabRepo.getDistractors(
                     level = item.cefrLevel,
                     partOfSpeech = item.partOfSpeech,
@@ -141,6 +168,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
         _uiState.value = _uiState.value.copy(
             currentExerciseType = chosenType,
+            contextPrompt = if (chosenType == ReviewExerciseType.CONTEXT_CLOZE) cloze.orEmpty() else "",
             isAnswerRevealed = false,
             multipleChoiceOptions = options,
             selectedOptionIndex = null,
@@ -157,7 +185,8 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     fun submitRating(rating: ReviewRating) {
         viewModelScope.launch {
-            val currentItem = _uiState.value.queue.getOrNull(_uiState.value.currentIndex) ?: return@launch
+            val queuedItem = _uiState.value.queue.getOrNull(_uiState.value.currentIndex) ?: return@launch
+            val currentItem = vocabRepo.getByIdSync(queuedItem.id) ?: queuedItem
             vocabRepo.recordReview(currentItem, rating)
 
             val isSuccess = rating != ReviewRating.AGAIN
@@ -185,11 +214,13 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         if (_uiState.value.isOptionAnswerChecked) return
         val currentItem = _uiState.value.queue.getOrNull(_uiState.value.currentIndex) ?: return
         val selectedText = _uiState.value.multipleChoiceOptions.getOrNull(index) ?: return
+        val exerciseType = _uiState.value.currentExerciseType
 
-        val isCorrect = when (_uiState.value.currentExerciseType) {
+        val isCorrect = when (exerciseType) {
             ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
             ReviewExerciseType.LISTENING_CHOOSE -> selectedText == currentItem.persianMeaning
-            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> selectedText == currentItem.word
+            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
+            ReviewExerciseType.CONTEXT_CLOZE -> selectedText == currentItem.word
             else -> false
         }
 
@@ -202,15 +233,35 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
         val rating = if (isCorrect) ReviewRating.GOOD else ReviewRating.AGAIN
         viewModelScope.launch {
-            vocabRepo.recordReview(currentItem, rating)
+            val fresh = vocabRepo.getByIdSync(currentItem.id) ?: currentItem
+            val itemForSemanticReview = if (exerciseType == ReviewExerciseType.CONTEXT_CLOZE) {
+                val skillUpdated = VocabularyStudyPolicy.withSkillResult(
+                    fresh,
+                    VocabularySkillAxis.CONTEXT,
+                    isCorrect
+                )
+                vocabRepo.update(skillUpdated)
+                replaceQueuedItem(skillUpdated)
+                skillUpdated
+            } else {
+                fresh
+            }
+            vocabRepo.recordReview(itemForSemanticReview, rating)
+
             if (!isCorrect) {
+                val isContext = exerciseType == ReviewExerciseType.CONTEXT_CLOZE
                 mistakeRepo.addMistake(
-                    question = "معنی یا معادل '${currentItem.word}'",
+                    question = if (isContext) {
+                        "کدام واژه جمله را کامل می‌کند؟ ${_uiState.value.contextPrompt}"
+                    } else {
+                        "معنی یا معادل '${currentItem.word}'"
+                    },
                     myAnswer = selectedText,
-                    correctAnswer = currentItem.persianMeaning,
+                    correctAnswer = if (isContext) currentItem.word else currentItem.persianMeaning,
                     explanationFa = currentItem.englishDefinition.ifBlank { currentItem.examplePersian },
+                    whyWrongFa = if (isContext) "واژه در بافت جمله درست بازیابی نشد" else "گزینه نادرست انتخاب شد",
                     concept = currentItem.word,
-                    skillType = "VOCABULARY"
+                    skillType = if (isContext) "VOCABULARY_CONTEXT" else "VOCABULARY"
                 )
                 requeueFailedCard(currentItem)
             }
@@ -222,21 +273,28 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Spelling/production is diagnostic only. Checking the exact spelling does not change the
-     * SRS schedule by itself; after feedback the learner self-rates the underlying memory.
+     * Spelling/production is diagnostic and persisted independently from semantic mastery.
+     * After this feedback the learner still self-rates meaning recall, which controls SRS timing.
      */
     fun checkTypedAnswer() {
         val currentItem = _uiState.value.queue.getOrNull(_uiState.value.currentIndex) ?: return
         val answer = _uiState.value.typedInput.trim()
         val isCorrect = answer.equals(currentItem.word.trim(), ignoreCase = true)
+        val skillUpdated = VocabularyStudyPolicy.withSkillResult(
+            currentItem,
+            VocabularySkillAxis.SPELLING,
+            isCorrect
+        )
+        replaceQueuedItem(skillUpdated)
         _uiState.value = _uiState.value.copy(
             isTypedCorrect = isCorrect,
             isAnswerRevealed = true,
             lastWasSuccess = isCorrect
         )
 
-        if (!isCorrect) {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            vocabRepo.update(skillUpdated)
+            if (!isCorrect) {
                 mistakeRepo.addMistake(
                     question = "تمرین املا/تولید برای «${currentItem.persianMeaning}»",
                     myAnswer = answer,
@@ -248,6 +306,14 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 )
             }
         }
+    }
+
+    private fun replaceQueuedItem(updated: VocabularyItem) {
+        val index = _uiState.value.currentIndex
+        if (index !in _uiState.value.queue.indices) return
+        val queue = _uiState.value.queue.toMutableList()
+        queue[index] = updated
+        _uiState.value = _uiState.value.copy(queue = queue)
     }
 
     private fun requeueFailedCard(item: VocabularyItem) {

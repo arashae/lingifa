@@ -11,3 +11,6 @@ fun <T> Flow<T>.flowOn(context: CoroutineContext): Flow<T> = with(this) {
 }
 
 suspend fun VocabularyDao.getByIdSync(id: Int) = getByIdSync(id.toLong())
+
+/** Keeps the repository constructor source-compatible while the sense DAO lives in data.local. */
+typealias VocabularySenseDao = com.example.data.local.VocabularySenseDao

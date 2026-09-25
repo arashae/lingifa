@@ -9,8 +9,16 @@ on:
       - scripts/curate_vocabulary_sources.py
       - scripts/sanitize_vocabulary_assets.py
       - scripts/validate_vocabulary_quality.py
+      - scripts/apply_vocabulary_overrides.py
+      - scripts/vocabulary_overrides/**
       - .github/workflows/vocabulary-bundle.yml
   workflow_dispatch:
+    inputs:
+      regenerate:
+        description: Regenerate IELTS/TOEFL/GRE from upstream sources before applying reviewed overrides
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -35,19 +43,38 @@ jobs:
           python-version: '3.13'
 
       - name: Install vocabulary curator dependency
+        if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python -m pip install --disable-pip-version-check --no-input openpyxl
 
       - name: Generate IELTS, TOEFL and GRE offline assets
+        if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python scripts/build_vocabulary_assets.py
 
       - name: Resolve remaining Persian meanings
+        if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python scripts/postprocess_vocabulary_meanings.py
 
       - name: Remove synthetic collocations and down-rank C2 names
+        if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python scripts/sanitize_vocabulary_assets.py
 
       - name: Curate general and academic Core bank
+        if: github.event_name == 'workflow_dispatch' && inputs.regenerate == true
         run: python scripts/curate_vocabulary_sources.py
+
+      - name: Re-apply reviewed TOEFL source of truth
+        run: python scripts/apply_vocabulary_overrides.py
+
+      - name: Strictly validate reviewed TOEFL chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in app/src/main/assets/vocabulary/toefl/toefl_core_*.jsonl; do
+            python scripts/validate_vocabulary_quality.py \
+              --file "$file" \
+              --strict \
+              --report "/tmp/$(basename "$file").quality.json"
+          done
 
       - name: Validate vocabulary quality
         run: python scripts/validate_vocabulary_quality.py
@@ -58,7 +85,7 @@ jobs:
           cat app/src/main/assets/vocabulary/quality_report.json
           git diff --stat
 
-      - name: Commit generated vocabulary into repository
+      - name: Commit vocabulary changes into repository
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -66,9 +93,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Vocabulary assets are already up to date."
           else
-            git commit -m "data: sanitize and validate offline vocabulary bundle"
-            # Other chats/workflows may update UI on main while this data job is running.
-            # Rebase the generated-assets commit so we never overwrite or reject their work.
+            git commit -m "data: preserve reviewed TOEFL vocabulary"
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main

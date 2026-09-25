@@ -1,7 +1,6 @@
 package com.example.ui.screens.vocab
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.audio.TtsManager
+import com.example.data.model.VocabularyItem
 import com.example.srs.ReviewRating
 import com.example.ui.components.CefrBadge
 import com.example.ui.components.LinguaTopAppBar
@@ -70,11 +68,10 @@ fun WordDetailScreen(
     val item by wordFlow.collectAsState(initial = null)
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
-    DisposableEffect(tts) {
-        onDispose { tts.shutdown() }
-    }
-    var selectedLangTab by remember { mutableStateOf(0) }
-    var feedbackMessage by remember { mutableStateOf<String?>(null) }
+    DisposableEffect(tts) { onDispose { tts.shutdown() } }
+
+    var userSelectedTab by remember(vocabId) { mutableStateOf<Int?>(null) }
+    var feedbackMessage by remember(vocabId) { mutableStateOf<String?>(null) }
 
     PersianRtlLayout {
         Scaffold(
@@ -100,19 +97,16 @@ fun WordDetailScreen(
             val currentWord = item
             if (currentWord == null) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "در حال بارگذاری واژه…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("در حال بارگذاری واژه…")
                 }
                 return@Scaffold
             }
+
+            val defaultTab = if (currentWord.cefrLevel.uppercase() in setOf("A1", "A2")) 0 else 1
+            val selectedTab = userSelectedTab ?: defaultTab
 
             Column(
                 modifier = Modifier
@@ -123,21 +117,18 @@ fun WordDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 WordHeroCard(
-                    word = currentWord.word,
-                    ipa = currentWord.ipa,
-                    level = currentWord.cefrLevel,
+                    item = currentWord,
                     onPronounce = { tts.speak(currentWord.word) }
                 )
 
                 LanguageTabs(
-                    selectedTab = selectedLangTab,
-                    onSelected = { selectedLangTab = it }
+                    selectedTab = selectedTab,
+                    onSelected = { userSelectedTab = it }
                 )
 
                 DefinitionCard(
-                    isPersian = selectedLangTab == 0,
-                    persianMeaning = currentWord.persianMeaning,
-                    englishDefinition = currentWord.englishDefinition
+                    item = currentWord,
+                    englishFirst = selectedTab == 1
                 )
 
                 if (currentWord.example.isNotBlank()) {
@@ -150,7 +141,7 @@ fun WordDetailScreen(
 
                 if (currentWord.collocations.isNotEmpty()) {
                     DetailListCard(
-                        title = "کالوکیشن‌ها",
+                        title = "Collocations",
                         subtitle = "ترکیب‌های طبیعی و پرتکرار",
                         items = currentWord.collocations
                     )
@@ -158,34 +149,43 @@ fun WordDetailScreen(
 
                 if (currentWord.synonyms.isNotEmpty()) {
                     DetailListCard(
-                        title = "مترادف‌ها",
+                        title = "Synonyms",
                         subtitle = "واژه‌های نزدیک از نظر معنا",
                         items = currentWord.synonyms
                     )
                 }
 
+                if (currentWord.wordFamily.isNotEmpty()) {
+                    DetailListCard(
+                        title = "Word family",
+                        subtitle = "اعضای خانواده واژه",
+                        items = currentWord.wordFamily
+                    )
+                }
+
                 if (currentWord.commonMistakes.isNotBlank()) {
-                    CommonMistakeCard(text = currentWord.commonMistakes)
+                    CommonMistakeCard(currentWord.commonMistakes)
                 }
 
                 ExamRelevanceCard(
                     ielts = currentWord.ieltsRelevance,
-                    toefl = currentWord.toeflRelevance
+                    toefl = currentWord.toeflRelevance,
+                    gre = currentWord.greRelevance
                 )
 
                 ReviewActionCard(
                     feedbackMessage = feedbackMessage,
                     onKnown = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD)
-                        feedbackMessage = "ثبت شد؛ این واژه در زمان مناسب برای مرور برمی‌گردد."
+                        feedbackMessage = "ثبت شد؛ این واژه در فاصله مناسب برای مرور برمی‌گردد."
+                    },
+                    onHard = {
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
+                        feedbackMessage = "ثبت شد؛ این واژه زودتر مرور می‌شود."
                     },
                     onPractice = {
                         viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN)
                         feedbackMessage = "ثبت شد؛ این واژه به مرور نزدیک اضافه شد."
-                    },
-                    onHard = {
-                        viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
-                        feedbackMessage = "ثبت شد؛ فاصلهٔ مرور این واژه کوتاه‌تر خواهد بود."
                     }
                 )
 
@@ -196,22 +196,16 @@ fun WordDetailScreen(
 }
 
 @Composable
-private fun WordHeroCard(
-    word: String,
-    ipa: String,
-    level: String,
-    onPronounce: () -> Unit
-) {
+private fun WordHeroCard(item: VocabularyItem, onPronounce: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Row(
@@ -221,20 +215,28 @@ private fun WordHeroCard(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = word,
+                            text = item.word,
                             style = MaterialTheme.typography.headlineLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        if (ipa.isNotBlank()) {
+                        if (item.ipa.isNotBlank()) {
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = ipa,
+                                text = item.ipa,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.68f)
                             )
                         }
+                        if (item.partOfSpeech.isNotBlank() && item.partOfSpeech != "word") {
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text(
+                                text = item.partOfSpeech,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
+                            )
+                        }
                     }
-                    CefrBadge(level = level)
+                    CefrBadge(level = item.cefrLevel)
                 }
             }
 
@@ -248,11 +250,7 @@ private fun WordHeroCard(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.VolumeUp,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(7.dp))
                     Text("پخش تلفظ", style = MaterialTheme.typography.labelLarge)
                 }
@@ -262,10 +260,7 @@ private fun WordHeroCard(
 }
 
 @Composable
-private fun LanguageTabs(
-    selectedTab: Int,
-    onSelected: (Int) -> Unit
-) {
+private fun LanguageTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
     TabRow(
         selectedTabIndex = selectedTab,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -277,9 +272,7 @@ private fun LanguageTabs(
                 color = MaterialTheme.colorScheme.primary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Tab(
             selected = selectedTab == 0,
@@ -295,24 +288,37 @@ private fun LanguageTabs(
 }
 
 @Composable
-private fun DefinitionCard(
-    isPersian: Boolean,
-    persianMeaning: String,
-    englishDefinition: String
-) {
-    SectionCard(title = if (isPersian) "معنی و تعریف" else "Definition") {
-        if (isPersian) {
+private fun DefinitionCard(item: VocabularyItem, englishFirst: Boolean) {
+    SectionCard(title = if (englishFirst) "English definition" else "معنی و تعریف") {
+        if (englishFirst) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Text(
+                    text = item.englishDefinition.ifBlank { item.persianMeaning },
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Start
+                )
+            }
+            if (item.englishDefinition.isNotBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = item.persianMeaning,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
             Text(
-                text = persianMeaning,
+                text = item.persianMeaning,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.SemiBold
             )
-            if (englishDefinition.isNotBlank()) {
+            if (item.englishDefinition.isNotBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Text(
-                        text = englishDefinition,
+                        text = item.englishDefinition,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
@@ -320,32 +326,18 @@ private fun DefinitionCard(
                     )
                 }
             }
-        } else {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Text(
-                    text = englishDefinition.ifBlank { persianMeaning },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun ExampleCard(
-    example: String,
-    translation: String,
-    onPronounce: () -> Unit
-) {
+private fun ExampleCard(example: String, translation: String, onPronounce: () -> Unit) {
     SectionCard(
-        title = "مثال",
+        title = "Example in context",
         trailing = {
             IconButton(onClick = onPronounce, modifier = Modifier.size(34.dp)) {
                 Icon(
-                    imageVector = Icons.Default.VolumeUp,
+                    Icons.Default.VolumeUp,
                     contentDescription = "پخش مثال",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(19.dp)
@@ -358,7 +350,6 @@ private fun ExampleCard(
                 text = example,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start
             )
@@ -375,31 +366,17 @@ private fun ExampleCard(
 }
 
 @Composable
-private fun DetailListCard(
-    title: String,
-    subtitle: String,
-    items: List<String>
-) {
+private fun DetailListCard(title: String, subtitle: String, items: List<String>) {
     SectionCard(title = title, subtitle = subtitle) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items.forEach { item ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
+                items.take(8).forEach { value ->
+                    Text(
+                        text = "• $value",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
                     )
-                    Spacer(modifier = Modifier.width(9.dp))
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Text(
-                            text = item,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Start
-                        )
-                    }
                 }
             }
         }
@@ -411,8 +388,7 @@ private fun CommonMistakeCard(text: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
         Column(
             modifier = Modifier.padding(15.dp),
@@ -420,65 +396,43 @@ private fun CommonMistakeCard(text: String) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.PriorityHigh,
+                    Icons.Default.PriorityHigh,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(19.dp)
                 )
                 Spacer(modifier = Modifier.width(7.dp))
-                Text(
-                    text = "اشتباه رایج",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
+                Text("اشتباه رایج", style = MaterialTheme.typography.titleSmall)
             }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
+            Text(text, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
 @Composable
-private fun ExamRelevanceCard(
-    ielts: String,
-    toefl: String
-) {
+private fun ExamRelevanceCard(ielts: String, toefl: String, gre: String) {
     SectionCard(title = "کاربرد در آزمون‌ها") {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ExamRow(exam = "IELTS", relevance = ielts)
-            ExamRow(exam = "TOEFL", relevance = toefl)
-        }
+        ExamRow("IELTS", ielts)
+        Spacer(modifier = Modifier.height(7.dp))
+        ExamRow("TOEFL", toefl)
+        Spacer(modifier = Modifier.height(7.dp))
+        ExamRow("GRE", gre)
     }
 }
 
 @Composable
 private fun ExamRow(exam: String, relevance: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(11.dp)
-    ) {
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(11.dp)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(exam, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(
-                text = exam,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = relevance.ifBlank { "—" },
+                relevance.ifBlank { "—" },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -488,75 +442,42 @@ private fun ExamRow(exam: String, relevance: String) {
 private fun ReviewActionCard(
     feedbackMessage: String?,
     onKnown: () -> Unit,
-    onPractice: () -> Unit,
-    onHard: () -> Unit
+    onHard: () -> Unit,
+    onPractice: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier.padding(15.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("وضعیت یادگیری", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "این ارزیابی برای زمان‌بندی مرورهای بعدی استفاده می‌شود.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(onClick = onKnown, modifier = Modifier.fillMaxWidth()) {
+                Text("بلدم — برنامه‌ریزی مرور بعدی")
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onHard, modifier = Modifier.weight(1f)) {
+                    Text("سخت بود")
+                }
+                OutlinedButton(onClick = onPractice, modifier = Modifier.weight(1f)) {
+                    Text("نیاز به مرور")
+                }
+            }
+            feedbackMessage?.let {
                 Text(
-                    text = "وضعیت یادگیری",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "برای مرورهای بعدی مشخص کن این واژه چقدر برات آشناست.",
+                    it,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.primary
                 )
-            }
-
-            Button(
-                onClick = onKnown,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("بلدم")
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onPractice,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                ) {
-                    Text("نیاز به تمرین")
-                }
-                OutlinedButton(
-                    onClick = onHard,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.45f))
-                ) {
-                    Text("سخت بود", color = MaterialTheme.colorScheme.error)
-                }
-            }
-
-            if (feedbackMessage != null) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text(
-                        text = feedbackMessage,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 8.dp)
-                    )
-                }
             }
         }
     }
@@ -566,39 +487,36 @@ private fun ReviewActionCard(
 private fun SectionCard(
     title: String,
     subtitle: String? = null,
-    trailing: @Composable (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Column(modifier = Modifier.padding(15.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (subtitle != null) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    subtitle?.let {
                         Text(
-                            text = subtitle,
+                            it,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                if (trailing != null) trailing()
+                trailing?.invoke()
             }
-            Spacer(modifier = Modifier.height(11.dp))
             content()
         }
     }

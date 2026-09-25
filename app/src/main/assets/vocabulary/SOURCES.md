@@ -1,9 +1,16 @@
 # Bundled vocabulary sources
 
-LinguaFa bundles the generated IELTS, TOEFL and GRE JSONL files directly in the Android APK. Runtime network access is not required to import these packs.
+LinguaFa bundles versioned JSONL vocabulary directly in the Android APK. The app does not need network access to review these cards.
 
-- **ECDICT** (`skywind3000/ECDICT`) — MIT License. Used for IELTS/TOEFL/GRE exam tags, English definitions, pronunciation and POS/frequency metadata.
-- **Openjam** (`amirj4m/openjam`) — MIT License. Used for high-quality Persian translations, examples, IPA and CEFR metadata when available.
-- **EnglishToPersianDictionaries** (`VahidN/EnglishToPersianDictionaries`) — Apache License 2.0. Used as a Persian-meaning fallback.
+## Primary open sources
 
-The exam providers do not publish one official finite list of every word that may appear on their tests. Therefore “complete” here means the complete set of entries carrying each exam tag in the pinned open datasets above, not an official ETS/IELTS master vocabulary.
+- **ECDICT** (`skywind3000/ECDICT`) — MIT. Exam membership, definitions, pronunciation, POS and frequency metadata.
+- **Openjam** (`amirj4m/openjam`) — MIT. Persian meanings, examples, IPA and CEFR metadata.
+- **EnglishToPersianDictionaries** (`VahidN/EnglishToPersianDictionaries`) — Apache-2.0. Persian fallback meanings.
+- **NGSL 1.2** (`newgeneralservicelist.com`) — CC BY-SA 4.0. 2,809 high-frequency general-English lemmas and learner definitions.
+- **NAWL 1.2** (`newgeneralservicelist.com`) — CC BY-SA 4.0. 957 academic-English lemmas and learner definitions.
+- **CEFR-J Vocabulary Profile 1.5** (`openlanguageprofiles/olp-en-cefrj`) — permitted for research and commercial use with proper citation; used as an independent CEFR signal.
+
+The General Core pack is the union of NGSL and NAWL. A source word is bundled only when the card has a Persian meaning; this keeps the app from showing empty flashcards. Exam packs remain exam-tagged ECDICT banks, enriched with the open general/academic metadata when a word overlaps.
+
+The IELTS, TOEFL and GRE providers do not publish one official finite master vocabulary list. Counts in the app therefore describe the pinned open datasets, not an official guarantee of test coverage.

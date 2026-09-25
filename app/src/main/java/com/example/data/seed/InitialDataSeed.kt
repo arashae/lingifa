@@ -10,6 +10,7 @@ object InitialDataSeed {
     const val GRE_MASTER_PACK_ID = "pack_gre_master"
     const val IELTS_CORE_PACK_ID = "pack_ielts_core"
     const val TOEFL_CORE_PACK_ID = "pack_toefl_core"
+    const val GENERAL_CORE_PACK_ID = "pack_general_core"
 
     private val CEFR_PACK_IDS = mapOf(
         "A1" to "pack_cefr_a1",
@@ -50,6 +51,23 @@ object InitialDataSeed {
             id = "pack_cefr_c2", titleFa = "مسیر عمومی C2 + Advanced", titleEn = "CEFR C2 + Advanced",
             descriptionFa = "واژگان پیشرفته عمومی و متون تخصصی برای بالاترین سطح تسلط زبانی.",
             level = "C2", exam = "General", wordCount = 16321, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = GENERAL_CORE_PACK_ID,
+            titleFa = "هسته انگلیسی روزمره و آکادمیک",
+            titleEn = "General + Academic Core",
+            descriptionFa = "ترکیب واژه‌های پرتکرار روزمره و آکادمیک از NGSL و NAWL برای تقویت هم‌زمان مکالمه و آمادگی IELTS، TOEFL و GRE.",
+            level = "A1-C1",
+            exam = "General / IELTS / TOEFL / GRE",
+            wordCount = 3767,
+            isDownloaded = false,
+            category = "Core English",
+            iconName = "translate",
+            version = 4,
+            source = "NGSL 1.2 + NAWL 1.2 + CEFR-J",
+            targetWordCount = 3767,
+            installedWordCount = 0,
+            isCorePack = true
         ),
         VocabularyPack(
             id = "pack_ielts_core",
@@ -96,8 +114,8 @@ object InitialDataSeed {
             isDownloaded = false,
             category = "Master Bank",
             iconName = "school",
-            version = 3,
-            source = "ECDICT + Openjam + EnglishToPersianDictionaries",
+            version = 4,
+            source = "ECDICT + Openjam + EnglishToPersianDictionaries + NGSL + NAWL + CEFR-J",
             targetWordCount = 5040,
             installedWordCount = 0,
             isCorePack = true
@@ -113,8 +131,8 @@ object InitialDataSeed {
             isDownloaded = false,
             category = "Master Bank",
             iconName = "menu_book",
-            version = 3,
-            source = "ECDICT + Openjam + EnglishToPersianDictionaries",
+            version = 4,
+            source = "ECDICT + Openjam + EnglishToPersianDictionaries + NGSL + NAWL + CEFR-J",
             targetWordCount = 6974,
             installedWordCount = 0,
             isCorePack = true
@@ -130,8 +148,8 @@ object InitialDataSeed {
             isDownloaded = false,
             category = "Master Bank",
             iconName = "psychology",
-            version = 3,
-            source = "ECDICT + Openjam + EnglishToPersianDictionaries",
+            version = 4,
+            source = "ECDICT + Openjam + EnglishToPersianDictionaries + NGSL + NAWL + CEFR-J",
             targetWordCount = 7504,
             installedWordCount = 0,
             isCorePack = true

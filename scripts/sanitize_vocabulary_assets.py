@@ -90,7 +90,6 @@ PROPER_NOUN_DEFINITION_PATTERNS = (
     "island of ",
     "capital of ",
     "province of ",
-    "state in ",
     "surname",
     "given name",
     "family name",

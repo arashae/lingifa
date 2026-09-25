@@ -1,5 +1,5 @@
 {
-  "datasetVersion": "3.0.0",
+  "datasetVersion": "4.0.0",
   "generatedFrom": {
     "examMembership": "skywind3000/ECDICT (MIT)",
     "primaryPersianEnrichment": "amirj4m/openjam (MIT)",
@@ -48,5 +48,14 @@
     "IELTS": [],
     "TOEFL": [],
     "GRE": []
+  },
+  "sourceAugmentation": {
+    "ngslWords": 2809,
+    "nawlWords": 959,
+    "cefrjWords": 6860,
+    "existingRowsTagged": 14371,
+    "generalCoreCards": 3767,
+    "newCardsWithPersianMeaning": 136,
+    "generalCoreMissingPersian": 0
   }
 }

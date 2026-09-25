@@ -6,6 +6,8 @@ on:
     paths:
       - scripts/build_vocabulary_assets.py
       - scripts/postprocess_vocabulary_meanings.py
+      - scripts/sanitize_vocabulary_assets.py
+      - scripts/validate_vocabulary_quality.py
       - .github/workflows/vocabulary-bundle.yml
   workflow_dispatch:
 
@@ -37,9 +39,16 @@ jobs:
       - name: Resolve remaining Persian meanings
         run: python scripts/postprocess_vocabulary_meanings.py
 
+      - name: Remove synthetic collocations and down-rank C2 names
+        run: python scripts/sanitize_vocabulary_assets.py
+
+      - name: Validate vocabulary quality
+        run: python scripts/validate_vocabulary_quality.py
+
       - name: Show generated coverage
         run: |
           cat app/src/main/assets/vocabulary/coverage_report.json
+          cat app/src/main/assets/vocabulary/quality_report.json
           git diff --stat
 
       - name: Commit generated vocabulary into repository
@@ -50,7 +59,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Vocabulary assets are already up to date."
           else
-            git commit -m "data: bundle complete offline IELTS TOEFL GRE vocabulary"
+            git commit -m "data: sanitize and validate offline vocabulary bundle"
             # Other chats/workflows may update UI on main while this data job is running.
             # Rebase the generated-assets commit so we never overwrite or reject their work.
             git fetch origin main
@@ -92,5 +101,6 @@ jobs:
           path: |
             LinguaFa-offline-vocabulary.apk
             app/src/main/assets/vocabulary/coverage_report.json
+            app/src/main/assets/vocabulary/quality_report.json
           if-no-files-found: error
           retention-days: 14

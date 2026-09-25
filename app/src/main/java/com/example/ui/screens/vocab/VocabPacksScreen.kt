@@ -145,7 +145,7 @@ private fun CefrLearningPathCard(
         "B1" to "مستقل",
         "B2" to "میان‌بالا",
         "C1" to "پیشرفته",
-        "C2" to "تسلط کامل"
+        "C2" to "C2 + پیشرفته عمومی"
     )
 
     Card(
@@ -271,6 +271,14 @@ private fun VocabPackCard(
     val isSyncing = syncState?.isRunning == true
     val isComplete = pack.isCorePack && target > 0 && installed >= target
     val statusMessage = syncState?.message?.takeIf { it.isNotBlank() }
+    val isC2Advanced = pack.id == "pack_cefr_c2"
+    val displayTitleFa = if (isC2Advanced) "C2 + واژگان پیشرفته" else pack.titleFa
+    val displayTitleEn = if (isC2Advanced) "C2 + Advanced Vocabulary" else pack.titleEn
+    val displayDescription = if (isC2Advanced) {
+        "بانک گسترده واژگان بسیار پیشرفته و عمومی؛ موارد کم‌کاربرد و نام‌های خاص در اولویت مطالعه پایین‌تر قرار می‌گیرند."
+    } else {
+        pack.descriptionFa
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,12 +312,12 @@ private fun VocabPackCard(
                 Spacer(modifier = Modifier.width(11.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(
-                        text = pack.titleFa,
+                        text = displayTitleFa,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = pack.titleEn,
+                        text = displayTitleEn,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -318,9 +326,9 @@ private fun VocabPackCard(
                 CefrBadge(level = pack.level)
             }
 
-            if (pack.descriptionFa.isNotBlank()) {
+            if (displayDescription.isNotBlank()) {
                 Text(
-                    text = pack.descriptionFa,
+                    text = displayDescription,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

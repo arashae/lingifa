@@ -147,9 +147,11 @@ fun SrsReviewScreen(
 
                     ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
                     ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
+                    ReviewExerciseType.CONTEXT_CLOZE,
                     ReviewExerciseType.LISTENING_CHOOSE -> MultipleChoiceExercise(
                         item = currentWord,
                         exerciseType = state.currentExerciseType,
+                        contextPrompt = state.contextPrompt,
                         options = state.multipleChoiceOptions,
                         selectedIndex = state.selectedOptionIndex,
                         isChecked = state.isOptionAnswerChecked,
@@ -461,6 +463,7 @@ private fun ResponseRatingButton(
 private fun MultipleChoiceExercise(
     item: VocabularyItem,
     exerciseType: ReviewExerciseType,
+    contextPrompt: String,
     options: List<String>,
     selectedIndex: Int?,
     isChecked: Boolean,
@@ -500,6 +503,23 @@ private fun MultipleChoiceExercise(
                             AudioSpeakerButton(onClick = onPlayAudio, size = 32)
                         }
                     }
+                    ReviewExerciseType.CONTEXT_CLOZE -> {
+                        Text(
+                            text = "واژه مناسب را از روی بافت جمله بازیابی کن",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Text(
+                                text = contextPrompt,
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                     else -> {
                         Text("کدام واژه انگلیسی با این معنی هماهنگ است؟")
                         Spacer(modifier = Modifier.height(10.dp))
@@ -517,7 +537,8 @@ private fun MultipleChoiceExercise(
             options.forEachIndexed { idx, optionText ->
                 val isSelected = selectedIndex == idx
                 val isCorrect = when (exerciseType) {
-                    ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> optionText == item.word
+                    ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
+                    ReviewExerciseType.CONTEXT_CLOZE -> optionText == item.word
                     else -> optionText == item.persianMeaning
                 }
                 val background = when {
@@ -622,7 +643,7 @@ private fun TypeWordExercise(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "این تمرین به‌تنهایی وضعیت حافظه را تعیین نمی‌کند؛ حالا خودت میزان یادآوری را ثبت کن.",
+                        text = "این تمرین فقط املا/تولید را می‌سنجد؛ امتیاز معنایی جداگانه با خودارزیابی ثبت می‌شود.",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),

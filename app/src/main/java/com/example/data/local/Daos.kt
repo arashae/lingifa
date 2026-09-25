@@ -171,6 +171,41 @@ interface VocabularyDao {
 
     @Query("SELECT * FROM vocabulary_items WHERE mastery >= 70 ORDER BY word ASC")
     fun getLearnedVocabularies(): Flow<List<VocabularyItem>>
+
+    @Query("SELECT COUNT(*) FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND mastery < 50")
+    fun getWeakCount(): Flow<Int>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM vocabulary_items WHERE id = :id LIMIT 1")
+    fun getWordWithSenses(id: Long): Flow<com.example.data.model.VocabularyWithSenses?>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM vocabulary_items WHERE id = :id LIMIT 1")
+    suspend fun getWordWithSensesSync(id: Long): com.example.data.model.VocabularyWithSenses?
+}
+
+@Dao
+interface VocabularySenseDao {
+    @Query("SELECT * FROM vocabulary_senses WHERE vocabularyId = :vocabularyId ORDER BY senseIndex ASC")
+    fun getSensesForWord(vocabularyId: Long): Flow<List<com.example.data.model.VocabularySense>>
+
+    @Query("SELECT * FROM vocabulary_senses WHERE vocabularyId = :vocabularyId ORDER BY senseIndex ASC")
+    suspend fun getSensesForWordSync(vocabularyId: Long): List<com.example.data.model.VocabularySense>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(sense: com.example.data.model.VocabularySense): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(senses: List<com.example.data.model.VocabularySense>): List<Long>
+
+    @Delete
+    suspend fun delete(sense: com.example.data.model.VocabularySense)
+
+    @Query("DELETE FROM vocabulary_senses WHERE vocabularyId = :vocabularyId")
+    suspend fun deleteSensesForWord(vocabularyId: Long)
+
+    @Query("SELECT COUNT(*) FROM vocabulary_senses")
+    suspend fun getSenseCount(): Int
 }
 
 @Dao

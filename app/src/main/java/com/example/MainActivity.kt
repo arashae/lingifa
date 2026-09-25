@@ -11,12 +11,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import com.example.network.AiPreferences
 import com.example.ui.navigation.AppNavGraph
 import com.example.ui.theme.LinguaFaTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AiPreferences.init(applicationContext)
         enableEdgeToEdge()
         setContent {
             LinguaFaTheme {

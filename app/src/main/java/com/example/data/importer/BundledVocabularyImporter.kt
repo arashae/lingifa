@@ -209,6 +209,12 @@ object BundledVocabularyImporter {
                     item.id
                 }
                 packItems.add(VocabularyPackItem(packId = packId, vocabularyId = vocabId))
+                if (packId == "pack_ielts_master" && (item.examPriority >= 70 || (item.learningOrder in 1..2000))) {
+                    packItems.add(VocabularyPackItem(packId = "pack_ielts_core", vocabularyId = vocabId))
+                }
+                if (packId == "pack_toefl_master" && (item.examPriority >= 70 || (item.learningOrder in 1..2200))) {
+                    packItems.add(VocabularyPackItem(packId = "pack_toefl_core", vocabularyId = vocabId))
+                }
             }
             packItemDao.insertAll(packItems)
         }

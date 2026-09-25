@@ -30,6 +30,13 @@ class InitialDataSeedTest {
         assertTrue(ielts.isCorePack)
         assertTrue(toefl.isCorePack)
         assertTrue(gre.isCorePack)
+
+        val ieltsCore = packs.getValue(InitialDataSeed.IELTS_CORE_PACK_ID)
+        val toeflCore = packs.getValue(InitialDataSeed.TOEFL_CORE_PACK_ID)
+        assertEquals(2000, ieltsCore.targetWordCount)
+        assertEquals(2200, toeflCore.targetWordCount)
+        assertTrue(ieltsCore.isCorePack)
+        assertTrue(toeflCore.isCorePack)
     }
 
     @Test

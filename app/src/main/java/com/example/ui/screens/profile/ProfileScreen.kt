@@ -19,9 +19,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Description
@@ -30,14 +33,20 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -231,6 +240,18 @@ fun ProfileScreen(
                     }
                 }
 
+                // DeepSeek AI Configuration Card
+                AiConfigurationCard(
+                    currentKey = state.deepSeekApiKey,
+                    currentModel = state.deepSeekModel,
+                    isTesting = state.isTestingAi,
+                    connectionStatus = state.aiConnectionStatus,
+                    onSaveKey = viewModel::setDeepSeekApiKey,
+                    onClearKey = viewModel::clearDeepSeekApiKey,
+                    onTestConnection = viewModel::testDeepSeekConnection,
+                    onSelectModel = viewModel::setDeepSeekModel
+                )
+
                 // Mistake Notebook Shortcut
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -423,6 +444,167 @@ fun ProfileScreen(
                         }
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiConfigurationCard(
+    currentKey: String,
+    currentModel: String,
+    isTesting: Boolean,
+    connectionStatus: String?,
+    onSaveKey: (String) -> Unit,
+    onClearKey: () -> Unit,
+    onTestConnection: (String) -> Unit,
+    onSelectModel: (String) -> Unit
+) {
+    var inputKey by remember(currentKey) { mutableStateOf(currentKey) }
+    var keyVisible by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "DeepSeek AI Configuration",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Powers AI Tutor, Writing Grader, Speaking Coach & Flashcard generator.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = inputKey,
+                onValueChange = { inputKey = it },
+                label = { Text("DeepSeek API Key") },
+                placeholder = { Text("sk-...") },
+                singleLine = true,
+                visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { keyVisible = !keyVisible }) {
+                        Icon(
+                            imageVector = if (keyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (keyVisible) "Hide key" else "Show key"
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Model:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                listOf("deepseek-chat", "deepseek-reasoner").forEach { model ->
+                    FilterChip(
+                        selected = currentModel == model,
+                        onClick = { onSelectModel(model) },
+                        label = { Text(model) },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            }
+
+            if (!connectionStatus.isNullOrBlank()) {
+                val isSuccess = connectionStatus.contains("Connected", ignoreCase = true)
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isSuccess) SuccessGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (isSuccess) SuccessGreen.copy(alpha = 0.4f) else MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = if (isSuccess) SuccessGreen else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = connectionStatus,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = if (isSuccess) SuccessGreen else MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { onSaveKey(inputKey) },
+                    enabled = inputKey.isNotBlank() && inputKey != currentKey,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Save Key")
+                }
+
+                OutlinedButton(
+                    onClick = { onTestConnection(inputKey) },
+                    enabled = !isTesting && inputKey.isNotBlank(),
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (isTesting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Testing…")
+                    } else {
+                        Text("Test Connection")
+                    }
+                }
             }
         }
     }

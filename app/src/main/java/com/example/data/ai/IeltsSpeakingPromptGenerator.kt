@@ -342,9 +342,9 @@ object IeltsSpeakingPromptGenerator {
         val overallBand = ((fluencyScore + lexicalScore + grammarScore + pronunciationScore) / 4.0f * 2).toInt() / 2.0f
 
         val upgrades = listOf(
-            VocabUpgradeItem("very important", "vital / indispensable", "به جای very important، استفاده از واژه آکادمیک تر نمره شما را به ۷.۵ ارتقا می‌دهد."),
-            VocabUpgradeItem("good idea", "viable approach / laudable initiative", "عبارت‌های رسمی و دقیق‌تر در آزمون آکادمیک تاثیرگذارترند."),
-            VocabUpgradeItem("a lot of people", "a considerable proportion of the population", "توصیف آماری و اجتماعی دقیق‌تر برای تسک ۲ و ۳.")
+            VocabUpgradeItem("very important", "vital / indispensable", "استفاده از واژگان دقیق آکادمیک (Lexical Precision) وضوح استدلال و دقت زبانی را بالا می‌برد."),
+            VocabUpgradeItem("good idea", "viable approach / laudable initiative", "عبارت‌های رسمی و دقیق‌تر در گفتار و نوشتار آکادمیک وضوح استدلال را افزایش می‌دهند."),
+            VocabUpgradeItem("a lot of people", "a considerable proportion of the population", "توصیف آماری و اجتماعی دقیق‌تر و آکادمیک برای تسک ۲ و ۳.")
         )
 
         val persianMistakes = mutableListOf<String>()

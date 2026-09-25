@@ -95,12 +95,16 @@ fun HomeScreen(
                 )
             }
 
-            // 2. Focused Daily Hero Card (Today's SRS Review CTA)
+            // 2. Exam Sprint Dashboard (Real 3-stage queue: Due -> Weak -> New)
             item {
-                ModernFocusHeroCard(
+                ExamSprintDashboardCard(
+                    targetExam = state.userProfile.targetGoal.ifBlank { "IELTS" },
+                    targetScore = state.userProfile.targetBandOrScore.ifBlank { "7.5" },
+                    daysRemaining = state.daysRemaining,
                     dueCount = state.dueWordsCount,
-                    totalWords = state.totalWordsCount,
-                    onStartReview = onNavigateToReview,
+                    weakCount = state.weakWordsCount,
+                    newCount = state.dailyNewWordsLimit,
+                    onStartSprint = onNavigateToReview,
                     onOpenTutor = onNavigateToTutor
                 )
             }
@@ -223,60 +227,79 @@ private fun HomeHeader(
 }
 
 @Composable
-private fun ModernFocusHeroCard(
+private fun ExamSprintDashboardCard(
+    targetExam: String,
+    targetScore: String,
+    daysRemaining: Int?,
     dueCount: Int,
-    totalWords: Int,
-    onStartReview: () -> Unit,
+    weakCount: Int,
+    newCount: Int,
+    onStartSprint: () -> Unit,
     onOpenTutor: () -> Unit
 ) {
-    val hasDue = dueCount > 0
+    val totalSprintQueue = dueCount + weakCount + newCount
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasDue) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
         border = BorderStroke(
             1.dp,
-            if (hasDue) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            // Header Row: Exam Title + Days Remaining / Sprint Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "$targetExam Sprint Plan",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                        ) {
+                            Text(
+                                text = "Target: $targetScore",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                     Text(
-                        text = if (hasDue) "Smart Spaced Review (SRS)" else "All Caught Up! 🎉",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = if (hasDue) "$dueCount cards are ready for memory consolidation today."
-                        else "You have reviewed all cards due today. Ready to explore new words?",
+                        text = if (daysRemaining != null) "$daysRemaining days remaining until test day"
+                               else "1–2 Month Intensive Vocabulary Preparation",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (hasDue) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (hasDue) MaterialTheme.colorScheme.primary else SuccessGreen,
+                    color = if (dueCount > 0) Color(0xFFDC2626) else SuccessGreen,
                     contentColor = Color.White
                 ) {
                     Text(
-                        text = if (hasDue) "$dueCount Due" else "Done",
+                        text = if (dueCount > 0) "$dueCount Due" else "On Track",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
@@ -284,24 +307,49 @@ private fun ModernFocusHeroCard(
                 }
             }
 
+            // 3-Stage Queue Pipeline Indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SprintStagePill(
+                    title = "Due Reviews",
+                    count = dueCount,
+                    accentColor = Color(0xFFDC2626),
+                    modifier = Modifier.weight(1f)
+                )
+                SprintStagePill(
+                    title = "Weak Words",
+                    count = weakCount,
+                    accentColor = Color(0xFFD97706),
+                    modifier = Modifier.weight(1f)
+                )
+                SprintStagePill(
+                    title = "New Words",
+                    count = newCount,
+                    accentColor = PrimaryBlue,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // CTA Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = onStartReview,
+                    onClick = onStartSprint,
                     modifier = Modifier.weight(1.3f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (hasDue) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surface,
-                        contentColor = if (hasDue) Color.White else MaterialTheme.colorScheme.primary
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
                     )
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (hasDue) "Start SRS Review" else "Free Practice",
+                        text = "Start Daily Sprint ($totalSprintQueue)",
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
@@ -318,6 +366,42 @@ private fun ModernFocusHeroCard(
                     Text("AI Tutor", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SprintStagePill(
+    title: String,
+    count: Int,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.25f))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = count.toString(),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = accentColor
+            )
+            Text(
+                text = title,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

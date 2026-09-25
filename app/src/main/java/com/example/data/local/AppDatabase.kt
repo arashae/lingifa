@@ -20,6 +20,7 @@ import com.example.data.model.VocabularyDatasetChunk
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
 import com.example.data.model.VocabularyPackItem
+import com.example.data.model.VocabularySense
 import com.example.data.seed.IeltsDeckSeed
 import com.example.data.seed.InitialDataSeed
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +33,7 @@ import java.util.Locale
 @Database(
     entities = [
         VocabularyItem::class,
+        VocabularySense::class,
         VocabularyPack::class,
         VocabularyPackItem::class,
         VocabularyDatasetChunk::class,
@@ -44,12 +46,13 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun vocabularyDao(): VocabularyDao
+    abstract fun vocabularySenseDao(): VocabularySenseDao
     abstract fun vocabularyPackDao(): VocabularyPackDao
     abstract fun vocabularyPackItemDao(): VocabularyPackItemDao
     abstract fun vocabularyDatasetChunkDao(): VocabularyDatasetChunkDao
@@ -146,6 +149,42 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS vocabulary_senses (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        vocabularyId INTEGER NOT NULL,
+                        senseIndex INTEGER NOT NULL DEFAULT 1,
+                        partOfSpeech TEXT NOT NULL DEFAULT '',
+                        cefrLevel TEXT NOT NULL DEFAULT '',
+                        englishDefinition TEXT NOT NULL DEFAULT '',
+                        persianMeaning TEXT NOT NULL DEFAULT '',
+                        exampleSentence TEXT NOT NULL DEFAULT '',
+                        exampleTranslation TEXT NOT NULL DEFAULT '',
+                        collocations TEXT NOT NULL DEFAULT '[]',
+                        isPrimary INTEGER NOT NULL DEFAULT 1,
+                        FOREIGN KEY(vocabularyId) REFERENCES vocabulary_items(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_senses_vocabularyId ON vocabulary_senses(vocabularyId)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_vocabulary_senses_vocabularyId_senseIndex ON vocabulary_senses(vocabularyId, senseIndex)")
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO vocabulary_senses (
+                        vocabularyId, senseIndex, partOfSpeech, cefrLevel,
+                        englishDefinition, persianMeaning, exampleSentence, exampleTranslation,
+                        collocations, isPrimary
+                    )
+                    SELECT id, 1, partOfSpeech, cefrLevel, englishDefinition, persianMeaning, example, examplePersian, collocations, 1
+                    FROM vocabulary_items
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -154,8 +193,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()
                 INSTANCE = instance
@@ -188,9 +226,6 @@ abstract class AppDatabase : RoomDatabase() {
                             if (database.ieltsFlashcardDao().getDeckCountSync() == 0) {
                                 populateIeltsDecks(database)
                             }
-                            if (database.dailyStreakDao().getTotalDaysCountSync() == 0) {
-                                populateStreakRecords(database)
-                            }
                         }
 
                         val summary = BundledVocabularyImporter.importBundledCatalog(
@@ -205,6 +240,33 @@ abstract class AppDatabase : RoomDatabase() {
                             ensureCefrMemberships(database)
                             refreshInstalledCounts(database)
                         }
+
+                        ensureVocabularySenses(database)
+                    }
+                }
+            }
+
+            private suspend fun ensureVocabularySenses(database: AppDatabase) {
+                val senseDao = database.vocabularySenseDao()
+                if (senseDao.getSenseCount() == 0) {
+                    val vocabDao = database.vocabularyDao()
+                    val allWords = vocabDao.getAllVocabulariesSync()
+                    if (allWords.isNotEmpty()) {
+                        val senses = allWords.map { word ->
+                            VocabularySense(
+                                vocabularyId = word.id,
+                                senseIndex = 1,
+                                partOfSpeech = word.partOfSpeech,
+                                cefrLevel = word.cefrLevel,
+                                englishDefinition = word.englishDefinition,
+                                persianMeaning = word.persianMeaning,
+                                exampleSentence = word.example,
+                                exampleTranslation = word.examplePersian,
+                                collocations = word.collocations,
+                                isPrimary = true
+                            )
+                        }
+                        senseDao.insertAll(senses)
                     }
                 }
             }
@@ -250,7 +312,6 @@ abstract class AppDatabase : RoomDatabase() {
                 refreshInstalledCounts(database)
 
                 populateIeltsDecks(database)
-                populateStreakRecords(database)
             }
 
             /**
@@ -305,34 +366,6 @@ abstract class AppDatabase : RoomDatabase() {
                 if (ieltsDao.getDeckCountSync() == 0) {
                     ieltsDao.insertDecks(IeltsDeckSeed.getDefaultDecks())
                     ieltsDao.insertCards(IeltsDeckSeed.getDefaultFlashcards())
-                }
-            }
-
-            private suspend fun populateStreakRecords(database: AppDatabase) {
-                val streakDao = database.dailyStreakDao()
-                if (streakDao.getTotalDaysCountSync() == 0) {
-                    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                    val activities = listOf("VOCABULARY", "IELTS_FLASHCARDS", "REVIEW", "AI_CARD")
-
-                    // Seed past 3 days + today (4-day active streak)
-                    for (daysAgo in 3 downTo 0) {
-                        val checkCal = Calendar.getInstance()
-                        checkCal.add(Calendar.DAY_OF_YEAR, -daysAgo)
-                        val dateStr = dateFormat.format(checkCal.time)
-                        val activity = activities[daysAgo % activities.size]
-                        val items = 5 + (daysAgo * 3)
-                        streakDao.insertOrUpdate(
-                            DailyStreakRecord(
-                                date = dateStr,
-                                timestamp = checkCal.timeInMillis,
-                                itemsPracticed = items,
-                                minutesSpent = 15 + daysAgo * 5,
-                                xpEarned = 25 + daysAgo * 10,
-                                activityType = activity,
-                                isGoalMet = true
-                            )
-                        )
-                    }
                 }
             }
         }

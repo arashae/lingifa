@@ -10,6 +10,8 @@ import com.example.data.model.UserProfile
 import com.example.data.repository.MistakeRepository
 import com.example.data.repository.UserProfileRepository
 import com.example.data.repository.VocabularyRepository
+import com.example.network.AiPreferences
+import com.example.network.DeepSeekClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +28,11 @@ data class ProfileUiState(
     val learnedWordsCount: Int = 0,
     val exportedContent: String? = null,
     val exportFormat: String? = null,
-    val statusMessage: String? = null
+    val statusMessage: String? = null,
+    val deepSeekApiKey: String = "",
+    val deepSeekModel: String = "deepseek-chat",
+    val isTestingAi: Boolean = false,
+    val aiConnectionStatus: String? = null
 )
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -39,6 +45,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _exportedContent = MutableStateFlow<String?>(null)
     private val _exportFormat = MutableStateFlow<String?>(null)
     private val _statusMessage = MutableStateFlow<String?>(null)
+    private val _deepSeekApiKey = MutableStateFlow(AiPreferences.getDeepSeekApiKey(application))
+    private val _deepSeekModel = MutableStateFlow(AiPreferences.getDeepSeekModel(application))
+    private val _isTestingAi = MutableStateFlow(false)
+    private val _aiConnectionStatus = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<ProfileUiState> = combine(
         profileRepo.profile,
@@ -47,7 +57,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         vocabRepo.learnedCount,
         _exportedContent,
         _exportFormat,
-        _statusMessage
+        _statusMessage,
+        _deepSeekApiKey,
+        _deepSeekModel,
+        _isTestingAi,
+        _aiConnectionStatus
     ) { params ->
         val prof = params[0] as? UserProfile ?: UserProfile()
         @Suppress("UNCHECKED_CAST")
@@ -57,6 +71,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         val expContent = params[4] as? String
         val expFormat = params[5] as? String
         val status = params[6] as? String
+        val dsKey = params[7] as String
+        val dsModel = params[8] as String
+        val testing = params[9] as Boolean
+        val connStatus = params[10] as? String
 
         ProfileUiState(
             profile = prof,
@@ -65,7 +83,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             learnedWordsCount = learned,
             exportedContent = expContent,
             exportFormat = expFormat,
-            statusMessage = status
+            statusMessage = status,
+            deepSeekApiKey = dsKey,
+            deepSeekModel = dsModel,
+            isTestingAi = testing,
+            aiConnectionStatus = connStatus
         )
     }.stateIn(
         scope = viewModelScope,
@@ -130,5 +152,40 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearStatusMessage() {
         _statusMessage.value = null
+    }
+
+    fun setDeepSeekApiKey(key: String) {
+        AiPreferences.setDeepSeekApiKey(getApplication(), key)
+        _deepSeekApiKey.value = key.trim()
+        _statusMessage.value = "DeepSeek API key saved."
+    }
+
+    fun clearDeepSeekApiKey() {
+        AiPreferences.clearDeepSeekApiKey(getApplication())
+        _deepSeekApiKey.value = ""
+        _aiConnectionStatus.value = null
+        _statusMessage.value = "DeepSeek API key cleared."
+    }
+
+    fun setDeepSeekModel(model: String) {
+        AiPreferences.setDeepSeekModel(getApplication(), model)
+        _deepSeekModel.value = model
+    }
+
+    fun testDeepSeekConnection(key: String = _deepSeekApiKey.value) {
+        viewModelScope.launch {
+            _isTestingAi.value = true
+            _aiConnectionStatus.value = "Testing connection..."
+            val result = DeepSeekClient.testConnection(key, _deepSeekModel.value)
+            _isTestingAi.value = false
+            if (result.isSuccess) {
+                _aiConnectionStatus.value = "Connected successfully (${result.getOrNull()})"
+                _statusMessage.value = "DeepSeek connected!"
+            } else {
+                val err = result.exceptionOrNull()?.message ?: "Unknown error"
+                _aiConnectionStatus.value = "Error: $err"
+                _statusMessage.value = "Connection failed: $err"
+            }
+        }
     }
 }

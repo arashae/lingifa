@@ -18,12 +18,32 @@ import kotlinx.coroutines.flow.Flow
 class VocabularyRepository(
     private val vocabDao: VocabularyDao,
     private val packDao: VocabularyPackDao,
-    private val packItemDao: VocabularyPackItemDao? = null
+    private val packItemDao: VocabularyPackItemDao? = null,
+    private val senseDao: VocabularySenseDao? = null
 ) {
     val allVocabularies: Flow<List<VocabularyItem>> = vocabDao.getAllVocabularies()
     val totalCount: Flow<Int> = vocabDao.getCount()
     val learnedCount: Flow<Int> = vocabDao.getLearnedCount()
+    val weakCount: Flow<Int> = vocabDao.getWeakCount()
     val allPacks: Flow<List<VocabularyPack>> = packDao.getAllPacks()
+
+    fun getWeakCount(): Flow<Int> = vocabDao.getWeakCount()
+
+    fun getWordWithSenses(id: Long): Flow<com.example.data.model.VocabularyWithSenses?> =
+        vocabDao.getWordWithSenses(id)
+
+    suspend fun getWordWithSensesSync(id: Long): com.example.data.model.VocabularyWithSenses? =
+        vocabDao.getWordWithSensesSync(id)
+
+    fun getSensesForWord(vocabularyId: Long): Flow<List<com.example.data.model.VocabularySense>> =
+        senseDao?.getSensesForWord(vocabularyId) ?: kotlinx.coroutines.flow.flowOf(emptyList())
+
+    suspend fun saveSenses(vocabularyId: Long, senses: List<com.example.data.model.VocabularySense>) {
+        senseDao?.let { dao ->
+            dao.deleteSensesForWord(vocabularyId)
+            dao.insertAll(senses)
+        }
+    }
 
     fun getDueVocabularies(currentTime: Long = System.currentTimeMillis()): Flow<List<VocabularyItem>> {
         return vocabDao.getDueVocabularies(currentTime)

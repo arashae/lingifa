@@ -8,6 +8,8 @@ object InitialDataSeed {
     const val IELTS_MASTER_PACK_ID = "pack_ielts_master"
     const val TOEFL_MASTER_PACK_ID = "pack_toefl_master"
     const val GRE_MASTER_PACK_ID = "pack_gre_master"
+    const val IELTS_CORE_PACK_ID = "pack_ielts_core"
+    const val TOEFL_CORE_PACK_ID = "pack_toefl_core"
 
     private val CEFR_PACK_IDS = mapOf(
         "A1" to "pack_cefr_a1",
@@ -45,9 +47,43 @@ object InitialDataSeed {
             level = "C1", exam = "General", wordCount = 1105, category = "CEFR Curriculum", iconName = "translate"
         ),
         VocabularyPack(
-            id = "pack_cefr_c2", titleFa = "مسیر عمومی C2", titleEn = "CEFR C2 Proficient",
-            descriptionFa = "واژگان بسیار پیشرفته برای درک و تولید زبان در بالاترین سطح.",
+            id = "pack_cefr_c2", titleFa = "مسیر عمومی C2 + Advanced", titleEn = "CEFR C2 + Advanced",
+            descriptionFa = "واژگان پیشرفته عمومی و متون تخصصی برای بالاترین سطح تسلط زبانی.",
             level = "C2", exam = "General", wordCount = 16321, category = "CEFR Curriculum", iconName = "translate"
+        ),
+        VocabularyPack(
+            id = "pack_ielts_core",
+            titleFa = "هسته واژگان آیلتس (IELTS Core)",
+            titleEn = "IELTS Core Academic (High Yield)",
+            descriptionFa = "واژگان بنیادین و بسیار پرتکرار رایتینگ و اسپیکینگ آیلتس برای برنامه فشرده ۱ تا ۲ ماهه.",
+            level = "B2-C1",
+            exam = "IELTS",
+            wordCount = 2000,
+            isDownloaded = false,
+            category = "Exam Sprints",
+            iconName = "school",
+            version = 1,
+            source = "AWL + Cambridge Lexical Focus",
+            targetWordCount = 2000,
+            installedWordCount = 0,
+            isCorePack = true
+        ),
+        VocabularyPack(
+            id = "pack_toefl_core",
+            titleFa = "هسته واژگان تافل (TOEFL Core)",
+            titleEn = "TOEFL Core Academic (High Yield)",
+            descriptionFa = "واژگان با اولویت بالای لکچرهای علمی، متون دانشگاهی و تسک‌های تلفیقی تافل برای مطالعه هدفمند.",
+            level = "B1-C1",
+            exam = "TOEFL",
+            wordCount = 2200,
+            isDownloaded = false,
+            category = "Exam Sprints",
+            iconName = "menu_book",
+            version = 1,
+            source = "NAWL + ETS Academic Corpus",
+            targetWordCount = 2200,
+            installedWordCount = 0,
+            isCorePack = true
         ),
         VocabularyPack(
             id = IELTS_MASTER_PACK_ID,

@@ -1,9 +1,12 @@
 package com.example.data.model
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity(
     tableName = "vocabulary_items",
@@ -68,6 +71,45 @@ data class VocabularyItem(
     val packName: String = ""
 )
 
+@Entity(
+    tableName = "vocabulary_senses",
+    foreignKeys = [
+        ForeignKey(
+            entity = VocabularyItem::class,
+            parentColumns = ["id"],
+            childColumns = ["vocabularyId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["vocabularyId"]),
+        Index(value = ["vocabularyId", "senseIndex"], unique = true)
+    ]
+)
+data class VocabularySense(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val vocabularyId: Long,
+    val senseIndex: Int = 1,
+    val partOfSpeech: String = "",
+    val cefrLevel: String = "",
+    val englishDefinition: String = "",
+    val persianMeaning: String = "",
+    val exampleSentence: String = "",
+    val exampleTranslation: String = "",
+    val collocations: List<String> = emptyList(),
+    val isPrimary: Boolean = true
+)
+
+data class VocabularyWithSenses(
+    @Embedded val item: VocabularyItem,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "vocabularyId"
+    )
+    val senses: List<VocabularySense> = emptyList()
+)
+
 @Entity(tableName = "vocabulary_packs")
 data class VocabularyPack(
     @PrimaryKey
@@ -129,17 +171,17 @@ data class MistakeRecord(
 data class UserProfile(
     @PrimaryKey
     val id: Int = 1,
-    val userName: String = "کاربر عزیز",
-    val targetGoal: String = "آیلتس",
+    val userName: String = "Learner",
+    val targetGoal: String = "IELTS",
     val currentLevel: String = "B2",
     val dailyMinutes: Int = 35,
     val weakestSkill: String = "Speaking",
     val targetBandOrScore: String = "7.5",
-    val testDateFa: String = "پاییز امسال",
-    val xp: Int = 150,
-    val streakDays: Int = 4,
-    val wordsLearnedCount: Int = 38,
-    val isOnboardingCompleted: Boolean = true
+    val testDateFa: String = "",
+    val xp: Int = 0,
+    val streakDays: Int = 0,
+    val wordsLearnedCount: Int = 0,
+    val isOnboardingCompleted: Boolean = false
 )
 
 data class GrammarQuizQuestion(

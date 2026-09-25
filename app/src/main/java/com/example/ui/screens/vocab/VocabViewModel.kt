@@ -78,7 +78,8 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = VocabularyRepository(
         vocabDao = db.vocabularyDao(),
         packDao = db.vocabularyPackDao(),
-        packItemDao = db.vocabularyPackItemDao()
+        packItemDao = db.vocabularyPackItemDao(),
+        senseDao = db.vocabularySenseDao()
     )
     private val studyPreferences = application.getSharedPreferences(
         VocabularyStudyPolicy.PREFS_NAME,
@@ -366,6 +367,10 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getWordById(id: Long): Flow<VocabularyItem?> {
         return repo.getById(id)
+    }
+
+    fun getSensesForWord(id: Long): Flow<List<com.example.data.model.VocabularySense>> {
+        return repo.getSensesForWord(id)
     }
 
     private fun curriculumLevelRank(level: String): Int = when (level.trim().uppercase()) {

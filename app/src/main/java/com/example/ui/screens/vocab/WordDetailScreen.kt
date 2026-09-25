@@ -66,6 +66,8 @@ fun WordDetailScreen(
 ) {
     val wordFlow = remember(vocabId) { viewModel.getWordById(vocabId) }
     val item by wordFlow.collectAsState(initial = null)
+    val sensesFlow = remember(vocabId) { viewModel.getSensesForWord(vocabId) }
+    val senses by sensesFlow.collectAsState(initial = emptyList())
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
     DisposableEffect(tts) { onDispose { tts.shutdown() } }
@@ -126,17 +128,25 @@ fun WordDetailScreen(
                     onSelected = { userSelectedTab = it }
                 )
 
-                DefinitionCard(
-                    item = currentWord,
-                    englishFirst = selectedTab == 1
-                )
-
-                if (currentWord.example.isNotBlank()) {
-                    ExampleCard(
-                        example = currentWord.example,
-                        translation = currentWord.examplePersian,
-                        onPronounce = { tts.speak(currentWord.example) }
+                if (senses.size > 1) {
+                    WordSensesCard(
+                        senses = senses,
+                        englishFirst = selectedTab == 1,
+                        onPronounceExample = { tts.speak(it) }
                     )
+                } else {
+                    DefinitionCard(
+                        item = currentWord,
+                        englishFirst = selectedTab == 1
+                    )
+
+                    if (currentWord.example.isNotBlank()) {
+                        ExampleCard(
+                            example = currentWord.example,
+                            translation = currentWord.examplePersian,
+                            onPronounce = { tts.speak(currentWord.example) }
+                        )
+                    }
                 }
 
                 if (currentWord.collocations.isNotEmpty()) {
@@ -284,6 +294,159 @@ private fun LanguageTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
             onClick = { onSelected(1) },
             text = { Text("English", style = MaterialTheme.typography.labelLarge) }
         )
+    }
+}
+
+@Composable
+private fun WordSensesCard(
+    senses: List<com.example.data.model.VocabularySense>,
+    englishFirst: Boolean,
+    onPronounceExample: (String) -> Unit
+) {
+    SectionCard(title = "Word Senses & Contexts (${senses.size} Meanings)") {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            senses.forEachIndexed { index, sense ->
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "Sense ${index + 1}" + if (sense.partOfSpeech.isNotBlank()) " • ${sense.partOfSpeech}" else "",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                            if (sense.cefrLevel.isNotBlank()) {
+                                CefrBadge(level = sense.cefrLevel)
+                            }
+                        }
+
+                        if (englishFirst) {
+                            if (sense.englishDefinition.isNotBlank()) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = sense.englishDefinition,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Start
+                                    )
+                                }
+                            }
+                            if (sense.persianMeaning.isNotBlank()) {
+                                Text(
+                                    text = sense.persianMeaning,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            if (sense.persianMeaning.isNotBlank()) {
+                                Text(
+                                    text = sense.persianMeaning,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            if (sense.englishDefinition.isNotBlank()) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = sense.englishDefinition,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Start
+                                    )
+                                }
+                            }
+                        }
+
+                        if (sense.exampleSentence.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.background,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.Top,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                            Text(
+                                                text = sense.exampleSentence,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Medium,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Start
+                                            )
+                                        }
+                                        if (sense.exampleTranslation.isNotBlank()) {
+                                            Text(
+                                                text = sense.exampleTranslation,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                    IconButton(
+                                        onClick = { onPronounceExample(sense.exampleSentence) },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.VolumeUp,
+                                            contentDescription = "Pronounce",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (sense.collocations.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                sense.collocations.take(4).forEach { colloc ->
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    ) {
+                                        Text(
+                                            text = colloc,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

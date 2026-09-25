@@ -60,6 +60,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _uiState = MutableStateFlow(ReviewSessionUiState())
     val uiState: StateFlow<ReviewSessionUiState> = _uiState
+    private var sessionStartMillis: Long = System.currentTimeMillis()
 
     init {
         startSession()
@@ -98,6 +99,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             if (sessionItems.isNotEmpty()) {
+                sessionStartMillis = System.currentTimeMillis()
                 _uiState.value = ReviewSessionUiState(
                     queue = sessionItems,
                     currentIndex = 0,
@@ -344,9 +346,10 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 )
                 setupCurrentExercise(_uiState.value.queue[nextIndex])
             } else {
+                val elapsedMinutes = maxOf(1, ((System.currentTimeMillis() - sessionStartMillis) / 60000L).toInt())
                 streakRepo.recordPracticeActivity(
                     itemsCount = newCompleted,
-                    minutesSpent = 8,
+                    minutesSpent = elapsedMinutes,
                     xpEarned = newXp,
                     activityType = "SRS_REVIEW"
                 )

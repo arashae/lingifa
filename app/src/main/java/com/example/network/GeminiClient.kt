@@ -62,6 +62,7 @@ object GeminiClient {
     }
 
     fun hasValidApiKey(): Boolean {
+        if (AiPreferences.hasValidAiKey()) return true
         val key = getApiKey()
         return key.isNotEmpty() && key != "MY_GEMINI_API_KEY"
     }
@@ -70,10 +71,16 @@ object GeminiClient {
      * AI Vocabulary Generator: user prompt -> structured JSON array of VocabularyItem
      */
     suspend fun generateVocabularyList(userPrompt: String): Result<List<VocabularyItem>> = withContext(Dispatchers.IO) {
+        val dsKey = AiPreferences.getDeepSeekApiKey()
+        if (dsKey.isNotBlank()) {
+            val res = DeepSeekClient.generateVocabularyList(dsKey, userPrompt, AiPreferences.getDeepSeekModel())
+            if (res.isSuccess) return@withContext res
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
             return@withContext Result.failure(
-                Exception("کلید API جمینای تنظیم نشده است. لطفاً کلید معتبر خود را در تنظیمات وارد فرمایید.")
+                Exception("هوش مصنوعی پیکربندی نشده است. لطفاً کلید DeepSeek خود را در صفحه تنظیمات پروفایل وارد نمایید.")
             )
         }
 
@@ -204,9 +211,15 @@ object GeminiClient {
      * Automatically completes all details (IPA, Persian, Definition, Example, Collocations) for a single word
      */
     suspend fun enrichWord(word: String, optionalPersian: String = ""): Result<VocabularyItem> = withContext(Dispatchers.IO) {
+        val dsKey = AiPreferences.getDeepSeekApiKey()
+        if (dsKey.isNotBlank()) {
+            val res = DeepSeekClient.enrichWord(dsKey, word, optionalPersian, AiPreferences.getDeepSeekModel())
+            if (res.isSuccess) return@withContext res
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.failure(Exception("کلید API جمینای موجود نیست."))
+            return@withContext Result.failure(Exception("هوش مصنوعی پیکربندی نشده است. لطفاً کلید DeepSeek خود را در صفحه تنظیمات پروفایل وارد نمایید."))
         }
 
         val prompt = "Word: '$word'. Optional Persian context: '$optionalPersian'. Return detailed lexicographical information."
@@ -220,10 +233,28 @@ object GeminiClient {
      * Persian AI Tutor Chat: guides the student, explains grammar & nuances in Persian
      */
     suspend fun askTutor(userQuestion: String, conversationContext: String = ""): Result<String> = withContext(Dispatchers.IO) {
+        val dsKey = AiPreferences.getDeepSeekApiKey()
+        if (dsKey.isNotBlank()) {
+            val systemInstruction = """
+                You are LinguaFa AI's elite English teacher for Persian speakers preparing for IELTS, TOEFL, and GRE.
+                Respond primarily in fluent, polite, pedagogical Persian (فارسی روان و آموزشی).
+                English words, example sentences, and grammar patterns should remain in clear English, with Persian explanations and translations.
+                When answering questions about word differences (e.g. affect vs effect, economic vs economical), explain clearly with practical examples and common Iranian learner errors.
+                Guide the student towards active recall and self-correction.
+            """.trimIndent()
+            val res = DeepSeekClient.chat(
+                apiKey = dsKey,
+                systemPrompt = systemInstruction,
+                userMessage = if (conversationContext.isNotBlank()) "Context:\n$conversationContext\n\nStudent Question: $userQuestion" else userQuestion,
+                model = AiPreferences.getDeepSeekModel()
+            )
+            if (res.isSuccess) return@withContext res
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.success(
-                "درود! من معلم هوشمند LinguaFa AI هستم. برای استفاده از پردازش زنده هوش مصنوعی، لطفاً کلید API جمینای خود را در پنل Secrets وارد نمایید. در عین حال، تمامی درس‌های گرامر، لغات و آزمون‌ها به صورت آفلاین و کامل در دسترس شما هستند!"
+            return@withContext Result.failure(
+                Exception("هوش مصنوعی پیکربندی نشده است. لطفاً کلید DeepSeek خود را در صفحه تنظیمات پروفایل وارد نمایید.")
             )
         }
 
@@ -278,21 +309,16 @@ object GeminiClient {
      * IELTS Writing Evaluator: Analyzes Task 1 or 2 according to official 4 criteria
      */
     suspend fun evaluateEssay(taskPrompt: String, essayText: String): Result<WritingEvaluationResult> = withContext(Dispatchers.IO) {
+        val dsKey = AiPreferences.getDeepSeekApiKey()
+        if (dsKey.isNotBlank()) {
+            val res = DeepSeekClient.evaluateEssay(dsKey, taskPrompt, essayText, AiPreferences.getDeepSeekModel())
+            if (res.isSuccess) return@withContext res
+        }
+
         val apiKey = getApiKey()
         if (!hasValidApiKey()) {
-            return@withContext Result.success(
-                WritingEvaluationResult(
-                    estimatedBand = "6.5 - 7.0",
-                    taskAchievementScore = "7.0",
-                    coherenceScore = "6.5",
-                    lexicalScore = "7.0",
-                    grammarScore = "6.5",
-                    overallFeedbackFa = "مقاله شما ساختار منسجم و دایره لغات مناسبی دارد. برای دریافت ارزیابی خط به خط هوش مصنوعی، کلید جمینای را در پنل اسرار ثبت نمایید.",
-                    strengthsFa = listOf("ساختار استاندارد ۴ پاراگرافی", "استفاده از افعال آکادمیک و کالوکیشن‌های مرتبط"),
-                    mainIssuesFa = listOf("نیاز به تنوع بیشتر در ساختارهای مرکب دستوری", "استفاده محدود از واژگان احتیاطی (Hedging)"),
-                    sentenceCorrections = emptyList(),
-                    improvedVersion = essayText
-                )
+            return@withContext Result.failure(
+                Exception("ارزیابی هوش مصنوعی در دسترس نیست. لطفاً کلید DeepSeek خود را در صفحه تنظیمات پروفایل وارد نمایید.")
             )
         }
 

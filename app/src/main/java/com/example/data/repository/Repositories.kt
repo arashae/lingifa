@@ -24,7 +24,7 @@ class VocabularyRepository(
     val allVocabularies: Flow<List<VocabularyItem>> = vocabDao.getAllVocabularies()
     val totalCount: Flow<Int> = vocabDao.getCount()
     val learnedCount: Flow<Int> = vocabDao.getLearnedCount()
-    val weakCount: Flow<Int> = vocabDao.getWeakCount()
+    val weakCountFlow: Flow<Int> = vocabDao.getWeakCount()
     val allPacks: Flow<List<VocabularyPack>> = packDao.getAllPacks()
 
     fun getWeakCount(): Flow<Int> = vocabDao.getWeakCount()

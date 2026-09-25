@@ -6,9 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Unified AI Client for LinguaFa.
- * Intelligently prioritizes DeepSeek API when a key is provided (or defaults to the pre-configured key),
- * falling back to Gemini if available.
+ * Unified AI client for LinguaFa.
+ * DeepSeek is preferred when the learner has configured a key; Gemini remains an optional fallback.
+ * No provider credential is bundled in the APK.
  */
 object AiApiClient {
 
@@ -16,7 +16,7 @@ object AiApiClient {
         return AiPreferences.getDeepSeekApiKey(context).isNotBlank() || GeminiClient.hasValidApiKey()
     }
 
-    suspend fun testConnection(apiKey: String, model: String = "deepseek-chat"): Result<String> {
+    suspend fun testConnection(apiKey: String, model: String = AiPreferences.DEFAULT_MODEL): Result<String> {
         return DeepSeekClient.testConnection(apiKey, model)
     }
 
@@ -31,25 +31,24 @@ object AiApiClient {
 
         if (provider == AiPreferences.PROVIDER_DEEPSEEK && dsKey.isNotBlank()) {
             val systemPrompt = """
-                You are a knowledgeable, patient, and encouraging personal English tutor for IELTS, TOEFL, and GRE exams.
-                Provide structured, clear explanations in Persian (فارسی). 
-                Use English examples, phonetic cues, and clear contrast points.
+                You are LinguaFa's English tutor for Persian speakers preparing for IELTS, TOEFL, and GRE.
+                Explain clearly in Persian, keep English examples natural, and prefer retrieval practice,
+                accurate collocations, paraphrasing, and self-correction over memorizing impressive words.
             """.trimIndent()
             val prompt = if (!contextInfo.isNullOrBlank()) {
                 "Context / Prior Discussion:\n$contextInfo\n\nStudent Question:\n$userMessage"
             } else {
                 userMessage
             }
-            val res = DeepSeekClient.chat(dsKey, systemPrompt, prompt, model)
-            if (res.isSuccess) return@withContext res
+            val result = DeepSeekClient.chat(dsKey, systemPrompt, prompt, model)
+            if (result.isSuccess) return@withContext result
         }
 
-        // Fallback to Gemini if DeepSeek fails or not preferred
         if (GeminiClient.hasValidApiKey()) {
-            return@withContext GeminiClient.askTutor(userMessage, contextInfo)
+            return@withContext GeminiClient.askTutor(userMessage, contextInfo.orEmpty())
         }
 
-        Result.failure(Exception("AI service unavailable. Please configure your DeepSeek API key in Profile."))
+        Result.failure(Exception("AI service unavailable. Add a DeepSeek API key in Profile > AI Configuration."))
     }
 
     suspend fun generateVocabularyList(
@@ -60,15 +59,15 @@ object AiApiClient {
         val model = AiPreferences.getDeepSeekModel(context)
 
         if (dsKey.isNotBlank()) {
-            val res = DeepSeekClient.generateVocabularyList(dsKey, userPrompt, model)
-            if (res.isSuccess) return@withContext res
+            val result = DeepSeekClient.generateVocabularyList(dsKey, userPrompt, model)
+            if (result.isSuccess) return@withContext result
         }
 
         if (GeminiClient.hasValidApiKey()) {
             return@withContext GeminiClient.generateVocabularyList(userPrompt)
         }
 
-        Result.failure(Exception("AI service unavailable. Please configure your DeepSeek API key in Profile."))
+        Result.failure(Exception("AI service unavailable. Add a DeepSeek API key in Profile > AI Configuration."))
     }
 
     suspend fun enrichWord(
@@ -80,15 +79,15 @@ object AiApiClient {
         val model = AiPreferences.getDeepSeekModel(context)
 
         if (dsKey.isNotBlank()) {
-            val res = DeepSeekClient.enrichWord(dsKey, word, optionalPersian, model)
-            if (res.isSuccess) return@withContext res
+            val result = DeepSeekClient.enrichWord(dsKey, word, optionalPersian, model)
+            if (result.isSuccess) return@withContext result
         }
 
         if (GeminiClient.hasValidApiKey()) {
             return@withContext GeminiClient.enrichWord(word, optionalPersian)
         }
 
-        Result.failure(Exception("AI service unavailable. Please configure your DeepSeek API key in Profile."))
+        Result.failure(Exception("AI service unavailable. Add a DeepSeek API key in Profile > AI Configuration."))
     }
 
     suspend fun evaluateEssay(
@@ -100,15 +99,15 @@ object AiApiClient {
         val model = AiPreferences.getDeepSeekModel(context)
 
         if (dsKey.isNotBlank()) {
-            val res = DeepSeekClient.evaluateEssay(dsKey, prompt, essay, model)
-            if (res.isSuccess) return@withContext res
+            val result = DeepSeekClient.evaluateEssay(dsKey, prompt, essay, model)
+            if (result.isSuccess) return@withContext result
         }
 
         if (GeminiClient.hasValidApiKey()) {
             return@withContext GeminiClient.evaluateEssay(prompt, essay)
         }
 
-        Result.failure(Exception("AI service unavailable. Please configure your DeepSeek API key in Profile."))
+        Result.failure(Exception("AI evaluation unavailable. Add a DeepSeek API key in Profile > AI Configuration."))
     }
 
     suspend fun evaluateSpeaking(
@@ -120,14 +119,13 @@ object AiApiClient {
         val model = AiPreferences.getDeepSeekModel(context)
 
         if (dsKey.isNotBlank()) {
-            val res = DeepSeekClient.evaluateSpeaking(dsKey, prompt, transcript, model)
-            if (res.isSuccess) return@withContext res
+            return@withContext DeepSeekClient.evaluateSpeaking(dsKey, prompt, transcript, model)
         }
 
-        if (GeminiClient.hasValidApiKey()) {
-            return@withContext GeminiClient.evaluateSpeaking(prompt, transcript)
-        }
-
-        Result.failure(Exception("AI service unavailable. Please configure your DeepSeek API key in Profile."))
+        // GeminiClient has no audio-aware speaking evaluator. Avoid fabricating pronunciation
+        // assessment from a transcript-only fallback.
+        Result.failure(
+            Exception("Speaking text analysis requires a configured DeepSeek key. Pronunciation cannot be scored from transcript text alone.")
+        )
     }
 }

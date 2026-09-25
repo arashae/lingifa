@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Warning as materialWarning
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp as composeSp
+import com.example.data.model.VocabularyPack
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn as coroutineFlowOn
 import kotlin.coroutines.CoroutineContext
@@ -19,3 +20,7 @@ val Int.sp: TextUnit
 
 val Icons.Filled.Warning: ImageVector
     get() = with(this) { materialWarning }
+
+/** VocabularyPack currently stores a localized Persian description only. */
+val VocabularyPack.descriptionEn: String
+    get() = ""

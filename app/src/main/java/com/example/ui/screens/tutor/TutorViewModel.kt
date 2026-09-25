@@ -3,7 +3,7 @@ package com.example.ui.screens.tutor
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.network.GeminiClient
+import com.example.network.AiApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +20,7 @@ data class TutorUiState(
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             sender = "AI",
-            text = "Hello! I'm your LinguaFa AI Tutor 👋\nYou can ask any questions regarding grammar rules, IELTS/TOEFL vocabulary nuances, collocations, or writing feedback."
+            text = "Hello! I'm your LinguaFa AI Tutor 👋\nYou can ask about grammar, IELTS/TOEFL/GRE vocabulary, collocations, or writing feedback."
         )
     ),
     val inputText: String = "",
@@ -62,16 +62,20 @@ class TutorViewModel(application: Application) : AndroidViewModel(application) {
                 contextBuilder.append("${msg.sender}: ${msg.text}\n")
             }
 
-            val result = GeminiClient.askTutor(trimmed, contextBuilder.toString())
+            val result = AiApiClient.askTutor(
+                userMessage = trimmed,
+                contextInfo = contextBuilder.toString(),
+                context = getApplication()
+            )
             _uiState.value = _uiState.value.copy(isLoading = false)
 
             result.onSuccess { responseText ->
                 val aiMessage = ChatMessage(sender = "AI", text = responseText)
                 _uiState.value = _uiState.value.copy(messages = _uiState.value.messages + aiMessage)
-            }.onFailure { err ->
+            }.onFailure { error ->
                 val errorMsg = ChatMessage(
                     sender = "AI",
-                    text = "متاسفانه در حال حاضر امکان برقراری ارتباط وجود ندارد: ${err.message}"
+                    text = "هوش مصنوعی در دسترس نیست: ${error.message ?: "کلید DeepSeek را در پروفایل بررسی کنید."}"
                 )
                 _uiState.value = _uiState.value.copy(messages = _uiState.value.messages + errorMsg)
             }

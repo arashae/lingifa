@@ -8,7 +8,7 @@ import com.example.data.repository.UserProfileRepository
 import com.example.data.seed.DiagnosticQuestion
 import com.example.data.seed.ExamPrompt
 import com.example.data.seed.ExamSeed
-import com.example.network.GeminiClient
+import com.example.network.AiApiClient
 import com.example.network.WritingEvaluationResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,23 +62,27 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(isEvaluatingWriting = true, writingResult = null)
 
         viewModelScope.launch {
-            val result = GeminiClient.evaluateEssay(prompt.promptTextEn, essay)
+            val result = AiApiClient.evaluateEssay(
+                prompt = prompt.promptTextEn,
+                essay = essay,
+                context = getApplication()
+            )
             _uiState.value = _uiState.value.copy(isEvaluatingWriting = false)
-            result.onSuccess { eval ->
-                _uiState.value = _uiState.value.copy(writingResult = eval)
+            result.onSuccess { evaluation ->
+                _uiState.value = _uiState.value.copy(writingResult = evaluation)
                 profileRepo.addXp(30)
-            }.onFailure {
-                // Fallback result
+            }.onFailure { error ->
+                // Never fabricate an IELTS score when an evaluator was unavailable.
                 _uiState.value = _uiState.value.copy(
                     writingResult = WritingEvaluationResult(
-                        estimatedBand = "6.5",
-                        taskAchievementScore = "6.5",
-                        coherenceScore = "6.5",
-                        lexicalScore = "6.5",
-                        grammarScore = "6.5",
-                        overallFeedbackFa = "مقاله ثبت شد. جهت تحلیل دقیق‌تر اطمینان حاصل کنید اتصال اینترنت برقرار است.",
-                        strengthsFa = listOf("پایبندی به ساختار مقاله", "تعداد کلمات مناسب"),
-                        mainIssuesFa = listOf("تنوع بیشتر در واژگان هم‌آیند (Collocations)"),
+                        estimatedBand = "N/A",
+                        taskAchievementScore = "N/A",
+                        coherenceScore = "N/A",
+                        lexicalScore = "N/A",
+                        grammarScore = "N/A",
+                        overallFeedbackFa = "ارزیابی هوش مصنوعی در دسترس نبود: ${error.message ?: "اتصال یا کلید API را بررسی کنید."}",
+                        strengthsFa = emptyList(),
+                        mainIssuesFa = emptyList(),
                         sentenceCorrections = emptyList(),
                         improvedVersion = essay
                     )
@@ -95,15 +99,43 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
         val text = _uiState.value.speakingTranscriptInput.trim()
         if (text.isEmpty()) return
 
+        val prompt = _uiState.value.prompts.getOrNull(_uiState.value.selectedPromptIndex)?.promptTextEn
+            ?: "General speaking response"
+
         _uiState.value = _uiState.value.copy(isEvaluatingSpeaking = true)
         viewModelScope.launch {
-            val prompt = "Evaluate speaking response: '$text'. Give feedback in Persian with estimated IELTS band, pronunciation tips, and grammatical improvements."
-            val result = GeminiClient.askTutor(prompt)
+            val result = AiApiClient.evaluateSpeaking(
+                prompt = prompt,
+                transcript = text,
+                context = getApplication()
+            )
+
+            val feedback = result.fold(
+                onSuccess = { evaluation ->
+                    buildString {
+                        append("برآورد متنی: ${evaluation.estimatedBand}\n\n")
+                        if (evaluation.fluencyFeedbackFa.isNotBlank()) append("روانی/انسجام: ${evaluation.fluencyFeedbackFa}\n\n")
+                        if (evaluation.lexicalFeedbackFa.isNotBlank()) append("واژگان: ${evaluation.lexicalFeedbackFa}\n\n")
+                        if (evaluation.grammarFeedbackFa.isNotBlank()) append("گرامر: ${evaluation.grammarFeedbackFa}\n\n")
+                        append(evaluation.pronunciationHintsFa.ifBlank {
+                            "برای ارزیابی تلفظ باید صدای واقعی بررسی شود؛ متن به‌تنهایی برای نمره‌دادن تلفظ کافی نیست."
+                        })
+                        if (evaluation.betterPhrasings.isNotEmpty()) {
+                            append("\n\nعبارت‌های بهتر:\n")
+                            evaluation.betterPhrasings.forEach { append("• $it\n") }
+                        }
+                    }.trim()
+                },
+                onFailure = { error ->
+                    "بازخورد اسپیکینگ در دسترس نیست: ${error.message ?: "کلید DeepSeek یا اتصال اینترنت را بررسی کنید."}"
+                }
+            )
+
             _uiState.value = _uiState.value.copy(
                 isEvaluatingSpeaking = false,
-                speakingFeedbackFa = result.getOrNull() ?: "بازخورد اسپیکینگ در دسترس نیست."
+                speakingFeedbackFa = feedback
             )
-            profileRepo.addXp(25)
+            if (result.isSuccess) profileRepo.addXp(25)
         }
     }
 
@@ -119,12 +151,13 @@ class ExamsViewModel(application: Application) : AndroidViewModel(application) {
                 diagnosticScore = newScore
             )
         } else {
+            // This five-question quiz is only a rough in-app starting estimate, not a formal CEFR assessment.
             val estimated = when (newScore) {
-                5 -> "C1 (پیشرفته)"
-                4 -> "B2 (متوسط رو به بالا)"
-                3 -> "B1 (متوسط)"
-                2 -> "A2 (پایه)"
-                else -> "A1 (مبتدی)"
+                5 -> "C1 (برآورد اولیه)"
+                4 -> "B2 (برآورد اولیه)"
+                3 -> "B1 (برآورد اولیه)"
+                2 -> "A2 (برآورد اولیه)"
+                else -> "A1 (برآورد اولیه)"
             }
             _uiState.value = _uiState.value.copy(
                 diagnosticScore = newScore,

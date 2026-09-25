@@ -13,10 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,15 +62,17 @@ fun DiagnosticTestScreen(
             }
         ) { paddingValues ->
             if (state.diagnosticFinished) {
-                // Result screen
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(paddingValues)
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
@@ -77,8 +80,9 @@ fun DiagnosticTestScreen(
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(28.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(26.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -95,21 +99,16 @@ fun DiagnosticTestScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
                             Text(
                                 text = "Level Placement Completed!",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                             )
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
                             Text(
                                 text = "Your estimated level based on CEFR:",
-                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-
-                            Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
                                 text = state.estimatedCefrLevel ?: "B2",
@@ -119,14 +118,11 @@ fun DiagnosticTestScreen(
                                 )
                             )
 
-                            Spacer(modifier = Modifier.height(6.dp))
-
                             Text(
                                 text = "Score: ${state.diagnosticScore} of ${state.diagnosticQuestions.size} correct answers",
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-
-                            Spacer(modifier = Modifier.height(14.dp))
 
                             Surface(
                                 color = Color(0xFFEFF6FF),
@@ -134,12 +130,11 @@ fun DiagnosticTestScreen(
                             ) {
                                 Text(
                                     text = "Your profile level has been updated and lessons are personalized accordingly.",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = PrimaryBlue),
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrimaryBlue,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(24.dp))
 
                             Button(
                                 onClick = onBack,
@@ -151,19 +146,20 @@ fun DiagnosticTestScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             } else {
                 val currentQ = state.diagnosticQuestions.getOrNull(state.diagnosticCurrentIndex)
-
                 if (currentQ != null) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
                             .padding(paddingValues)
-                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Progress
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -176,10 +172,11 @@ fun DiagnosticTestScreen(
                             CefrBadge(level = currentQ.testedLevel)
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
                         LinearProgressIndicator(
-                            progress = { ((state.diagnosticCurrentIndex + 1).toFloat() / state.diagnosticQuestions.size).coerceIn(0f, 1f) },
+                            progress = {
+                                ((state.diagnosticCurrentIndex + 1).toFloat() /
+                                    state.diagnosticQuestions.size.coerceAtLeast(1)).coerceIn(0f, 1f)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
@@ -188,33 +185,31 @@ fun DiagnosticTestScreen(
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Question Card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
-                                Text(
-                                    text = currentQ.questionEn,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, lineHeight = 26.sp)
-                                )
-                            }
+                            Text(
+                                text = currentQ.questionEn,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 26.sp
+                                ),
+                                modifier = Modifier.padding(20.dp)
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Options
                         currentQ.options.forEachIndexed { optIndex, optText ->
                             Surface(
                                 color = MaterialTheme.colorScheme.surface,
                                 shape = RoundedCornerShape(14.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 5.dp)
                                     .clickable { viewModel.answerDiagnosticQuestion(optIndex) }
                             ) {
                                 Row(
@@ -228,16 +223,23 @@ fun DiagnosticTestScreen(
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(text = "${optIndex + 1}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = "${optIndex + 1}",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
                                         text = optText,
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                        modifier = Modifier.weight(1f)
                                     )
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }

@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.application)
@@ -8,21 +9,50 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+// All debug APKs use one repository-owned, non-production signing identity.
+// This is intentional: GitHub-hosted runners otherwise generate a new ~/.android/debug.keystore
+// on every run, which makes Android reject the next APK as a conflicting package.
+val stableDebugKeystore = layout.buildDirectory.file("stable-signing/linguafa-debug.jks").get().asFile
+val stableDebugKeystoreBase64 = rootProject.file("ci/debug-keystore.b64")
+if (!stableDebugKeystore.exists()) {
+  require(stableDebugKeystoreBase64.exists()) {
+    "Missing ci/debug-keystore.b64; stable debug signing is required for upgrade-compatible APKs."
+  }
+  stableDebugKeystore.parentFile.mkdirs()
+  stableDebugKeystore.writeBytes(
+    Base64.getMimeDecoder().decode(stableDebugKeystoreBase64.readText().trim())
+  )
+}
+
+val buildVersionCode = providers.environmentVariable("LINGUAFA_VERSION_CODE")
+  .orNull
+  ?.toIntOrNull()
+  ?.coerceAtLeast(65)
+  ?: 65
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
+    // Keep this ID stable forever for in-place upgrades.
     applicationId = "com.aistudio.linguafa.zqkxmr"
     minSdk = 24
     targetSdk = 36
-    versionCode = 2
-    versionName = "1.1.0"
+    versionCode = buildVersionCode
+    versionName = "1.1.$buildVersionCode"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
+    create("stableDebug") {
+      storeFile = stableDebugKeystore
+      storePassword = "linguafa-debug"
+      keyAlias = "linguafa-debug"
+      keyPassword = "linguafa-debug"
+    }
+
     create("release") {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
@@ -39,9 +69,10 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    // Keep the default Android debug signing config so local and CI debug APKs
-    // use the automatically generated debug keystore instead of a repo-local file.
-    debug { }
+    debug {
+      // Never fall back to the machine-generated debug keystore: that would break upgrades.
+      signingConfig = signingConfigs.getByName("stableDebug")
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

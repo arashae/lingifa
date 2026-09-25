@@ -31,3 +31,10 @@
 - Exam relevance remains editorial and conservative; no official IELTS, TOEFL, or GRE list membership was inferred.
 - Lemma selection and frequency metadata remain sourced from NGSL 1.2 and inherited open datasets. CEFR-J 1.5 remains the carried level source, with selected sense-level levels cross-checked against Cambridge and Oxford learner references.
 - Definitions, Persian glosses, examples, translations, and collocations in this batch were rewritten editorially and are not attributed to NGSL, NAWL, CEFR-J, Cambridge, Oxford, ECDICT, Openjam, or the Persian fallback dictionary.
+
+## Batch 5: cards 401–450
+
+- Reviewed every card in source order and selected common learner senses over rare dictionary, technical, or text-reference senses.
+- Corrected POS/sense conflicts, WordNet-style fragments, empty closed-class cards, Persian gloss drift, and non-aligned bilingual examples.
+- Added only high-confidence collocations and removed stale `needs-collocation` tags.
+- Preserved inherited frequency, learning-order, and upstream provenance fields; revised lexical wording is editorial and is not attributed to those sources.

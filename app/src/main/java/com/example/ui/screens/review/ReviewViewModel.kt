@@ -11,11 +11,10 @@ import com.example.data.repository.UserProfileRepository
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 enum class ReviewExerciseType {
     FLASHCARD,
@@ -69,13 +68,9 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 if (due.isNotEmpty()) {
                     due.take(15)
                 } else {
-                    // If no due reviews, pull new unlearned words for today's intake
                     val newWords = vocabRepo.getNewVocabulariesForLearning(userLevel, limit = 10)
-                    if (newWords.isNotEmpty()) {
-                        newWords
-                    } else {
-                        vocabRepo.getStudiedVocabulariesForReview(limit = 10)
-                    }
+                    if (newWords.isNotEmpty()) newWords
+                    else vocabRepo.getStudiedVocabulariesForReview(limit = 10)
                 }
             }
 
@@ -93,47 +88,44 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Retrieval-first review policy.
+     *
+     * The main learning signal is silent/mental recall followed by reveal and self-rating.
+     * Recognition, listening and spelling are useful secondary probes, but they should not
+     * dominate scheduling. In particular, exact typing is kept deliberately rare so a learner
+     * is not marked as having forgotten a concept merely because a synonym came to mind or the
+     * spelling was imperfect.
+     */
     private suspend fun setupCurrentExercise(item: VocabularyItem) {
-        // Cognitive Science: Graduated Retrieval Practice Hierarchy
-        // 1. Initial Encounter (correctCount == 0 && incorrectCount == 0):
-        //    Show full Flashcard (meaning, IPA audio, example in context, collocations) to form the initial mental trace.
-        // 2. Developing Trace (correctCount in 1..2):
-        //    Cued recognition (Multiple choice or Listening) to test semantic binding with low cognitive strain.
-        // 3. Consolidated / Mature Trace (correctCount >= 3 or intervalDays >= 3):
-        //    Active Production (TYPE_WORD) to trigger active lexical retrieval and spelling consolidation.
+        val roll = Random.nextInt(100)
         val chosenType = when {
-            item.correctCount == 0 && item.incorrectCount == 0 -> {
-                ReviewExerciseType.FLASHCARD
+            item.correctCount == 0 && item.incorrectCount == 0 -> ReviewExerciseType.FLASHCARD
+            item.correctCount <= 2 -> when {
+                roll < 72 -> ReviewExerciseType.FLASHCARD
+                roll < 84 -> ReviewExerciseType.LISTENING_CHOOSE
+                roll < 94 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
+                else -> ReviewExerciseType.MULTIPLE_CHOICE_FA_EN
             }
-            item.correctCount in 1..2 -> {
-                listOf(
-                    ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
-                    ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
-                    ReviewExerciseType.LISTENING_CHOOSE
-                ).random()
-            }
-            else -> {
-                if (item.word.isNotBlank() && (1..10).random() <= 7) {
-                    ReviewExerciseType.TYPE_WORD
-                } else {
-                    listOf(
-                        ReviewExerciseType.MULTIPLE_CHOICE_FA_EN,
-                        ReviewExerciseType.LISTENING_CHOOSE,
-                        ReviewExerciseType.FLASHCARD
-                    ).random()
-                }
+            else -> when {
+                roll < 68 -> ReviewExerciseType.FLASHCARD
+                roll < 80 -> ReviewExerciseType.LISTENING_CHOOSE
+                roll < 90 -> ReviewExerciseType.MULTIPLE_CHOICE_EN_FA
+                roll < 96 -> ReviewExerciseType.MULTIPLE_CHOICE_FA_EN
+                else -> ReviewExerciseType.TYPE_WORD
             }
         }
 
         val options = when (chosenType) {
-            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOOSE -> {
+            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
+            ReviewExerciseType.LISTENING_CHOOSE -> {
                 val distractors = vocabRepo.getDistractors(
                     level = item.cefrLevel,
                     partOfSpeech = item.partOfSpeech,
                     excludeWord = item.word,
                     limit = 3
                 ).map { it.persianMeaning }
-                (distractors + item.persianMeaning).shuffled()
+                (distractors + item.persianMeaning).distinct().shuffled()
             }
             ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> {
                 val distractors = vocabRepo.getDistractors(
@@ -142,7 +134,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                     excludeWord = item.word,
                     limit = 3
                 ).map { it.word }
-                (distractors + item.word).shuffled()
+                (distractors + item.word).distinct().shuffled()
             }
             else -> emptyList()
         }
@@ -171,15 +163,17 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             val isSuccess = rating != ReviewRating.AGAIN
             if (!isSuccess) {
                 mistakeRepo.addMistake(
-                    question = "معنی واژه '${currentItem.word}' چیست؟",
-                    myAnswer = "پاسخ نادرست / نیاز به مرور",
-                    correctAnswer = "${currentItem.persianMeaning} (${currentItem.ipa})",
-                    explanationFa = currentItem.examplePersian.ifEmpty { "معنی: ${currentItem.persianMeaning}" },
-                    whyWrongFa = "فراموشی در جلسه مرور روزانه",
+                    question = "معنی یا کاربرد واژه '${currentItem.word}' چیست؟",
+                    myAnswer = "یادم نبود / نیاز به مرور",
+                    correctAnswer = buildString {
+                        append(currentItem.englishDefinition.ifBlank { currentItem.persianMeaning })
+                        if (currentItem.persianMeaning.isNotBlank()) append(" — ${currentItem.persianMeaning}")
+                    },
+                    explanationFa = currentItem.examplePersian.ifEmpty { currentItem.example },
+                    whyWrongFa = "در بازیابی آزادِ جلسه مرور به یاد نیامد",
                     concept = currentItem.word,
                     skillType = "VOCABULARY"
                 )
-                // Intra-session loop: Re-queue failed card at the end of the session
                 requeueFailedCard(currentItem)
             }
 
@@ -193,10 +187,9 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         val selectedText = _uiState.value.multipleChoiceOptions.getOrNull(index) ?: return
 
         val isCorrect = when (_uiState.value.currentExerciseType) {
-            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA, ReviewExerciseType.LISTENING_CHOOSE ->
-                selectedText == currentItem.persianMeaning
-            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN ->
-                selectedText == currentItem.word
+            ReviewExerciseType.MULTIPLE_CHOICE_EN_FA,
+            ReviewExerciseType.LISTENING_CHOOSE -> selectedText == currentItem.persianMeaning
+            ReviewExerciseType.MULTIPLE_CHOICE_FA_EN -> selectedText == currentItem.word
             else -> false
         }
 
@@ -212,10 +205,10 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             vocabRepo.recordReview(currentItem, rating)
             if (!isCorrect) {
                 mistakeRepo.addMistake(
-                    question = "معنی '${currentItem.word}'",
+                    question = "معنی یا معادل '${currentItem.word}'",
                     myAnswer = selectedText,
                     correctAnswer = currentItem.persianMeaning,
-                    explanationFa = currentItem.examplePersian.ifEmpty { currentItem.englishDefinition },
+                    explanationFa = currentItem.englishDefinition.ifBlank { currentItem.examplePersian },
                     concept = currentItem.word,
                     skillType = "VOCABULARY"
                 )
@@ -228,33 +221,41 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(typedInput = input)
     }
 
+    /**
+     * Spelling/production is diagnostic only. Checking the exact spelling does not change the
+     * SRS schedule by itself; after feedback the learner self-rates the underlying memory.
+     */
     fun checkTypedAnswer() {
         val currentItem = _uiState.value.queue.getOrNull(_uiState.value.currentIndex) ?: return
-        val isCorrect = _uiState.value.typedInput.trim().equals(currentItem.word.trim(), ignoreCase = true)
+        val answer = _uiState.value.typedInput.trim()
+        val isCorrect = answer.equals(currentItem.word.trim(), ignoreCase = true)
         _uiState.value = _uiState.value.copy(
             isTypedCorrect = isCorrect,
             isAnswerRevealed = true,
             lastWasSuccess = isCorrect
         )
 
-        val rating = if (isCorrect) ReviewRating.GOOD else ReviewRating.AGAIN
-        viewModelScope.launch {
-            vocabRepo.recordReview(currentItem, rating)
-            if (!isCorrect) {
+        if (!isCorrect) {
+            viewModelScope.launch {
                 mistakeRepo.addMistake(
-                    question = "املای واژه «${currentItem.persianMeaning}»",
-                    myAnswer = _uiState.value.typedInput.trim(),
+                    question = "تمرین املا/تولید برای «${currentItem.persianMeaning}»",
+                    myAnswer = answer,
                     correctAnswer = currentItem.word,
                     explanationFa = currentItem.example.ifEmpty { "واژه صحیح: ${currentItem.word}" },
+                    whyWrongFa = "این خطا جدا از دانستن مفهوم ثبت شده و به‌تنهایی حافظه معنایی را صفر نمی‌کند.",
                     concept = currentItem.word,
-                    skillType = "VOCABULARY"
+                    skillType = "VOCABULARY_SPELLING"
                 )
-                requeueFailedCard(currentItem)
             }
         }
     }
 
     private fun requeueFailedCard(item: VocabularyItem) {
+        val alreadyRequeued = _uiState.value.queue
+            .drop(_uiState.value.currentIndex + 1)
+            .any { it.id == item.id }
+        if (alreadyRequeued) return
+
         val updatedQueue = _uiState.value.queue.toMutableList().apply { add(item) }
         _uiState.value = _uiState.value.copy(
             queue = updatedQueue,

@@ -282,9 +282,11 @@ abstract class AppDatabase : RoomDatabase() {
                 val packDao = database.vocabularyPackDao()
                 val packs = InitialDataSeed.getDefaultPacks()
                 packDao.insertAllIfMissing(packs)
-                // CEFR bundles are generated from a versioned catalog; refresh their
-                // visible counts without discarding a user's installed-word progress.
-                packs.filter { it.category == "CEFR Curriculum" }.forEach { fresh ->
+
+                // Refresh metadata for every built-in pack on app updates while preserving the
+                // user's local install state. This fixes stale historical targets (for example
+                // old IELTS/GRE 9k/5k metadata) without deleting vocabulary or study progress.
+                packs.forEach { fresh ->
                     val existing = packDao.getPackById(fresh.id) ?: return@forEach
                     packDao.update(
                         fresh.copy(

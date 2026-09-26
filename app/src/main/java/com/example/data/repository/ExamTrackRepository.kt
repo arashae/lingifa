@@ -34,7 +34,9 @@ class ExamTrackRepository(
     /**
      * Reactive exam-track state backed by the real many-to-many master vocabulary pack.
      * The original hand-curated seed cards remain as rich high-yield cards at the beginning
-     * of the track; downloaded Room vocabulary fills the rest of the 9k/7k/5k target.
+     * of the track; downloaded Room vocabulary fills the current catalog target for each exam.
+     * A successful study of a canonical vocabulary row is shared across every exam pack that
+     * contains that same word, while pack membership and stage organization remain independent.
      */
     fun getTrackState(trackType: ExamTrackType): Flow<ExamTrackState> {
         val seedWords = ExamTrackDataSeed.getWordsForTrack(trackType.id)
@@ -47,6 +49,7 @@ class ExamTrackRepository(
         ) { downloadedVocabulary, progressList, settings ->
             val allWords = buildTrackWords(trackType, seedWords, downloadedVocabulary)
             val progressMap = progressList.associateBy { it.wordId }
+            val vocabularyByNormalizedWord = downloadedVocabulary.associateBy { normalize(it.word) }
             val today = getTodayDateString()
 
             val dailyGoal = settings?.dailyGoalWords ?: trackType.defaultDailyGoal
@@ -55,7 +58,9 @@ class ExamTrackRepository(
 
             val decoratedWords = allWords.map { word ->
                 val progress = progressMap[word.id]
-                word.copy(isMastered = progress?.isMastered ?: false)
+                val canonical = vocabularyByNormalizedWord[normalize(word.word)]
+                val learnedAnywhere = (canonical?.correctCount ?: 0) > 0
+                word.copy(isMastered = progress?.isMastered == true || learnedAnywhere)
             }
 
             val stages = buildStages(trackType, decoratedWords, currentStageNum)

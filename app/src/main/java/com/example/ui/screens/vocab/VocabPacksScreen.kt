@@ -61,6 +61,16 @@ fun VocabPacksScreen(
     val wordCounts = state.packs
         .groupBy { it.level.trim().uppercase() }
         .mapValues { (_, packs) -> packs.sumOf { it.wordCount } }
+    val examTrackSubtitle = listOf(
+        "IELTS" to "pack_ielts_master",
+        "TOEFL" to "pack_toefl_master",
+        "GRE" to "pack_gre_master"
+    ).mapNotNull { (label, packId) ->
+        state.packs.firstOrNull { it.id == packId }?.let { pack ->
+            val count = pack.targetWordCount.takeIf { it > 0 } ?: pack.wordCount
+            "$label $count"
+        }
+    }.joinToString(" · ").ifBlank { "IELTS · TOEFL · GRE" }
 
     EnglishLtrLayout {
         Scaffold(
@@ -90,7 +100,10 @@ fun VocabPacksScreen(
                 }
 
                 item {
-                    ExamTracksEntryCard(onClick = onNavigateToExamTracks)
+                    ExamTracksEntryCard(
+                        subtitle = examTrackSubtitle,
+                        onClick = onNavigateToExamTracks
+                    )
                 }
 
                 item {
@@ -185,7 +198,10 @@ private fun CefrLearningPathCard(
 }
 
 @Composable
-private fun ExamTracksEntryCard(onClick: () -> Unit) {
+private fun ExamTracksEntryCard(
+    subtitle: String,
+    onClick: () -> Unit
+) {
     AppCard(
         modifier = Modifier.fillMaxWidth(),
         padding = Dimens.cardPaddingTight,
@@ -216,7 +232,7 @@ private fun ExamTracksEntryCard(onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "IELTS 9k · TOEFL 7k · GRE 5k",
+                    text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.76f),
                     maxLines = 1,

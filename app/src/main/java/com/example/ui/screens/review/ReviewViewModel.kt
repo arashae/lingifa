@@ -26,12 +26,14 @@ data class ReviewSessionUiState(
 )
 
 /**
- * Vocabulary-only SRS review.
+ * Vocabulary-only review across the learner's complete vocabulary history.
  *
  * Important contract:
  * - Review never introduces a new vocabulary item.
  * - Only words that the learner has already judged at least once can enter the queue.
- * - Only currently-due words are shown; weak-but-not-due words are not pulled forward.
+ * - Currently-due SRS words always come first.
+ * - If fewer than a full session are due, Review is filled with weak/recent/rotating studied words
+ *   from every pack so the learner can practice on demand instead of seeing an empty session.
  * - AGAIN is persisted with the SRS intra-day delay (30 minutes) and is not immediately
  *   appended to the current session.
  */
@@ -57,23 +59,30 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     fun startSession() {
         viewModelScope.launch {
+            val now = System.currentTimeMillis()
             val dueItems = vocabRepo
-                .getDueVocabulariesForReview(limit = 50)
+                .getDueVocabulariesForReview(limit = ReviewQueuePolicy.DEFAULT_SESSION_LIMIT, currentTime = now)
                 .first()
-                .filter { it.correctCount > 0 || it.incorrectCount > 0 }
-                .distinctBy { it.id }
+            val studiedItems = vocabRepo.getStudiedVocabulariesForReview(
+                limit = ReviewQueuePolicy.CANDIDATE_POOL_LIMIT
+            )
+            val queue = ReviewQueuePolicy.buildQueue(
+                dueItems = dueItems,
+                studiedItems = studiedItems,
+                now = now
+            )
 
-            sessionStartMillis = System.currentTimeMillis()
-            _uiState.value = if (dueItems.isEmpty()) {
+            sessionStartMillis = now
+            _uiState.value = if (queue.isEmpty()) {
                 ReviewSessionUiState(
                     sessionTotal = 0,
                     isSessionFinished = true
                 )
             } else {
                 ReviewSessionUiState(
-                    queue = dueItems,
+                    queue = queue,
                     currentIndex = 0,
-                    sessionTotal = dueItems.size
+                    sessionTotal = queue.size
                 )
             }
         }

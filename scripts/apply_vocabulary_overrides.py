@@ -31,6 +31,10 @@ TOEFL_FINAL_FIXES = {
     },
 }
 
+# `expected` counts the reviewed override set, which mirrors what the generator
+# produces. It is deliberately NOT the final bank size: curated multiword
+# entries are added afterwards by apply_curated_additions.py, so the shipped
+# IELTS and TOEFL banks are larger than these numbers.
 BANKS = {
     "ielts": {"prefix": "ielts_core", "expected": 5040, "final_fixes": {}},
     "toefl": {"prefix": "toefl_core", "expected": 6974, "final_fixes": TOEFL_FINAL_FIXES},

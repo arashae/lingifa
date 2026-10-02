@@ -53,6 +53,15 @@ data class VocabularyItem(
     /** Stable position in the CEFR curriculum; lower values are introduced first. */
     @ColumnInfo(defaultValue = "0")
     val learningOrder: Int = 0,
+    /** Syllabus topics this card belongs to, e.g. Environment or Urbanisation. */
+    @ColumnInfo(defaultValue = "[]")
+    val examTopics: List<String> = emptyList(),
+    /** IELTS band this card is normally taught towards, e.g. "7.0". */
+    @ColumnInfo(defaultValue = "'7.0'")
+    val targetBand: String = "7.0",
+    /** Test skills this card exercises, e.g. Writing or Listening Lecture. */
+    @ColumnInfo(defaultValue = "[]")
+    val skillFocus: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val mastery: Int = 0, // 0 to 100

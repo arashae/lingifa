@@ -25,3 +25,11 @@ License: Apache License 2.0
 LinguaFa uses the `essential-english-words-2` slices as an optional supplemental source. The upstream repository carries the full Apache-2.0 license text. Redistribution and derivative use must continue to comply with that license.
 
 See `docs/VOCABULARY_DATA_SOURCES.md` for the exact selection, filtering, deduplication, exam-pack construction and offline-cache methodology.
+
+## Original LinguaFa editorial content
+
+Parts of the bundled vocabulary are original content authored for this project rather than upstream data. The phrasal verbs, phrasal prepositions and academic discourse expressions in `scripts/curated_multiword_catalog.py` and the `scripts/multiword_cards_*.py` modules, together with the reviewed override rows in `scripts/vocabulary_overrides/`, were written for LinguaFa.
+
+No upstream source supplies Persian meanings for multiword expressions: ECDICT tags only 2 IELTS and 4 TOEFL multiword lemmas, and Openjam contains no multiword lemma at all. None of this content is derived from ECDICT, Openjam, NGSL, NAWL, CEFR-J, Cambridge or Oxford, and it therefore carries no upstream licence.
+
+These rows are tagged `curated-multiword` and record `sourceLicense = "Original LinguaFa editorial content"`, which keeps them separable from source-derived rows at runtime.

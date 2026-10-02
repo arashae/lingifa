@@ -6,13 +6,17 @@ Persian-first Android English-learning app for IELTS, TOEFL and GRE, built with 
 
 LinguaFa 1.1 uses one deduplicated vocabulary database with many-to-many pack membership. A word can belong to IELTS, TOEFL and GRE at the same time without creating duplicate vocabulary rows.
 
-| Master bank | LinguaFa coverage target |
+| Master bank | Bundled offline rows |
 |---|---:|
-| IELTS | 9,000 words |
-| TOEFL | 7,000 words |
-| GRE | 5,000 words |
+| IELTS | 5,335 words |
+| TOEFL | 7,269 words |
+| GRE | 7,504 words |
 
-These are **LinguaFa study-coverage targets**, not claims that the exam organizations publish official closed lists of exactly those sizes.
+These are the counts actually shipped in `app/src/main/assets/vocabulary`. They are **LinguaFa study-coverage figures**, not claims that the exam organizations publish official closed lists of exactly those sizes.
+
+Each exam bank includes curated phrasal verbs, phrasal prepositions and academic discourse expressions alongside single-word headwords. These are original LinguaFa editorial content: no upstream source supplies them, because ECDICT tags almost no multiword lemmas and Openjam contains no multiword lemma at all.
+
+Every card carries syllabus topics, a target band and skill focus, so the app can group cards by topic or target a specific band.
 
 ### How a master bank is built
 
@@ -36,14 +40,15 @@ Each track is divided into four stages. A study session loads only the user's da
 
 ## Data model
 
-- Room database version: 6
-- `vocabulary_items`: one canonical row per vocabulary item
+- Room database version: 11
+- `vocabulary_items`: one canonical row per vocabulary item, including syllabus topic, target band, skill focus and pedagogical learning order
 - `vocabulary_packs`: pack metadata and installed/target counts
 - `vocabulary_pack_items`: many-to-many membership
 - `vocabulary_dataset_chunks`: versioned bundled-import history
+- `vocabulary_senses`: per-sense breakdown for multi-meaning words
 - independent SRS/mastery/favorites/progress remain stored locally
 
-The v5 -> v6 migration preserves existing vocabulary and progress.
+The v10 -> v11 migration adds the topic, band and skill-focus columns.
 
 ## Build
 

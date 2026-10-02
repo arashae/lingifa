@@ -247,18 +247,30 @@ def partition_and_interleave_exam(all_words: list, stage_sizes: list) -> list:
     # Flatten and assign 1-based sequential learningOrder
     flattened = []
     learning_order = 1
+    deferred = 0
     for stage_list in stages:
         for w in stage_list:
-            w['learningOrder'] = learning_order
-            learning_order += 1
-            # Polish collocations
-            w['collocations'] = generate_natural_collocations(
-                w['word'],
-                w.get('partOfSpeech', ''),
-                w.get('collocations', [])
-            )
+            # sanitize_vocabulary_assets.py marks C2 names and places as
+            # low-study-priority and parks them at learningOrder >= 100000 so
+            # they sort last. Reassigning a plain sequence would silently undo
+            # that down-ranking and trip the validator, so the sentinel is
+            # preserved and the row is counted as deferred.
+            if "low-study-priority" in {str(t) for t in w.get("tags", [])}:
+                deferred += 1
+                w["learningOrder"] = 100_000 + deferred
+            else:
+                w["learningOrder"] = learning_order
+                learning_order += 1
+            # Collocations are deliberately left untouched. This stage owns
+            # ordering only: generate_natural_collocations() emits template
+            # filler such as "key X" / "significant X" when a row carries fewer
+            # than two real collocations, which is the opposite of what a learner
+            # needs. Collocation content is curated elsewhere.
             flattened.append(w)
-            
+
+    if deferred:
+        print(f"  Preserved down-ranking for {deferred} low-study-priority row(s).")
+
     return flattened
 
 def write_chunk_files(items: list, file_paths: list, expected_counts: list):
@@ -314,16 +326,13 @@ def process_pack(catalog_entry: dict, pack_dir: str, stage_split_ratios: list):
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     print("=== Starting Pedagogical Vocabulary Re-ordering and Enrichment ===")
-    
-    # IELTS: 5040 words -> 4 equal stages of 1260 words
-    process_pack({}, "app/src/main/assets/vocabulary/ielts", [0.25, 0.25, 0.25, 0.25])
-    
-    # TOEFL: 6974 words -> 4 stages (1744, 1744, 1744, 1742)
-    process_pack({}, "app/src/main/assets/vocabulary/toefl", [1744/6974, 1744/6974, 1744/6974, 1742/6974])
-    
-    # GRE: 7504 words -> 4 equal stages of 1876 words
-    process_pack({}, "app/src/main/assets/vocabulary/gre", [0.25, 0.25, 0.25, 0.25])
-    
+
+    # Four equal stages per bank. Ratios are equal quarters rather than the
+    # previous hard-coded word counts, so growing a bank never silently skews
+    # the stage boundaries.
+    for pack_dir in ("ielts", "toefl", "gre"):
+        process_pack({}, f"app/src/main/assets/vocabulary/{pack_dir}", [0.25, 0.25, 0.25, 0.25])
+
     print("\n=== All Exam Packs Successfully Re-ordered and Enriched! ===")
 
 if __name__ == '__main__':

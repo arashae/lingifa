@@ -43,8 +43,13 @@ from sanitize_vocabulary_assets import (
 
 VALID_CEFR = {"A1", "A2", "B1", "B2", "C1", "C2"}
 REPORT_PATH = VOCAB_ROOT / "quality_report.json"
-POS_OK = {
-    "noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
+# Findings that are always advisory, even under --strict. These track a known
+# editorial backlog rather than a regression, so escalating them would block the
+# pipeline on work that is already counted and scheduled. Their counts are still
+# reported in quality_report.json so the backlog cannot silently grow.
+ADVISORY_KINDS = frozenset({"dictionary_citation_example"})
+
+POS_OK = {    "noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition",
     "modal", "phrase", "phrasal verb", "idiom", "prepositional phrase",
     "modal verb", "modal auxiliary", "auxiliary verb", "article", "interjection", "prefix", "suffix",
     "be-verb", "have-verb", "do-verb", "infinitive-to"
@@ -380,6 +385,39 @@ def placeholder_definition_risk(definition: str) -> str | None:
     return None
 
 
+def dictionary_citation_example_risk(example: str) -> str | None:
+    """Detect an example that is a dictionary citation rather than a real sentence.
+
+    Rows generated before the curated-correction pass carried placeholders such as
+    `In this context, "choose" means v.` and
+    `The author uses "crisscross" to describe the process accurately.` These
+    describe the word instead of using it, so the card teaches nothing.
+
+    Reported as a semantic finding rather than an error: a few hundred advanced
+    words still need hand-written examples, and blocking the pipeline on them
+    would hide the rest of the report. The count is tracked in quality_report.json
+    so the backlog cannot silently grow.
+    """
+    text = (example or "").strip()
+    if not text:
+        return None
+    lowered = text.lower()
+    patterns = (
+        r"^in this context,?\s*[\"\u201c]?\w+[\"\u201c]?\s+means\b",
+        r"^the author uses\b",
+        r"^the article explains the meaning of the term\b",
+        r"used to (?:describe|characterize) the (?:process|result) accurately",
+        r"\bmeans (?:n|v|adj|adv|prep|con)\.",
+        r"^here,?\s*[\"\u201c]",
+        r"^in academic writing,?\s*[\"\u201c]?\w+[\"\u201c]?\s+refers to\b",
+        r"^researchers? (?:carefully )?examined the term\b",
+    )
+    for pattern in patterns:
+        if re.search(pattern, lowered):
+            return "example is a dictionary citation, not a real sentence"
+    return None
+
+
 def priority_sense_review_risk(word: str, definition: str, persian_meaning: str, part_of_speech: str = "") -> str | None:
     normalized_word = word.lower()
     priority_words = {"it", "or", "may", "can", "might", "must", "chess", "metabolism", "replicate", "orient", "corpus", "novice"}
@@ -544,7 +582,7 @@ def run_validation(
                 "word": word,
                 "detail": detail,
             })
-        if strict:
+        if strict and kind not in ADVISORY_KINDS:
             errors.append(f"{rel_posix}:{line_no}: {word}: [{kind}] {detail}")
 
     for path in files:
@@ -623,6 +661,9 @@ def run_validation(
             priority_risk = priority_sense_review_risk(word, definition, meaning, pos)
             if priority_risk:
                 flag("priority_sense_review", path, line_no, word, priority_risk)
+            citation_risk = dictionary_citation_example_risk(example)
+            if citation_risk:
+                flag("dictionary_citation_example", path, line_no, word, citation_risk)
 
             if normalized_word in per_bank_words[bank]:
                 counts["duplicates"] += 1

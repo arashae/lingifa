@@ -90,6 +90,8 @@ object VocabularyStudyPolicy {
             else -> strongestRelevance(item)
         }
         score += when (relevance.trim().lowercase(Locale.US)) {
+            "essential" -> 30
+            "very high" -> 27
             "high" -> 24
             "medium" -> 12
             else -> 0

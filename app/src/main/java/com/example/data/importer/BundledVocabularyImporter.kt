@@ -7,9 +7,12 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.VocabularyDao
 import com.example.data.local.VocabularyDatasetChunkDao
 import com.example.data.local.VocabularyPackItemDao
+import com.example.data.local.VocabularySenseDao
 import com.example.data.model.VocabularyDatasetChunk
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPackItem
+import com.example.data.model.VocabularySense
+import com.example.vocab.VocabularyStudyPolicy
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
@@ -48,7 +51,8 @@ object BundledVocabularyImporter {
         database: AppDatabase,
         vocabularyDao: VocabularyDao,
         packItemDao: VocabularyPackItemDao,
-        chunkDao: VocabularyDatasetChunkDao
+        chunkDao: VocabularyDatasetChunkDao,
+        vocabularySenseDao: VocabularySenseDao
     ): ImportSummary {
         val catalogText = try {
             context.assets.open(CATALOG_ASSET).bufferedReader().use { it.readText() }
@@ -97,7 +101,8 @@ object BundledVocabularyImporter {
                     packId = packId,
                     datasetVersion = effectiveVersion,
                     vocabularyDao = vocabularyDao,
-                    packItemDao = packItemDao
+                    packItemDao = packItemDao,
+                    vocabularySenseDao = vocabularySenseDao
                 )
 
                 if (expectedItems >= 0) {
@@ -144,7 +149,8 @@ object BundledVocabularyImporter {
         packId: String,
         datasetVersion: String,
         vocabularyDao: VocabularyDao,
-        packItemDao: VocabularyPackItemDao
+        packItemDao: VocabularyPackItemDao,
+        vocabularySenseDao: VocabularySenseDao
     ): ChunkResult {
         val lines = context.assets.open(assetPath).bufferedReader().use { reader ->
             reader.lineSequence()
@@ -165,9 +171,13 @@ object BundledVocabularyImporter {
             require(persianMeaning.isNotEmpty()) { "Persian meaning is required for $word" }
 
             val normalized = word.lowercase(Locale.US).trim()
-            normalized to json.toVocabularyItem(
-                normalizedWord = normalized,
-                datasetVersion = datasetVersion
+            Triple(
+                normalized,
+                json.toVocabularyItem(
+                    normalizedWord = normalized,
+                    datasetVersion = datasetVersion
+                ),
+                json.toVocabularySenses(normalized, persianMeaning)
             )
         }
 
@@ -178,7 +188,7 @@ object BundledVocabularyImporter {
         val toUpdate = mutableListOf<VocabularyItem>()
         val incomingList = mutableListOf<Pair<VocabularyItem, Boolean>>()
 
-        for ((normalized, incoming) in parsedItems) {
+        for ((normalized, incoming, _) in parsedItems) {
             val existing = existingMap[normalized]
             if (existing == null) {
                 toInsert.add(incoming)
@@ -200,6 +210,34 @@ object BundledVocabularyImporter {
                 vocabularyDao.updateAll(toUpdate)
             }
 
+            // A word can appear in more than one bank, so the same sense list may
+            // arrive twice for one row. Senses are replaced wholesale per word
+            // rather than appended, which keeps a re-import idempotent.
+            val sensesByWord = parsedItems.associate { it.first to it.third }
+            var senseInsertIdx = 0
+            val senseRows = mutableListOf<VocabularySense>()
+            for ((item, isInsert) in incomingList) {
+                // The counter must advance for every inserted row, not only for
+                // rows that carry senses: insertedIds is a single flat list in
+                // insertion order, and pack-membership insertion below walks it
+                // with its own index. Skipping rows here would desynchronise the
+                // two and attach senses to the wrong word.
+                val rowId = if (isInsert) {
+                    val id = insertedIds.getOrNull(senseInsertIdx++)
+                    if (id == null) continue
+                    id
+                } else {
+                    item.id
+                }
+                val senses = sensesByWord[item.normalizedWord]
+                if (senses.isNullOrEmpty()) continue
+                vocabularySenseDao.deleteForWord(rowId)
+                senseRows += senses.map { it.copy(vocabularyId = rowId) }
+            }
+            if (senseRows.isNotEmpty()) {
+                vocabularySenseDao.insertAll(senseRows)
+            }
+
             var insertIdx = 0
             val packItems = ArrayList<VocabularyPackItem>(incomingList.size)
             for ((item, isInsert) in incomingList) {
@@ -209,10 +247,15 @@ object BundledVocabularyImporter {
                     item.id
                 }
                 packItems.add(VocabularyPackItem(packId = packId, vocabularyId = vocabId))
-                if (packId == "pack_ielts_master" && (item.examPriority >= 70 || (item.learningOrder in 1..2000))) {
+                // Core-tier membership follows the pedagogical learning order.
+                // The earlier `examPriority >= 70` clause never matched anything:
+                // the dataset uses a 0..4 priority scale, so it silently left
+                // both core packs empty. VocabularyStudyPolicy.IELTS_CORE_LIMIT
+                // and TOEFL_CORE_LIMIT define the cut-offs used here.
+                if (packId == "pack_ielts_master" && item.learningOrder in 1..VocabularyStudyPolicy.IELTS_CORE_LIMIT) {
                     packItems.add(VocabularyPackItem(packId = "pack_ielts_core", vocabularyId = vocabId))
                 }
-                if (packId == "pack_toefl_master" && (item.examPriority >= 70 || (item.learningOrder in 1..2200))) {
+                if (packId == "pack_toefl_master" && item.learningOrder in 1..VocabularyStudyPolicy.TOEFL_CORE_LIMIT) {
                     packItems.add(VocabularyPackItem(packId = "pack_toefl_core", vocabularyId = vocabId))
                 }
             }
@@ -267,7 +310,10 @@ object BundledVocabularyImporter {
             datasetVersion = datasetVersion,
             frequencyRank = optInt("frequencyRank", 0),
             examPriority = optInt("examPriority", 0),
-            learningOrder = optInt("learningOrder", 0)
+            learningOrder = optInt("learningOrder", 0),
+            examTopics = stringList("examTopics").distinct(),
+            targetBand = optString("targetBand", "7.0").trim().ifEmpty { "7.0" },
+            skillFocus = stringList("skillFocus").distinct()
         )
     }
 
@@ -330,8 +376,86 @@ object BundledVocabularyImporter {
             frequencyRank = chooseFrequencyRank(existing.frequencyRank, incoming.frequencyRank),
             examPriority = maxOf(existing.examPriority, incoming.examPriority),
             learningOrder = chooseLearningOrder(existing.learningOrder, incoming.learningOrder),
+            // Prefer the newer dataset's taxonomy; union only when the existing
+            // row has metadata and the incoming row does not.
+            examTopics = mergeTaxonomy(existing.examTopics, incoming.examTopics),
+            targetBand = incoming.targetBand.ifBlank { existing.targetBand },
+            skillFocus = mergeTaxonomy(existing.skillFocus, incoming.skillFocus),
             updatedAt = System.currentTimeMillis()
         )
+    }
+
+    /**
+     * Parses the optional `senses` array written by scripts/normalize_definitions.py.
+     *
+     * Rows that were raw multi-sense dictionary dumps gain one row per sense, with
+     * the sense matching the card's part of speech marked primary. The Persian
+     * meaning and example are only known for the primary sense, so non-primary
+     * senses leave them blank rather than inheriting text that describes a
+     * different meaning.
+     */
+    private fun JSONObject.toVocabularySenses(
+        normalizedWord: String,
+        persianMeaning: String
+    ): List<VocabularySense> {
+        val cefr = optString("cefrLevel", "").trim().uppercase(Locale.US)
+        val array = optJSONArray("senses")
+        if (array == null) {
+            // Every card needs at least its own primary sense, otherwise a word
+            // with only one meaning has no sense row at all and the app shows an
+            // empty sense list. This mirrors the single-sense backfill that
+            // AppDatabase.ensureVocabularySenses used to do on an empty table.
+            val definition = cleanDefinition(optString("englishDefinition"))
+            if (definition.isBlank()) return emptyList()
+            return listOf(
+                VocabularySense(
+                    vocabularyId = 0L,
+                    senseIndex = 1,
+                    partOfSpeech = optString("partOfSpeech", "").trim(),
+                    cefrLevel = cefr,
+                    englishDefinition = definition,
+                    persianMeaning = persianMeaning,
+                    exampleSentence = cleanExample(optString("example")),
+                    exampleTranslation = cleanExample(optString("examplePersian")),
+                    collocations = sanitizeCollocations(
+                        normalizedWord,
+                        optString("partOfSpeech", ""),
+                        stringList("collocations")
+                    ),
+                    isPrimary = true
+                )
+            )
+        }
+        val senses = mutableListOf<VocabularySense>()
+        for (i in 0 until array.length()) {
+            val entry = array.optJSONObject(i) ?: continue
+            val definition = entry.optString("englishDefinition").trim()
+            if (definition.isEmpty()) continue
+            val isPrimary = entry.optBoolean("isPrimary", senses.isEmpty())
+            senses.add(
+                VocabularySense(
+                    vocabularyId = 0L,
+                    senseIndex = entry.optInt("senseIndex", senses.size + 1),
+                    partOfSpeech = entry.optString("partOfSpeech", "").trim(),
+                    cefrLevel = optString("cefrLevel", "").trim().uppercase(Locale.US),
+                    englishDefinition = definition,
+                    persianMeaning = if (isPrimary) persianMeaning else "",
+                    exampleSentence = if (isPrimary) cleanExample(optString("example")) else "",
+                    exampleTranslation = if (isPrimary) cleanExample(optString("examplePersian")) else "",
+                    collocations = if (isPrimary) sanitizeCollocations(
+                        normalizedWord,
+                        optString("partOfSpeech", ""),
+                        stringList("collocations")
+                    ) else emptyList(),
+                    isPrimary = isPrimary
+                )
+            )
+        }
+        return senses
+    }
+
+    private fun mergeTaxonomy(existing: List<String>, incoming: List<String>): List<String> {
+        return if (incoming.isNotEmpty()) incoming.distinct() else existing.distinct()
     }
 
     private fun cleanDefinition(value: String): String {

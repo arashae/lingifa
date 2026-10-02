@@ -11,6 +11,7 @@ Multi-tier testing architecture:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -128,7 +129,20 @@ class Tier1FeatureCoverageTests(unittest.TestCase):
             self.assertGreater(targets[expected_pack], 0)
 
         chunks = catalog["chunks"]
-        self.assertEqual(len(chunks), 93)
+        # Derived rather than hard-coded: growing a bank legitimately adds a
+        # chunk. Compared by file name because the catalog is not internally
+        # consistent about the path prefix it stores (some entries carry
+        # "vocabulary/<bank>/<file>", others only "<file>").
+        on_disk = {
+            path.name
+            for pattern in ("*/*.jsonl", "cefr/*/*.jsonl")
+            for path in VOCAB_ROOT.glob(pattern)
+        }
+        self.assertEqual({Path(c["asset"]).name for c in chunks}, on_disk)
+        self.assertEqual(
+            {c["asset"] for c in chunks}.__len__(), len(chunks),
+            "the catalog must not list the same chunk twice",
+        )
 
         # Check all chunk files exist on disk
         for chunk in chunks:
@@ -655,6 +669,340 @@ class Tier4RealWorldApplicationScenariosTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(report["rows"], 100)
         self.assertEqual(report["errorCount"], 0)
+
+
+class Tier5CuratedMultiwordAndTaxonomyTests(unittest.TestCase):
+    """Invariants for the curated multiword, calibration and taxonomy stages.
+
+    Each test here pins a defect that was actually present in the shipped
+    dataset, so the suite fails if any of them is reintroduced.
+    """
+
+    EXAM_BANKS = ("ielts", "toefl")
+
+    def _rows(self, bank: str) -> list[dict]:
+        rows: list[dict] = []
+        for path in sorted((VOCAB_ROOT / bank).glob("*.jsonl")):
+            for raw in path.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if line and not line.startswith("#"):
+                    rows.append(json.loads(line))
+        return rows
+
+    def test_curated_catalog_is_internally_valid(self) -> None:
+        from curated_multiword_catalog import CARDS, validate_cards
+
+        self.assertGreaterEqual(len(CARDS), 250, "curated multiword catalog regressed")
+        self.assertEqual(validate_cards(CARDS), [])
+
+    def test_every_curated_card_lands_in_both_exam_banks(self) -> None:
+        from curated_multiword_catalog import CARDS
+
+        expected = {card["word"] for card in CARDS}
+        for bank in self.EXAM_BANKS:
+            present = {row["word"] for row in self._rows(bank)}
+            # Two cards already exist as generated rows, so require near-total
+            # coverage rather than exact equality.
+            missing = expected - present
+            self.assertLessEqual(
+                len(missing), 5, f"{bank.upper()} lost {len(missing)} curated card(s)"
+            )
+
+    def test_banks_actually_contain_multiword_expressions(self) -> None:
+        """The shipped banks had zero phrasal verbs before curation."""
+        for bank in self.EXAM_BANKS:
+            multiword = [r for r in self._rows(bank) if " " in r["word"].strip()]
+            self.assertGreater(len(multiword), 250, f"{bank.upper()} has too few multiword rows")
+
+    def test_curated_rows_carry_full_bilingual_content(self) -> None:
+        for bank in self.EXAM_BANKS:
+            curated = [
+                r for r in self._rows(bank)
+                if "curated-multiword" in {str(t) for t in r.get("tags", [])}
+            ]
+            self.assertGreater(len(curated), 250)
+            for row in curated:
+                self.assertTrue(row["persianMeaning"].strip(), row["word"])
+                self.assertTrue(row["englishDefinition"].strip(), row["word"])
+                self.assertTrue(row["example"].strip(), row["word"])
+                self.assertTrue(row["examplePersian"].strip(), row["word"])
+                self.assertTrue(row["collocations"], row["word"])
+                self.assertIn(row["cefrLevel"], VALID_CEFR, row["word"])
+
+    def test_curated_rows_survive_the_strict_quality_gate(self) -> None:
+        for bank in self.EXAM_BANKS:
+            for row in self._rows(bank):
+                if "curated-multiword" not in {str(t) for t in row.get("tags", [])}:
+                    continue
+                word = row["word"]
+                self.assertIsNone(
+                    placeholder_definition_risk(row["englishDefinition"]), word
+                )
+                self.assertIsNone(
+                    definition_meaning_alignment_risk(
+                        row["partOfSpeech"], row["persianMeaning"], row["englishDefinition"]
+                    ),
+                    word,
+                )
+                self.assertIsNone(
+                    example_translation_alignment_risk(row["example"], row["examplePersian"]),
+                    word,
+                )
+                self.assertTrue(target_present(word, row["example"]), word)
+                self.assertFalse(is_generated_family(row), word)
+                self.assertEqual(
+                    collocation_target_risk(word, row["collocations"]), None, word
+                )
+
+    def test_cefr_calibration_caps_saturated_c2_labels(self) -> None:
+        """C2 used to cover 44% of TOEFL; list membership and frequency now cap it."""
+        from recalibrate_cefr_levels import calibrate
+
+        listed_academic = {
+            "word": "corpus", "cefrLevel": "C2", "tags": ["NAWL"],
+            "frequencyRank": 40_000,
+        }
+        self.assertEqual(calibrate(listed_academic), "C1")
+        listed_general = {
+            "word": "however", "cefrLevel": "C2", "tags": ["NGSL"],
+            "frequencyRank": 90,
+        }
+        self.assertEqual(calibrate(listed_general), "B2")
+        common_word = {
+            "word": "incur", "cefrLevel": "C2", "tags": ["ielts"], "frequencyRank": 12_994,
+        }
+        self.assertEqual(calibrate(common_word), "C1")
+        rare_word = {
+            "word": "connivance", "cefrLevel": "C2", "tags": ["gre"], "frequencyRank": 78_487,
+        }
+        self.assertIsNone(calibrate(rare_word), "a rare word must keep its published level")
+        self.assertIsNone(
+            calibrate({"word": "harmony", "cefrLevel": "B2", "tags": [], "frequencyRank": 900}),
+            "only C2 labels are in scope for this stage",
+        )
+
+    def test_every_exam_row_has_learning_order_and_a_topic(self) -> None:
+        """learningOrder was missing from every bundled exam row before the fix."""
+        for bank in self.EXAM_BANKS:
+            rows = self._rows(bank)
+            orders = [int(r.get("learningOrder") or 0) for r in rows]
+            self.assertTrue(
+                all(value > 0 for value in orders),
+                f"{bank.upper()} has rows without a positive learningOrder",
+            )
+            self.assertEqual(
+                len({v for v in orders if v < 100_000}), len([v for v in orders if v < 100_000]),
+                f"{bank.upper()} learningOrder values are not unique",
+            )
+            for row in rows:
+                self.assertTrue(row.get("examTopics"), f"{row['word']} has no topic")
+                self.assertTrue(row.get("targetBand"), f"{row['word']} has no target band")
+                self.assertTrue(row.get("skillFocus"), f"{row['word']} has no skill focus")
+                self.assertIn(row["targetBand"], {"6.0", "6.5", "7.0", "7.5", "8.0", "8.0+"})
+
+    def test_low_study_priority_rows_keep_the_sanitizer_sentinel(self) -> None:
+        """The pedagogy stage must not undo the C2 name/place down-ranking."""
+        for bank in (*self.EXAM_BANKS, "gre"):
+            for row in self._rows(bank):
+                if "low-study-priority" not in {str(t) for t in row.get("tags", [])}:
+                    continue
+                if not looks_like_c2_proper_noun(row):
+                    continue
+                self.assertGreaterEqual(
+                    int(row.get("learningOrder") or 0), 100_000,
+                    f"{bank}: {row['word']} lost its down-ranking sentinel",
+                )
+
+    def test_topic_tagging_is_deterministic_and_idempotent(self) -> None:
+        from tag_exam_topics import band_for, skills_for, topics_for
+
+        row = {
+            "englishDefinition": "A serious illness spread by mosquitoes in hot countries.",
+            "collocations": ["malaria cases"],
+            "example": "Malaria cases rose sharply.",
+            "synonyms": [],
+            "cefrLevel": "B1",
+            "stageNumber": 2,
+            "partOfSpeech": "noun",
+        }
+        self.assertEqual(topics_for(row), ["Health"])
+        self.assertEqual(band_for(row), "7.0")
+        self.assertEqual(skills_for(row, ["Health"])[0], "Reading Academic")
+        untagged = {
+            "englishDefinition": "Contact means the state of being in touch with someone.",
+            "collocations": ["in contact with"],
+            "example": "",
+            "synonyms": [],
+            "cefrLevel": "B2",
+            "partOfSpeech": "noun",
+        }
+        self.assertEqual(topics_for(untagged), ["General Academic"])
+
+    def test_catalog_target_counts_match_the_shipped_banks(self) -> None:
+        catalog = json.loads(
+            (VOCAB_ROOT / "master_catalog.json").read_text(encoding="utf-8-sig")
+        )
+        for bank, pack_id in (("ielts", "pack_ielts_master"), ("toefl", "pack_toefl_master")):
+            rows = self._rows(bank)
+            self.assertEqual(
+                catalog["targets"][pack_id], len(rows),
+                f"{bank.upper()} catalog target is stale",
+            )
+            for entry in (c for c in catalog["chunks"] if c["packId"] == pack_id):
+                # Asset paths are relative to assets/, as the importer opens them.
+                path = VOCAB_ROOT.parent / entry["asset"]
+                self.assertTrue(path.is_file(), f"missing chunk asset {path.name}")
+                actual = sum(
+                    1 for raw in path.read_text(encoding="utf-8").splitlines() if raw.strip()
+                )
+                self.assertEqual(
+                    actual, entry["expectedItems"],
+                    f"{path.name} row count does not match the catalog",
+                )
+
+
+class Tier6ContentQualityTests(unittest.TestCase):
+    """Guards the content-quality defects found by the committed audit.
+
+    Each assertion pins a defect that was actually present in the shipped banks:
+    raw dictionary sense dumps leaking into definitions, part-of-speech tags that
+    contradict the meaning, and examples that were dictionary citations rather
+    than sentences.
+    """
+
+    EXAM_BANKS = ("ielts", "toefl")
+    DICT_ABBREV = re.compile(r"^\s*(s|v|n|adj|adv|prep|con|vt|vi)\s*[\.:]")
+
+    def _rows(self, bank: str) -> list[dict]:
+        rows: list[dict] = []
+        for path in sorted((VOCAB_ROOT / bank).glob("*.jsonl")):
+            for raw in path.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if line and not line.startswith("#"):
+                    rows.append(json.loads(line))
+        return rows
+
+    def test_definitions_have_no_dictionary_sense_dumps(self) -> None:
+        """990 rows once showed raw text such as 'n. a general officer of...'."""
+        offenders = []
+        for bank in (*self.EXAM_BANKS, "gre"):
+            for row in self._rows(bank):
+                definition = str(row.get("englishDefinition", ""))
+                if "\\n" in definition or "\n" in definition or self.DICT_ABBREV.match(definition):
+                    offenders.append(f"{bank}:{row['word']}")
+        self.assertEqual(offenders[:10], [], f"{len(offenders)} definition(s) still leak a dump")
+
+    def test_normalized_definitions_are_complete_sentences(self) -> None:
+        for bank in (*self.EXAM_BANKS, "gre"):
+            for row in self._rows(bank):
+                definition = str(row.get("englishDefinition", "")).strip()
+                if not definition:
+                    continue
+                self.assertTrue(
+                    definition.endswith((".", "!", "?")),
+                    f"{bank}:{row['word']} definition has no terminal punctuation",
+                )
+
+    def test_multisense_rows_expose_a_primary_sense(self) -> None:
+        """Senses must be usable, so exactly one has to be primary."""
+        checked = 0
+        for bank in self.EXAM_BANKS:
+            for row in self._rows(bank):
+                senses = row.get("senses")
+                if not isinstance(senses, list) or len(senses) < 2:
+                    continue
+                checked += 1
+                primaries = [s for s in senses if s.get("isPrimary")]
+                self.assertEqual(len(primaries), 1, f"{row['word']} primary sense count")
+                indices = [int(s["senseIndex"]) for s in senses]
+                self.assertEqual(indices, list(range(1, len(senses) + 1)), row["word"])
+                for sense in senses:
+                    self.assertTrue(str(sense.get("englishDefinition", "")).strip(), row["word"])
+        self.assertGreater(checked, 200, "expected multi-sense rows in the exam banks")
+
+    def test_primary_sense_matches_the_card_definition(self) -> None:
+        for bank in self.EXAM_BANKS:
+            for row in self._rows(bank):
+                senses = row.get("senses")
+                if not isinstance(senses, list) or len(senses) < 2:
+                    continue
+                primary = next(s for s in senses if s.get("isPrimary"))
+                self.assertEqual(
+                    primary["englishDefinition"], row["englishDefinition"],
+                    f"{row['word']} primary sense disagrees with the card definition",
+                )
+
+    def test_part_of_speech_agrees_with_the_definition(self) -> None:
+        def implied(definition: str) -> str | None:
+            definition = definition.strip()
+            if re.match(r"^(To|to)\s+[a-z]", definition):
+                return "verb"
+            if re.match(r"^(A|An|The|a|an|the)\s+[a-z]", definition):
+                return "noun"
+            return None
+
+        offenders = []
+        for bank in self.EXAM_BANKS:
+            for row in self._rows(bank):
+                guess = implied(str(row.get("englishDefinition", "")))
+                tag = str(row.get("partOfSpeech", ""))
+                if guess and tag in ("noun", "verb") and guess != tag:
+                    offenders.append(f"{bank}:{row['word']}")
+        self.assertEqual(offenders[:10], [], f"{len(offenders)} POS contradiction(s) remain")
+
+    def test_dictionary_citation_examples_are_detected(self) -> None:
+        from validate_vocabulary_quality import dictionary_citation_example_risk
+
+        bad = [
+            'In this context, "choose" means v.',
+            'The author uses "crisscross" to describe the process accurately.',
+            'The article explains the meaning of the term "daisy" in this context.',
+            "Researchers carefully examined the term 'braid' in the report.",
+        ]
+        for example in bad:
+            self.assertIsNotNone(
+                dictionary_citation_example_risk(example), example
+            )
+        good = [
+            "Her mother used to braid her hair every Sunday evening.",
+            "Choose a topic you can argue both sides of.",
+            "Water chips in ceramic glazes as it cools.",
+        ]
+        for example in good:
+            self.assertIsNone(dictionary_citation_example_risk(example), example)
+
+    def test_curated_corrections_are_well_formed_and_applied(self) -> None:
+        from curated_row_corrections import CORRECTIONS, validate_corrections
+
+        self.assertEqual(validate_corrections(CORRECTIONS), [])
+        tagged = [
+            row
+            for bank in self.EXAM_BANKS
+            for row in self._rows(bank)
+            if "corrected-content" in {str(t) for t in row.get("tags", [])}
+        ]
+        self.assertGreater(len(tagged), 100, "curated corrections are not reaching the banks")
+
+    def test_definition_normaliser_splits_senses(self) -> None:
+        from normalize_definitions import build_senses, is_dump, strip_pos_prefix
+
+        dump = "n. a general officer of the highest rank\\nn. the head of a religious order"
+        self.assertTrue(is_dump(dump))
+        built = build_senses(dump, "noun")
+        self.assertIsNotNone(built)
+        primary, senses = built
+        self.assertEqual(len(senses), 2)
+        self.assertTrue(primary.startswith("A general officer"))
+        self.assertTrue(senses[0]["isPrimary"])
+        self.assertFalse(senses[1]["isPrimary"])
+        # The sense matching the card tag wins, so an adjective card is not
+        # defined as a verb.
+        prefer_adjective = build_senses(
+            "v. stroke soothingly\\ns. soft and mild; not harsh or stern", "adjective"
+        )
+        self.assertTrue(prefer_adjective[0].startswith("Soft and mild"))
+        self.assertEqual(strip_pos_prefix("s. gentle")[0], "adjective")
+        self.assertFalse(is_dump("A gentle person."))
 
 
 def main() -> None:

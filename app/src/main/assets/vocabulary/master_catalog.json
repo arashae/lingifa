@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026.09.25.1",
+  "catalogVersion": "2026.10.02.1",
   "targets": {
-    "pack_ielts_master": 5040,
-    "pack_toefl_master": 6974,
+    "pack_ielts_master": 5335,
+    "pack_toefl_master": 7269,
     "pack_gre_master": 7504,
     "pack_cefr_a1": 292,
     "pack_cefr_a2": 707,
@@ -20,7 +20,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_001.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-002",
@@ -28,7 +28,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_002.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-003",
@@ -36,7 +36,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_003.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-004",
@@ -44,7 +44,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_004.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-005",
@@ -52,7 +52,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_005.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-006",
@@ -60,7 +60,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_006.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-007",
@@ -68,7 +68,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_007.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-008",
@@ -76,7 +76,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_008.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-009",
@@ -84,7 +84,7 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_009.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-010",
@@ -92,15 +92,15 @@
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_010.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "ielts-core-011",
       "version": "4.0.0",
       "packId": "pack_ielts_master",
       "asset": "vocabulary/ielts/ielts_core_011.jsonl",
-      "expectedItems": 40,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "expectedItems": 335,
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-001",
@@ -108,7 +108,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_001.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-002",
@@ -116,7 +116,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_002.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-003",
@@ -124,7 +124,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_003.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-004",
@@ -132,7 +132,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_004.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-005",
@@ -140,7 +140,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_005.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-006",
@@ -148,7 +148,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_006.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-007",
@@ -156,7 +156,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_007.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-008",
@@ -164,7 +164,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_008.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-009",
@@ -172,7 +172,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_009.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-010",
@@ -180,7 +180,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_010.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-011",
@@ -188,7 +188,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_011.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-012",
@@ -196,7 +196,7 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_012.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-013",
@@ -204,15 +204,15 @@
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_013.jsonl",
       "expectedItems": 500,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "toefl-core-014",
       "version": "4.0.0",
       "packId": "pack_toefl_master",
       "asset": "vocabulary/toefl/toefl_core_014.jsonl",
-      "expectedItems": 474,
-      "source": "ECDICT exam tags + Openjam + EnglishToPersianDictionaries"
+      "expectedItems": 500,
+      "source": "LinguaFa curated multiword editorial"
     },
     {
       "id": "gre-core-001",
@@ -757,6 +757,14 @@
       "asset": "vocabulary/general/general_core_008.jsonl",
       "expectedItems": 267,
       "source": "NGSL 1.2 + NAWL 1.2 + CEFR-J + EnglishToPersianDictionaries"
+    },
+    {
+      "id": "toefl-core-015",
+      "version": "4.0.0",
+      "packId": "pack_toefl_master",
+      "asset": "vocabulary/toefl/toefl_core_015.jsonl",
+      "expectedItems": 269,
+      "source": "LinguaFa curated multiword editorial"
     }
   ]
 }

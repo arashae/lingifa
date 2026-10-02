@@ -46,7 +46,7 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -185,6 +185,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Syllabus topic, target band and skill focus ship with the bundled
+                // dataset but arrived after these columns were first created, so an
+                // upgraded install backfills them on the next vocabulary import
+                // rather than guessing values in SQL.
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN examTopics TEXT NOT NULL DEFAULT '[]'")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN targetBand TEXT NOT NULL DEFAULT '7.0'")
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN skillFocus TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -193,7 +205,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()
                 INSTANCE = instance
@@ -233,7 +245,8 @@ abstract class AppDatabase : RoomDatabase() {
                             database = database,
                             vocabularyDao = database.vocabularyDao(),
                             packItemDao = database.vocabularyPackItemDao(),
-                            chunkDao = database.vocabularyDatasetChunkDao()
+                            chunkDao = database.vocabularyDatasetChunkDao(),
+                            vocabularySenseDao = database.vocabularySenseDao()
                         )
                         val needsCefrBackfill = database.vocabularyPackItemDao().getPackItemCount("pack_cefr_b2") == 0
                         if (summary.insertedWords > 0 || summary.updatedWords > 0 || needsCefrBackfill) {

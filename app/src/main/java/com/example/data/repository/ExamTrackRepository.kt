@@ -85,8 +85,8 @@ class ExamTrackRepository(
     private val cachedDownloadedSize = java.util.concurrent.ConcurrentHashMap<ExamTrackType, Int>()
 
     private fun masterTarget(trackType: ExamTrackType): Int = when (trackType) {
-        ExamTrackType.IELTS -> 5040
-        ExamTrackType.TOEFL -> 6974
+        ExamTrackType.IELTS -> 5335
+        ExamTrackType.TOEFL -> 7269
         ExamTrackType.GRE -> 7504
     }
 

@@ -65,6 +65,34 @@ jobs:
       - name: Re-apply reviewed IELTS and TOEFL sources of truth
         run: python scripts/apply_vocabulary_overrides.py
 
+      # Order matters from here. Definition normalisation runs before the curated
+      # corrections so a correction can keep the primary sense in step with the
+      # card it rewrites. Calibration runs after the overrides so reviewed rows
+      # cannot restore a stale CEFR label; additions run before topics and
+      # ordering so curated cards get the same metadata as generated ones.
+      - name: Normalise dictionary sense dumps and definition punctuation
+        run: python scripts/normalize_definitions.py
+
+      - name: Apply curated row corrections
+        run: python scripts/apply_curated_row_corrections.py
+
+      - name: Recalibrate over-inflated CEFR levels
+        run: python scripts/recalibrate_cefr_levels.py
+
+      - name: Add curated multiword cards to IELTS and TOEFL
+        run: python scripts/apply_curated_additions.py
+
+      - name: Tag exam topics, target band and skill focus
+        run: python scripts/tag_exam_topics.py
+
+      - name: Apply pedagogical ordering and learning order
+        run: python scripts/reorder_and_enrich_pedagogy.py
+
+      - name: Verify curated content catalogs
+        run: |
+          python scripts/curated_multiword_catalog.py
+          python scripts/curated_row_corrections.py
+
       - name: Strictly validate reviewed TOEFL chunks
         shell: bash
         run: |

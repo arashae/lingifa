@@ -15,8 +15,8 @@ class InitialDataSeedTest {
         val toefl = packs.getValue(InitialDataSeed.TOEFL_MASTER_PACK_ID)
         val gre = packs.getValue(InitialDataSeed.GRE_MASTER_PACK_ID)
 
-        assertEquals(5040, ielts.targetWordCount)
-        assertEquals(6974, toefl.targetWordCount)
+        assertEquals(5335, ielts.targetWordCount)
+        assertEquals(7269, toefl.targetWordCount)
         assertEquals(7504, gre.targetWordCount)
 
         assertEquals(ielts.targetWordCount, ielts.wordCount)

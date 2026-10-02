@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import tempfile
 import sys
 import unittest
 from pathlib import Path
@@ -652,11 +653,16 @@ class Tier4RealWorldApplicationScenariosTests(unittest.TestCase):
 
     def test_e2e_cli_execution_via_subprocess(self) -> None:
         """Verify CLI execution of scripts/validate_vocabulary_quality.py via subprocess."""
+        # A temporary --report is essential: without it the CLI writes to the
+        # default path, which is the committed quality_report.json asset, and a
+        # 100-row slice from this test would overwrite the full-catalogue report.
+        report_path = Path(tempfile.gettempdir()) / "lingufa_e2e_slice.quality.json"
         cmd = [
             sys.executable,
             str(SCRIPTS_DIR / "validate_vocabulary_quality.py"),
             "--file", "general/general_core_001.jsonl",
             "--range", "201:300",
+            "--report", str(report_path),
         ]
         result = subprocess.run(
             cmd,
@@ -669,6 +675,15 @@ class Tier4RealWorldApplicationScenariosTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(report["rows"], 100)
         self.assertEqual(report["errorCount"], 0)
+        self.assertTrue(report_path.is_file())
+        # The committed asset must not be what this test produced.
+        committed = json.loads(
+            (VOCAB_ROOT / "quality_report.json").read_text(encoding="utf-8-sig")
+        )
+        self.assertNotEqual(
+            committed["rows"], 100,
+            "quality_report.json was overwritten by a single-chunk validation run",
+        )
 
 
 class Tier5CuratedMultiwordAndTaxonomyTests(unittest.TestCase):

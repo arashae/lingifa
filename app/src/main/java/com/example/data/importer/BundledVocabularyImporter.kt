@@ -222,17 +222,22 @@ object BundledVocabularyImporter {
                 // insertion order, and pack-membership insertion below walks it
                 // with its own index. Skipping rows here would desynchronise the
                 // two and attach senses to the wrong word.
-                val rowId = if (isInsert) {
-                    val id = insertedIds.getOrNull(senseInsertIdx++)
-                    if (id == null) continue
-                    id
+                //
+                // No `continue`/`return` here: withTransaction takes a
+                // non-inline suspend lambda, so a jump out of this loop is
+                // illegal. The work is nested in `if` blocks instead.
+                val rowId: Long? = if (isInsert) {
+                    insertedIds.getOrNull(senseInsertIdx++)
                 } else {
                     item.id
                 }
-                val senses = sensesByWord[item.normalizedWord]
-                if (senses.isNullOrEmpty()) continue
-                vocabularySenseDao.deleteForWord(rowId)
-                senseRows += senses.map { it.copy(vocabularyId = rowId) }
+                if (rowId != null) {
+                    val senses = sensesByWord[item.normalizedWord]
+                    if (!senses.isNullOrEmpty()) {
+                        vocabularySenseDao.deleteSensesForWord(rowId)
+                        senseRows += senses.map { it.copy(vocabularyId = rowId) }
+                    }
+                }
             }
             if (senseRows.isNotEmpty()) {
                 vocabularySenseDao.insertAll(senseRows)

@@ -4,13 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - scripts/build_vocabulary_assets.py
-      - scripts/postprocess_vocabulary_meanings.py
-      - scripts/curate_vocabulary_sources.py
-      - scripts/sanitize_vocabulary_assets.py
-      - scripts/validate_vocabulary_quality.py
-      - scripts/apply_vocabulary_overrides.py
-      - scripts/vocabulary_overrides/**
+      # Every generator and curation stage lives in scripts/, so a change to any
+      # of them can alter the committed bundle. Listing the stages individually
+      # meant a new stage was silently excluded from this trigger until someone
+      # noticed, so the whole directory is watched instead.
+      - scripts/**
+      - app/src/main/assets/vocabulary/**
       - .github/workflows/vocabulary-bundle.yml
   workflow_dispatch:
     inputs:

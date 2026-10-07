@@ -287,7 +287,7 @@ private fun VocabularyReviewContent(
                 )
             }
         }
-        if (task.mode == ReviewMode.MEANING && item.ipa.isNotBlank()) {
+        if ((task.mode == ReviewMode.MEANING || isRevealed) && item.ipa.isNotBlank()) {
             Text(
                 text = item.ipa,
                 style = MaterialTheme.typography.titleMedium,

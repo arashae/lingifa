@@ -306,6 +306,33 @@ private fun VocabularyReviewContent(
 
         if (isRevealed) {
             HairLine(modifier = Modifier.padding(vertical = Dimens.space4))
+            if (task.mode != ReviewMode.MEANING) {
+                Text(
+                    text = item.word,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    ),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (task.answerNoteFa.isNotBlank()) {
+                AppInset(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    PersianContentRtl {
+                        Text(
+                            text = task.answerNoteFa,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
             if (item.englishDefinition.isNotBlank()) {
                 Text(
                     text = item.englishDefinition,

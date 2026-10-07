@@ -162,6 +162,13 @@ class VocabularyStudyPolicyTest {
         assertEquals(76, contextUpdated.mastery)
         assertEquals(0, VocabularyStudyPolicy.skillMastery(contextUpdated, VocabularySkillAxis.SPELLING))
         assertEquals(12, VocabularyStudyPolicy.skillMastery(contextUpdated, VocabularySkillAxis.CONTEXT))
+
+        val definitionUpdated = VocabularyStudyPolicy.withSkillResult(
+            contextUpdated,
+            VocabularySkillAxis.ENGLISH_DEFINITION,
+            success = true
+        )
+        assertEquals(15, VocabularyStudyPolicy.skillMastery(definitionUpdated, VocabularySkillAxis.ENGLISH_DEFINITION))
     }
 
     @Test

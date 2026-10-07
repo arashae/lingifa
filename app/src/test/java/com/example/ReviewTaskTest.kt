@@ -26,6 +26,38 @@ class ReviewTaskTest {
     }
 
     @Test
+    fun `english definition task prompts without leaking the headword`() {
+        val task = ReviewTask.forItem(
+            item(
+                word = "allocate",
+                meaning = "تخصیص دادن",
+                definition = "To distribute money or resources for a particular purpose.",
+                lowest = VocabularySkillAxis.ENGLISH_DEFINITION
+            )
+        )
+
+        assertEquals(ReviewMode.ENGLISH_DEFINITION, task.mode)
+        assertEquals("To distribute money or resources for a particular purpose.", task.prompt)
+        assertFalse(task.prompt.contains("allocate", ignoreCase = true))
+        assertTrue(task.isCorrect("ALLOCATE"))
+    }
+
+    @Test
+    fun `circular definitions are excluded as answer cues`() {
+        val task = ReviewTask.forItem(
+            item(
+                word = "allocate",
+                meaning = "تخصیص دادن",
+                definition = "To allocate money or resources.",
+                lowest = VocabularySkillAxis.ENGLISH_DEFINITION
+            )
+        )
+
+        assertFalse(task.mode == ReviewMode.ENGLISH_DEFINITION)
+        assertFalse(task.prompt.contains("allocate", ignoreCase = true))
+    }
+
+    @Test
     fun `context task requires a real example containing the target`() {
         val withExample = item(
             word = "allocate",
@@ -50,6 +82,26 @@ class ReviewTaskTest {
     }
 
     @Test
+    fun `all reviewed contrast pairs reveal a Persian usage distinction`() {
+        val reviewedWords = listOf(
+            "avoid", "prevent", "economic", "economical", "say", "tell",
+            "borrow", "lend", "rise", "raise", "remember", "remind",
+            "affect", "effect", "advice", "advise", "accept", "except",
+            "lose", "loose", "do", "make", "discover", "invent"
+        )
+
+        reviewedWords.forEach { word ->
+            val task = ReviewTask.forItem(
+                item(word = word, meaning = "معنی", lowest = VocabularySkillAxis.SYNONYM)
+            )
+            assertEquals(ReviewMode.SYNONYM, task.mode)
+            assertTrue(task.isCorrect(word))
+            assertTrue(task.answerNoteFa.isNotBlank())
+            assertTrue(task.prompt.contains("____"))
+        }
+    }
+
+    @Test
     fun `synonym contrast tasks only use reviewed sense-specific pairs`() {
         val pair = ReviewTask.forItem(
             item(word = "avoid", meaning = "اجتناب کردن", lowest = VocabularySkillAxis.SYNONYM)
@@ -69,6 +121,7 @@ class ReviewTaskTest {
         word: String,
         meaning: String,
         example: String = "",
+        definition: String = "",
         lowest: VocabularySkillAxis
     ): VocabularyItem {
         val axes = VocabularySkillAxis.values().associateWith { axis ->
@@ -79,6 +132,7 @@ class ReviewTaskTest {
             id = 21,
             word = word,
             persianMeaning = meaning,
+            englishDefinition = definition,
             example = example,
             tags = tags
         )

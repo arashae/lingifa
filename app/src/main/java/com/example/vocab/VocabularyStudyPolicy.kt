@@ -19,6 +19,7 @@ enum class LearningLifecycle {
 enum class VocabularySkillAxis(val tagPrefix: String) {
     MEANING("linguafa:skill:meaning:"),
     RETRIEVAL("linguafa:skill:retrieval:"),
+    ENGLISH_DEFINITION("linguafa:skill:english-definition:"),
     CONTEXT("linguafa:skill:context:"),
     SYNONYM("linguafa:skill:synonym:"),
     SPELLING("linguafa:skill:spelling:")
@@ -46,7 +47,7 @@ data class VocabularyDailyPlan(
  *
  * The source datasets deliberately remain broad. This policy turns that catalog into a useful
  * learning queue by ranking words for the selected exam, splitting large exam banks into Core and
- * Extended tiers, and keeping meaning/context/spelling progress independent.
+ * Extended tiers, and keeping meaning/retrieval/definition/context/word-distinction progress independent.
  *
  * priorityScore is calculated rather than stored so it never becomes stale after a dataset update.
  */
@@ -216,6 +217,7 @@ object VocabularyStudyPolicy {
         val delta = when (axis) {
             VocabularySkillAxis.MEANING -> if (success) 12 else -12
             VocabularySkillAxis.RETRIEVAL -> if (success) 15 else -10
+            VocabularySkillAxis.ENGLISH_DEFINITION -> if (success) 15 else -10
             VocabularySkillAxis.CONTEXT -> if (success) 12 else -12
             VocabularySkillAxis.SYNONYM -> if (success) 12 else -12
             VocabularySkillAxis.SPELLING -> if (success) 15 else -10
@@ -226,6 +228,18 @@ object VocabularyStudyPolicy {
             tags = cleanTags + "${axis.tagPrefix}$next",
             updatedAt = System.currentTimeMillis()
         )
+    }
+
+    /**
+     * Returns a non-circular English definition cue. Definitions that repeat the headword are
+     * excluded so they cannot reveal the answer in a typed recall task.
+     */
+    fun definitionCue(item: VocabularyItem): String? {
+        val definition = item.englishDefinition.trim()
+        val word = item.word.trim()
+        if (definition.length < 12 || word.isBlank()) return null
+        val headword = Regex("(?i)(?<![A-Za-z])${Regex.escape(word)}(?![A-Za-z])")
+        return definition.takeUnless { headword.containsMatchIn(it) }
     }
 
     fun clozeSentence(item: VocabularyItem): String? {

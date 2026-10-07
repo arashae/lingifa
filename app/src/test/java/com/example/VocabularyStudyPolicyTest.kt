@@ -168,6 +168,7 @@ class VocabularyStudyPolicyTest {
     fun `mastery requires repeated success and a week-long interval`() {
         val practiced = VocabularyItem(
             word = "persistent",
+            persianMeaning = "پایدار",
             correctCount = 4,
             mastery = 70,
             intervalDays = 6

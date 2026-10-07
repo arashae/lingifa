@@ -14,6 +14,7 @@ import com.example.data.model.StreakUpdateResult
 import com.example.data.model.VocabularyItem
 import com.example.data.seed.ExamTrackDataSeed
 import com.example.data.seed.InitialDataSeed
+import com.example.vocab.VocabularyStudyPolicy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.text.SimpleDateFormat
@@ -59,8 +60,12 @@ class ExamTrackRepository(
             val decoratedWords = allWords.map { word ->
                 val progress = progressMap[word.id]
                 val canonical = vocabularyByNormalizedWord[normalize(word.word)]
-                val learnedAnywhere = (canonical?.correctCount ?: 0) > 0
-                word.copy(isMastered = progress?.isMastered == true || learnedAnywhere)
+                // Canonical vocabulary progress is authoritative when the seed has a Room row.
+                // One successful flip is practice, not mastery: mastery requires repeated,
+                // spaced success through VocabularyStudyPolicy.
+                val isMastered = canonical?.let(VocabularyStudyPolicy::isMastered)
+                    ?: (progress?.isMastered == true)
+                word.copy(isMastered = isMastered)
             }
 
             val stages = buildStages(trackType, decoratedWords, currentStageNum)

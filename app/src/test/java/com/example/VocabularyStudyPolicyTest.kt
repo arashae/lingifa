@@ -162,6 +162,33 @@ class VocabularyStudyPolicyTest {
         assertEquals(76, contextUpdated.mastery)
         assertEquals(0, VocabularyStudyPolicy.skillMastery(contextUpdated, VocabularySkillAxis.SPELLING))
         assertEquals(12, VocabularyStudyPolicy.skillMastery(contextUpdated, VocabularySkillAxis.CONTEXT))
+
+        val definitionUpdated = VocabularyStudyPolicy.withSkillResult(
+            contextUpdated,
+            VocabularySkillAxis.ENGLISH_DEFINITION,
+            success = true
+        )
+        assertEquals(15, VocabularyStudyPolicy.skillMastery(definitionUpdated, VocabularySkillAxis.ENGLISH_DEFINITION))
+    }
+
+    @Test
+    fun `mastery requires repeated success and a week-long interval`() {
+        val practiced = VocabularyItem(
+            word = "persistent",
+            persianMeaning = "پایدار",
+            correctCount = 4,
+            mastery = 70,
+            intervalDays = 6
+        )
+        assertEquals(LearningLifecycle.REVIEW, VocabularyStudyPolicy.lifecycle(practiced))
+        assertEquals(
+            LearningLifecycle.MASTERED,
+            VocabularyStudyPolicy.lifecycle(practiced.copy(intervalDays = 7))
+        )
+        assertEquals(
+            LearningLifecycle.REVIEW,
+            VocabularyStudyPolicy.lifecycle(practiced.copy(correctCount = 3, intervalDays = 7))
+        )
     }
 
     @Test

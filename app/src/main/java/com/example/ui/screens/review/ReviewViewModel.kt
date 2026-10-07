@@ -9,13 +9,17 @@ import com.example.data.repository.DailyStreakRepository
 import com.example.data.repository.MistakeRepository
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
+import com.example.vocab.VocabularyStudyPolicy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ReviewSessionUiState(
-    val queue: List<VocabularyItem> = emptyList(),
+    val queue: List<ReviewTask> = emptyList(),
+    val answerText: String = "",
+    val answerChecked: Boolean = false,
+    val typedAnswerCorrect: Boolean? = null,
     val currentIndex: Int = 0,
     val isAnswerRevealed: Boolean = false,
     val completedCount: Int = 0,
@@ -80,7 +84,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 )
             } else {
                 ReviewSessionUiState(
-                    queue = queue,
+                    queue = queue.map(ReviewTask::forItem),
                     currentIndex = 0,
                     sessionTotal = queue.size
                 )
@@ -88,35 +92,67 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateAnswer(answer: String) {
+        val state = _uiState.value
+        if (state.isSubmitting || state.answerChecked) return
+        _uiState.value = state.copy(answerText = answer)
+    }
+
+    fun checkAnswer() {
+        val state = _uiState.value
+        if (state.isSubmitting || state.answerChecked || state.answerText.isBlank()) return
+        val task = state.queue.getOrNull(state.currentIndex) ?: return
+        _uiState.value = state.copy(
+            answerChecked = true,
+            typedAnswerCorrect = task.isCorrect(state.answerText),
+            isAnswerRevealed = true
+        )
+    }
+
     fun revealAnswer() {
-        if (_uiState.value.isSubmitting) return
-        _uiState.value = _uiState.value.copy(isAnswerRevealed = true)
+        val state = _uiState.value
+        if (state.isSubmitting) return
+        val task = state.queue.getOrNull(state.currentIndex) ?: return
+        if (task.mode.requiresTypedAnswer && !state.answerChecked) return
+        _uiState.value = state.copy(isAnswerRevealed = true)
     }
 
     fun submitRating(rating: ReviewRating) {
         if (_uiState.value.isSubmitting) return
 
         val snapshot = _uiState.value
-        val queuedItem = snapshot.queue.getOrNull(snapshot.currentIndex) ?: return
+        val task = snapshot.queue.getOrNull(snapshot.currentIndex) ?: return
+        if (task.mode.requiresTypedAnswer &&
+            (!snapshot.answerChecked || (snapshot.typedAnswerCorrect != true && rating != ReviewRating.AGAIN))
+        ) return
+        val queuedItem = task.item
         _uiState.value = snapshot.copy(isSubmitting = true)
 
         viewModelScope.launch {
             val currentItem = vocabRepo.getByIdSync(queuedItem.id) ?: queuedItem
-            vocabRepo.recordReview(currentItem, rating)
+            val skillUpdatedItem = VocabularyStudyPolicy.withSkillResult(
+                currentItem,
+                task.mode.skill,
+                success = if (task.mode.requiresTypedAnswer) snapshot.typedAnswerCorrect == true else rating != ReviewRating.AGAIN
+            )
+            vocabRepo.recordReview(skillUpdatedItem, rating)
 
             val isSuccess = rating != ReviewRating.AGAIN
             if (!isSuccess) {
                 mistakeRepo.addMistake(
-                    question = "What does the word '${currentItem.word}' mean, and how is it used?",
-                    myAnswer = "I could not recall it / needs review",
-                    correctAnswer = buildString {
-                        append(currentItem.englishDefinition.ifBlank { currentItem.persianMeaning })
-                        if (currentItem.persianMeaning.isNotBlank()) {
-                            append(" — ${currentItem.persianMeaning}")
-                        }
+                    question = task.prompt,
+                    myAnswer = snapshot.answerText.ifBlank { "I could not recall it / needs review" },
+                    correctAnswer = task.expectedAnswer + if (currentItem.persianMeaning.isNotBlank()) {
+                        " — ${currentItem.persianMeaning}"
+                    } else {
+                        ""
                     },
                     explanationFa = currentItem.examplePersian.ifEmpty { currentItem.example },
-                    whyWrongFa = "Could not recall it during vocabulary review; this word is due again in 30 minutes.",
+                    whyWrongFa = if (snapshot.typedAnswerCorrect == false) {
+                        "پاسخ ثبت‌شده با جواب مورد انتظار یکی نبود؛ این واژه ۳۰ دقیقه دیگر دوباره مرور می‌شود."
+                    } else {
+                        "Could not recall it during vocabulary review; this word is due again in 30 minutes."
+                    },
                     concept = currentItem.word,
                     skillType = "VOCABULARY"
                 )
@@ -136,6 +172,9 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = state.copy(
                 currentIndex = nextIndex,
                 isAnswerRevealed = false,
+                answerText = "",
+                answerChecked = false,
+                typedAnswerCorrect = null,
                 completedCount = newCompleted,
                 xpEarned = newXp,
                 isSubmitting = false

@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -109,7 +110,8 @@ fun SrsReviewScreen(
                 }
 
                 else -> {
-                    val currentWord = state.queue[state.currentIndex]
+                    val task = state.queue[state.currentIndex]
+                    val currentWord = task.item
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -127,7 +129,12 @@ fun SrsReviewScreen(
                             mastery = currentWord.mastery
                         )
                         VocabularyReviewContent(
+                            task = task,
                             item = currentWord,
+                            answerText = state.answerText,
+                            answerChecked = state.answerChecked,
+                            typedAnswerCorrect = state.typedAnswerCorrect,
+                            onAnswerChange = viewModel::updateAnswer,
                             isRevealed = state.isAnswerRevealed,
                             onPlayWord = { tts.speak(currentWord.word) },
                             onPlayExample = {
@@ -143,12 +150,14 @@ fun SrsReviewScreen(
                             ReviewActionBar(
                                 item = currentWord,
                                 enabled = !state.isSubmitting,
+                                successEnabled = !task.mode.requiresTypedAnswer || state.typedAnswerCorrect == true,
                                 onRate = viewModel::submitRating
                             )
                         } else {
+                            val canCheck = task.mode.requiresTypedAnswer && !state.answerChecked
                             Button(
-                                onClick = viewModel::revealAnswer,
-                                enabled = !state.isSubmitting,
+                                onClick = if (canCheck) viewModel::checkAnswer else viewModel::revealAnswer,
+                                enabled = !state.isSubmitting && (!canCheck || state.answerText.isNotBlank()),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(Dimens.minTapTarget),
@@ -160,7 +169,7 @@ fun SrsReviewScreen(
                                     modifier = Modifier.size(Dimens.iconSm)
                                 )
                                 Spacer(modifier = Modifier.width(Dimens.space8))
-                                Text("Show Answer", maxLines = 1)
+                                Text(if (canCheck) "Check Answer" else "Show Answer", maxLines = 1)
                             }
                         }
                     }
@@ -216,7 +225,12 @@ private fun ReviewProgressHeader(
 
 @Composable
 private fun VocabularyReviewContent(
+    task: ReviewTask,
     item: VocabularyItem,
+    answerText: String,
+    answerChecked: Boolean,
+    typedAnswerCorrect: Boolean?,
+    onAnswerChange: (String) -> Unit,
     isRevealed: Boolean,
     onPlayWord: () -> Unit,
     onPlayExample: () -> Unit,
@@ -230,7 +244,7 @@ private fun VocabularyReviewContent(
         verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
     ) {
         Text(
-            text = if (isRevealed) "Check your recall" else "Recall the meaning first",
+            text = task.mode.instruction,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -238,17 +252,42 @@ private fun VocabularyReviewContent(
             overflow = TextOverflow.Ellipsis
         )
         CefrBadge(level = item.cefrLevel)
-        Text(
-            text = item.word,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            ),
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        if (item.ipa.isNotBlank()) {
+        if (task.mode == ReviewMode.MEANING) {
+            Text(
+                text = item.word,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        } else {
+            Text(
+                text = task.prompt,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = answerText,
+                onValueChange = onAnswerChange,
+                enabled = !answerChecked,
+                label = { Text("Your answer") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (answerChecked) {
+                Text(
+                    text = if (typedAnswerCorrect == true) "Correct" else "Not quite — review the answer below",
+                    color = if (typedAnswerCorrect == true) Accent.success else Accent.danger,
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        if ((task.mode == ReviewMode.MEANING || isRevealed) && item.ipa.isNotBlank()) {
             Text(
                 text = item.ipa,
                 style = MaterialTheme.typography.titleMedium,
@@ -258,13 +297,42 @@ private fun VocabularyReviewContent(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        AudioSpeakerButton(
-            onClick = onPlayWord,
-            contentDescription = "Play word pronunciation"
-        )
+        if (task.mode == ReviewMode.MEANING || isRevealed) {
+            AudioSpeakerButton(
+                onClick = onPlayWord,
+                contentDescription = "Play word pronunciation"
+            )
+        }
 
         if (isRevealed) {
             HairLine(modifier = Modifier.padding(vertical = Dimens.space4))
+            if (task.mode != ReviewMode.MEANING) {
+                Text(
+                    text = item.word,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    ),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (task.answerNoteFa.isNotBlank()) {
+                AppInset(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    PersianContentRtl {
+                        Text(
+                            text = task.answerNoteFa,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
             if (item.englishDefinition.isNotBlank()) {
                 Text(
                     text = item.englishDefinition,
@@ -327,6 +395,7 @@ private fun VocabularyReviewContent(
 private fun ReviewActionBar(
     item: VocabularyItem,
     enabled: Boolean,
+    successEnabled: Boolean,
     onRate: (ReviewRating) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
@@ -354,7 +423,7 @@ private fun ReviewActionBar(
                 label = "Hard",
                 interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD),
                 color = Accent.warning,
-                enabled = enabled,
+                enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.HARD) },
                 modifier = Modifier.weight(1f)
             )
@@ -362,7 +431,7 @@ private fun ReviewActionBar(
                 label = "Good",
                 interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD),
                 color = MaterialTheme.colorScheme.primary,
-                enabled = enabled,
+                enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.GOOD) },
                 modifier = Modifier.weight(1f)
             )
@@ -370,7 +439,7 @@ private fun ReviewActionBar(
                 label = "Easy",
                 interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY),
                 color = Accent.success,
-                enabled = enabled,
+                enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.EASY) },
                 modifier = Modifier.weight(1f)
             )

@@ -17,8 +17,11 @@ enum class LearningLifecycle {
 }
 
 enum class VocabularySkillAxis(val tagPrefix: String) {
-    SPELLING("linguafa:skill:spelling:"),
-    CONTEXT("linguafa:skill:context:")
+    MEANING("linguafa:skill:meaning:"),
+    RETRIEVAL("linguafa:skill:retrieval:"),
+    CONTEXT("linguafa:skill:context:"),
+    SYNONYM("linguafa:skill:synonym:"),
+    SPELLING("linguafa:skill:spelling:")
 }
 
 data class VocabularyMasteryStats(
@@ -140,11 +143,13 @@ object VocabularyStudyPolicy {
         }
     }
 
+    fun isMastered(item: VocabularyItem): Boolean = lifecycle(item) == LearningLifecycle.MASTERED
+
     fun lifecycle(item: VocabularyItem): LearningLifecycle {
         val attempts = item.correctCount + item.incorrectCount
         return when {
             attempts == 0 -> LearningLifecycle.UNSEEN
-            item.mastery >= 70 && item.correctCount >= 4 -> LearningLifecycle.MASTERED
+            item.mastery >= 70 && item.correctCount >= 4 && item.intervalDays >= 7 -> LearningLifecycle.MASTERED
             attempts <= 1 || item.mastery < 30 -> LearningLifecycle.LEARNING
             else -> LearningLifecycle.REVIEW
         }
@@ -209,8 +214,11 @@ object VocabularyStudyPolicy {
     ): VocabularyItem {
         val current = skillMastery(item, axis)
         val delta = when (axis) {
-            VocabularySkillAxis.SPELLING -> if (success) 15 else -10
+            VocabularySkillAxis.MEANING -> if (success) 12 else -12
+            VocabularySkillAxis.RETRIEVAL -> if (success) 15 else -10
             VocabularySkillAxis.CONTEXT -> if (success) 12 else -12
+            VocabularySkillAxis.SYNONYM -> if (success) 12 else -12
+            VocabularySkillAxis.SPELLING -> if (success) 15 else -10
         }
         val next = (current + delta).coerceIn(0, 100)
         val cleanTags = item.tags.filterNot { it.startsWith(axis.tagPrefix) }

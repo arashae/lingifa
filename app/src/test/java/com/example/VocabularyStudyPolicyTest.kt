@@ -165,6 +165,25 @@ class VocabularyStudyPolicyTest {
     }
 
     @Test
+    fun `mastery requires repeated success and a week-long interval`() {
+        val practiced = VocabularyItem(
+            word = "persistent",
+            correctCount = 4,
+            mastery = 70,
+            intervalDays = 6
+        )
+        assertEquals(LearningLifecycle.REVIEW, VocabularyStudyPolicy.lifecycle(practiced))
+        assertEquals(
+            LearningLifecycle.MASTERED,
+            VocabularyStudyPolicy.lifecycle(practiced.copy(intervalDays = 7))
+        )
+        assertEquals(
+            LearningLifecycle.REVIEW,
+            VocabularyStudyPolicy.lifecycle(practiced.copy(correctCount = 3, intervalDays = 7))
+        )
+    }
+
+    @Test
     fun `cloze uses the real stored example`() {
         val item = VocabularyItem(
             word = "allocate",

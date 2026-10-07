@@ -85,7 +85,7 @@ interface VocabularyDao {
               :status = 'همه'
               OR :status = 'All'
               OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
-              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70)
+              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7)
               OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
               OR (:status IN ('جدید', 'New') AND v.mastery = 0)
               OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
@@ -116,7 +116,7 @@ interface VocabularyDao {
               :status = 'همه'
               OR :status = 'All'
               OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
-              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70)
+              OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7)
               OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
               OR (:status IN ('جدید', 'New') AND v.mastery = 0)
               OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
@@ -166,10 +166,10 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items")
     suspend fun getAllVocabulariesSync(): List<VocabularyItem>
 
-    @Query("SELECT COUNT(*) FROM vocabulary_items WHERE mastery >= 70")
+    @Query("SELECT COUNT(*) FROM vocabulary_items WHERE mastery >= 70 AND correctCount >= 4 AND intervalDays >= 7")
     fun getLearnedCount(): Flow<Int>
 
-    @Query("SELECT * FROM vocabulary_items WHERE mastery >= 70 ORDER BY word ASC")
+    @Query("SELECT * FROM vocabulary_items WHERE mastery >= 70 AND correctCount >= 4 AND intervalDays >= 7 ORDER BY word ASC")
     fun getLearnedVocabularies(): Flow<List<VocabularyItem>>
 
     @Query("SELECT COUNT(*) FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND mastery < 50")

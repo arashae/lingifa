@@ -387,12 +387,13 @@ private fun VocabularyReviewContent(
             if (answerChecked) {
                 Text(
                     text = when {
+                        typedAnswerCorrect != true && answerText.isBlank() -> "Target revealed — try recalling it again later."
                         typedAnswerCorrect != true -> "Different from the target. Another word may also fit."
                         !task.isExactTarget(answerText) -> "Valid alternative. The target word stays ungraded."
                         hintUsed -> "Correct with a hint — guided practice"
                         else -> "Correct"
                     },
-                    color = if (typedAnswerCorrect == true) Accent.success else Accent.danger,
+                    color = if (typedAnswerCorrect == true) Accent.success else MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center
                 )

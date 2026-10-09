@@ -92,7 +92,7 @@ class ReviewLearningStore(private val db: AppDatabase) {
             val next = active.minOf { it.nextReview }
             val routed = if (updated.schedulerVersion == "legacy") minOf(item.nextReview, next) else next
             updated = updated.copy(nextReview = if (effective == ReviewRating.AGAIN && item.nextReview > now) minOf(item.nextReview, routed) else routed)
-            val core = active.filter { it.senseKey == "primary" && it.axis in setOf(VocabularySkillAxis.MEANING.name, VocabularySkillAxis.RETRIEVAL.name) }
+            val core = active.filter { it.schedulerVersion == Fsrs6.VERSION && it.senseKey == "primary" && it.axis in setOf(VocabularySkillAxis.MEANING.name, VocabularySkillAxis.RETRIEVAL.name) }
             val mature = core.size == 2 && core.all { it.independentSuccesses >= 4 && now - it.firstReview >= 7 * Fsrs6.DAY_MS && Fsrs6.interval(it.stability, retention) >= 7 }
             if (!mature) updated = updated.copy(mastery = updated.mastery.coerceAtMost(69))
         }

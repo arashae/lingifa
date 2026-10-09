@@ -113,7 +113,7 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
             title = { Text("FSRS retention target") },
             text = {
                 Column {
-                    Text("A higher target brings reviews closer together. This is a scheduling target, not a measured guarantee.")
+                    Text("A higher target brings future graded reviews closer together. This is a scheduling target, not a measured guarantee.")
                     listOf(0.85, 0.90, 0.95).forEach { target ->
                         TextButton(onClick = { actions.onRetention(target); retentionDialog = false }) {
                             Text("${(target * 100).toInt()}% — a 10-day stability: ${Fsrs6.interval(10.0, target)} days")

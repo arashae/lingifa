@@ -59,11 +59,11 @@ data class ReviewTask(
         fun forItem(item: VocabularyItem, progress: List<VocabularySkillProgress> = emptyList(),
             knownWords: Set<String>? = null, now: Long = System.currentTimeMillis()): ReviewTask {
             val relation = LexicalBank.forWord(item.word, knownWords)?.takeIf {
-                item.partOfSpeech.lowercase() in setOf("", "word", it.sense(item.word).partOfSpeech) &&
+                item.partOfSpeech.lowercase(Locale.US) in setOf("", "word", it.sense(item.word).partOfSpeech) &&
                     (knownWords == null || item.correctCount > 0)
             }
             fun key(mode: ReviewMode) = if (mode == ReviewMode.SYNONYM && relation != null)
-                "lexical:${relation.id}:${item.word.lowercase()}" else "primary"
+                "lexical:${relation.id}:${item.word.lowercase(Locale.US)}" else "primary"
             fun state(mode: ReviewMode) = progress.firstOrNull { it.axis == mode.skill.name && it.senseKey == key(mode) }
 
             val candidates = buildList {

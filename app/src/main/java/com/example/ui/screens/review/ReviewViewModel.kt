@@ -92,7 +92,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 val evidence = ReviewEvidence.summarize(db.reviewLearningDao().recentEvents())
                 val skills = db.reviewLearningDao().skillsFor(queue.map { it.id }).groupBy { it.vocabularyId }
                 val knownWords = db.vocabularyDao().getByNormalizedWords(LexicalBank.words.toList())
-                    .filter { it.correctCount > 0 }.map { it.word.lowercase() }.toSet()
+                    .filter { it.correctCount > 0 }.map { it.word.lowercase(java.util.Locale.US) }.toSet()
                 val tasks = queue.map { item ->
                     val task = ReviewTask.forItem(item, skills[item.id].orEmpty(), knownWords, now)
                     val lexical = task.lexicalRelation?.sense(item.word)

@@ -86,6 +86,14 @@ class ReviewLearningStoreTest {
         assertEquals(2, db.reviewLearningDao().recentEvents().size)
     }
 
+    @Test fun `an unavailable lexical counterpart cannot hold the due date in the past`() = runBlocking {
+        db.reviewLearningDao().saveSkill(VocabularySkillProgress(1, "lexical:buy-purchase:buy", "SYNONYM",
+            stability = 2.0, difficulty = 5.0, lastReview = now - 2 * Fsrs6.DAY_MS, nextReview = now - 1))
+        store.record(task(), "buy", ReviewRating.GOOD, now)
+        val skills = db.reviewLearningDao().skills(1)
+        assertEquals(skills.single { it.axis == "RETRIEVAL" }.nextReview, db.vocabularyDao().getByIdSync(1)!!.nextReview)
+    }
+
     @Test fun `single axis success does not certify multi-skill mastery`() = runBlocking {
         var time = now
         repeat(10) {

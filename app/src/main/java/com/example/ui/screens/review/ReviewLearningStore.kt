@@ -8,6 +8,7 @@ import com.example.data.model.VocabularyReviewEvent
 import com.example.srs.Fsrs6
 import com.example.srs.ReviewRating
 import com.example.srs.SpacedRepetitionSystem
+import com.example.vocab.LexicalBank
 import com.example.vocab.ReviewPersistencePolicy
 import com.example.vocab.VocabularySkillAxis
 import com.example.vocab.VocabularyStudyPolicy
@@ -60,13 +61,31 @@ class ReviewLearningStore(private val db: AppDatabase) {
         // Canonical counts remain compatible with older screens; semantic alternatives never
         // certify recall of the intended headword, and one axis cannot postpone another.
         if (effective != null && !verifiedAlternative && item.nextReview <= now && (!initialized || due)) {
-            val result = SpacedRepetitionSystem.calculateNextReview(item, effective, now, retention)
-            updated = updated.copy(intervalDays = result.intervalDays, stability = result.newStability,
-                difficulty = result.newDifficulty, correctCount = result.correctCount, incorrectCount = result.incorrectCount,
-                mastery = result.newMastery, lastReview = now, schedulerVersion = Fsrs6.VERSION)
+            val interval = if (effective == ReviewRating.AGAIN) 0 else Fsrs6.interval(progress.stability, retention)
+            updated = updated.copy(intervalDays = interval, stability = progress.stability.toFloat(),
+                difficulty = progress.difficulty.toFloat(),
+                correctCount = item.correctCount + if (effective == ReviewRating.AGAIN) 0 else 1,
+                incorrectCount = item.incorrectCount + if (effective == ReviewRating.AGAIN) 1 else 0,
+                lastReview = now, schedulerVersion = Fsrs6.VERSION)
+            updated = updated.copy(mastery = SpacedRepetitionSystem.calculateMastery(updated))
         }
         val all = states.filterNot { it.senseKey == progress.senseKey && it.axis == progress.axis } + progress
-        val active = all.filter { it.lastReview > 0 }
+        val known = if (all.any { it.axis == VocabularySkillAxis.SYNONYM.name })
+            db.vocabularyDao().getByNormalizedWords(LexicalBank.words.toList())
+                .filter { it.correctCount > 0 }.map { it.word.lowercase(java.util.Locale.US) }.toSet() else emptySet()
+        val relation = LexicalBank.forWord(item.word, known)?.takeIf {
+            item.partOfSpeech.lowercase(java.util.Locale.US) in setOf("", "word", it.sense(item.word).partOfSpeech)
+        }
+        // A removed definition/example or unknown/deleted counterpart must not trap the
+        // vocabulary due date behind a skill that can no longer produce a valid task.
+        val active = all.filter { state -> state.lastReview > 0 && when (state.axis) {
+            VocabularySkillAxis.MEANING.name -> true
+            VocabularySkillAxis.RETRIEVAL.name -> item.persianMeaning.isNotBlank()
+            VocabularySkillAxis.ENGLISH_DEFINITION.name -> VocabularyStudyPolicy.definitionCue(item) != null
+            VocabularySkillAxis.CONTEXT.name -> VocabularyStudyPolicy.clozeSentence(item) != null
+            VocabularySkillAxis.SYNONYM.name -> relation != null && state.senseKey == "lexical:${relation.id}:${item.word.lowercase(java.util.Locale.US)}"
+            else -> false
+        } }
         if (rating != null && !verifiedAlternative && active.isNotEmpty()) {
             val next = active.minOf { it.nextReview }
             updated = updated.copy(nextReview = if (updated.schedulerVersion == "legacy") minOf(item.nextReview, next) else next)

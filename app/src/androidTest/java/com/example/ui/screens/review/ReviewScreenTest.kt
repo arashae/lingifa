@@ -4,6 +4,10 @@ import android.graphics.Bitmap
 import android.content.ContentValues
 import android.provider.MediaStore
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -41,7 +45,10 @@ class ReviewScreenTest {
         val second = ReviewTask(item.copy(id = 2, word = "retain"), ReviewMode.WORD_RECALL, "حفظ کردن", "retain")
         val state = mutableStateOf(ReviewSessionUiState(queue = listOf(first, second), sessionTotal = 2))
         var submitted: ReviewRating? = null
+        lateinit var rootView: android.view.View
         compose.setContent {
+            val view = LocalView.current
+            SideEffect { rootView = view }
             LinguaTheme(darkTheme = false) {
                 ReviewSessionScreen(state.value, ReviewSessionActions(
                     onAnswer = { state.value = state.value.copy(answerText = it) },
@@ -55,7 +62,11 @@ class ReviewScreenTest {
         compose.onNodeWithText("Check Answer").assertIsNotEnabled()
         compose.onNodeWithText("Show a hint").performClick()
         compose.onNodeWithText("Target: b", substring = true).assertExists()
-        compose.onNodeWithText("Your answer").performClick().performTextInput("buy")
+        compose.onNodeWithText("Your answer").performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            ViewCompat.getRootWindowInsets(rootView)?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        }
+        compose.onNodeWithText("Your answer").performTextInput("buy")
         compose.onNodeWithText("Check Answer").assertIsDisplayed()
         compose.onNodeWithText("I don’t know").assertIsDisplayed()
         screenshot("01-keyboard")
@@ -65,7 +76,8 @@ class ReviewScreenTest {
         compose.onNodeWithText("Word 2 of 2").assertIsDisplayed()
         // Android's IME hides asynchronously; wait for the next cue to settle on screen.
         compose.waitUntil(timeoutMillis = 5_000) {
-            runCatching { compose.onNodeWithText("حفظ کردن").assertIsDisplayed() }.isSuccess
+            ViewCompat.getRootWindowInsets(rootView)?.isVisible(WindowInsetsCompat.Type.ime()) == false &&
+                runCatching { compose.onNodeWithText("حفظ کردن").assertIsDisplayed() }.isSuccess
         }
         compose.onNodeWithText("حفظ کردن").assertIsDisplayed()
         compose.onNodeWithText("Target:", substring = true).assertDoesNotExist()

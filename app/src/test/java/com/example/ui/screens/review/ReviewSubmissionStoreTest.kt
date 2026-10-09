@@ -63,12 +63,16 @@ class ReviewSubmissionStoreTest {
         assertEquals(task.item, db.vocabularyDao().getByIdSync(1))
         assertTrue(db.mistakeDao().getAllMistakes().first().isEmpty())
         assertTrue(db.dailyStreakDao().getAllRecordsSync().isEmpty())
+        assertTrue(db.reviewLearningDao().skills(1).isEmpty())
+        assertTrue(db.reviewLearningDao().recentEvents().isEmpty())
         assertEquals(100, db.userProfileDao().getProfileSync()!!.xp)
         db.openHelper.writableDatabase.execSQL("DROP TRIGGER reject_activity")
         store.save(task, "", ReviewRating.AGAIN, now, 1, 2)
         assertEquals(1, db.vocabularyDao().getByIdSync(1)!!.incorrectCount)
         assertEquals(1, db.mistakeDao().getAllMistakes().first().size)
         assertEquals(102, db.userProfileDao().getProfileSync()!!.xp)
+        assertEquals(1, db.reviewLearningDao().skills(1).size)
+        assertEquals(1, db.reviewLearningDao().recentEvents().size)
     }
 
     @Test fun `alternative answer does not punish or certify target recall`() = runBlocking {

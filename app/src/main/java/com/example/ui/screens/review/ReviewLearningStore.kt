@@ -52,7 +52,7 @@ class ReviewLearningStore(private val db: AppDatabase) {
                 nextReview = next,
                 correctCount = progress.correctCount + if (effective == ReviewRating.AGAIN) 0 else 1,
                 incorrectCount = progress.incorrectCount + if (effective == ReviewRating.AGAIN) 1 else 0,
-                independentSuccesses = (if (initialized) progress.independentSuccesses else 0) + if (!hintUsed && !verifiedAlternative && effective != ReviewRating.AGAIN) 1 else 0,
+                independentSuccesses = (if (initialized) progress.independentSuccesses else 0) + if (source == "REVIEW" && !hintUsed && !verifiedAlternative && effective != ReviewRating.AGAIN) 1 else 0,
                 schedulerVersion = Fsrs6.VERSION)
         }
         progress = progress.copy(lastPractice = now)

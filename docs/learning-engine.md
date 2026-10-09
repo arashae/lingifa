@@ -13,7 +13,7 @@ Target retention is persisted at 85%, 90% (default) or 95%. Higher targets short
 
 ## Honest grading and evidence
 
-Hints are optional and explicitly recorded. A successful answer using a hint counts as Hard and does not increase independent successes. A valid alternative is recognized and gets feedback, but leaves target memory, counts and due date ungraded. Learner-declared alternatives also remain ungraded. Incorrect or blank responses allow Again; a successful typed rating requires a checked, accepted answer. Core mastery needs repeated independent meaning and retrieval successes across at least seven days; the visible number is a progress score, not recall probability.
+Hints are optional and explicitly recorded. A successful answer using a hint counts as Hard and does not increase independent successes. A valid alternative is recognized and gets feedback, but leaves target memory, counts and due date ungraded. Learner-declared alternatives also remain ungraded. Incorrect or blank responses allow Again; a successful typed rating requires a checked, accepted answer. Study-page and exam-track self-judgements initialize memory but do not count as independent recall. Core mastery needs repeated independent meaning and retrieval successes in Review across at least seven days; the visible number is a progress score, not recall probability.
 
 Every submission appends a timestamped immutable event with skill/sense, prompt, expected and actual answer, rating, hint use, category (initial/due/early/alternative/ungraded), pre-answer prediction, elapsed time, retention and scheduler version. Events remain after a word is deleted. Word, state, event, mistake and activity changes share one transaction; a storage failure rolls them all back.
 

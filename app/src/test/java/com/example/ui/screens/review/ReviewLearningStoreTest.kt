@@ -80,6 +80,15 @@ class ReviewLearningStoreTest {
         assertNull(db.reviewLearningDao().recentEvents().single().prediction)
     }
 
+    @Test fun `study-page judgements initialize memory without claiming independent recall`() = runBlocking {
+        store.recordBase(item, ReviewRating.GOOD, now)
+        val state = db.reviewLearningDao().skills(1).single()
+        assertEquals("MEANING", state.axis)
+        assertTrue(state.stability > 0)
+        assertEquals(0, state.independentSuccesses)
+        assertEquals("LEARNING", db.reviewLearningDao().recentEvents().single().source)
+    }
+
     @Test fun `a hint records guided Hard practice without independent success`() = runBlocking {
         store.record(task(), "buy", ReviewRating.EASY, now, hintUsed = true)
         val state = db.reviewLearningDao().skills(1).single()

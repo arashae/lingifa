@@ -8,6 +8,11 @@ import com.example.data.model.VocabularyItem
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
 import kotlinx.coroutines.CancellationException
+import com.example.vocab.LexicalBank
+import com.example.vocab.ReviewEvidence
+import com.example.vocab.ReviewEvidenceSummary
+import com.example.data.model.VocabularyReviewSettings
+import com.example.data.model.VocabularySense
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -17,6 +22,9 @@ data class ReviewSessionUiState(
     val queue: List<ReviewTask> = emptyList(),
     val answerText: String = "",
     val answerChecked: Boolean = false,
+    val hintUsed: Boolean = false,
+    val desiredRetention: Double = 0.9,
+    val evidence: ReviewEvidenceSummary = ReviewEvidenceSummary(0, null, null),
     val typedAnswerCorrect: Boolean? = null,
     val currentIndex: Int = 0,
     val isAnswerRevealed: Boolean = false,
@@ -80,16 +88,41 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                     now = now
                 )
 
+                val settings = db.reviewLearningDao().settings() ?: VocabularyReviewSettings()
+                val evidence = ReviewEvidence.summarize(db.reviewLearningDao().recentEvents(),
+                    db.reviewLearningDao().initializedSkills(),
+                    db.reviewLearningDao().eventCountSince(now - 7 * com.example.srs.Fsrs6.DAY_MS))
+                val skills = db.reviewLearningDao().skillsFor(queue.map { it.id }).groupBy { it.vocabularyId }
+                val knownWords = db.vocabularyDao().getByNormalizedWords(LexicalBank.words.toList())
+                    .filter { it.correctCount > 0 }.map { it.word.lowercase(java.util.Locale.US) }.toSet()
+                val tasks = queue.map { item ->
+                    val task = ReviewTask.forItem(item, skills[item.id].orEmpty(), knownWords, now)
+                    val lexical = task.lexicalRelation?.sense(item.word)
+                    if (lexical != null) {
+                        val senses = db.vocabularySenseDao().getSensesForWordSync(item.id)
+                        val id = senses.firstOrNull { it.senseIndex == lexical.index }?.id
+                            ?: db.vocabularySenseDao().insert(VocabularySense(vocabularyId = item.id,
+                                senseIndex = lexical.index, partOfSpeech = lexical.partOfSpeech,
+                                cefrLevel = item.cefrLevel, englishDefinition = lexical.definition,
+                                persianMeaning = lexical.meaningFa, exampleSentence = lexical.example, isPrimary = false))
+                        task.copy(senseId = id)
+                    } else task.copy(senseId = db.vocabularySenseDao().getSensesForWordSync(item.id)
+                        .firstOrNull { it.isPrimary && it.englishDefinition == item.englishDefinition }?.id)
+                }
                 sessionStartMillis = now
                 recordedMinutes = 0
                 _uiState.value = if (queue.isEmpty()) {
                     ReviewSessionUiState(
+                        desiredRetention = settings.desiredRetention,
+                        evidence = evidence,
                         sessionTotal = 0,
                         isSessionFinished = true
                     )
                 } else {
                     ReviewSessionUiState(
-                        queue = queue.map(ReviewTask::forItem),
+                        queue = tasks,
+                        desiredRetention = settings.desiredRetention,
+                        evidence = evidence,
                         currentIndex = 0,
                         sessionTotal = queue.size
                     )
@@ -106,6 +139,23 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         val state = _uiState.value
         if (state.isSubmitting || state.answerChecked) return
         _uiState.value = state.copy(answerText = answer)
+    }
+
+    fun showHint() {
+        val state = _uiState.value
+        if (!state.answerChecked && !state.isSubmitting) _uiState.value = state.copy(hintUsed = true)
+    }
+
+    fun setRetention(retention: Double) {
+        require(retention in setOf(0.85, 0.9, 0.95))
+        if (_uiState.value.isSubmitting) return
+        viewModelScope.launch {
+            try {
+                db.reviewLearningDao().saveSettings(VocabularyReviewSettings(desiredRetention = retention))
+                _uiState.value = _uiState.value.copy(desiredRetention = retention)
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { _uiState.value = _uiState.value.copy(errorMessage = "Could not save the review target. Please retry.") }
+        }
     }
 
     fun checkAnswer() {
@@ -141,7 +191,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         val state = _uiState.value
         val task = state.queue.getOrNull(state.currentIndex) ?: return
         if (!state.answerChecked || state.typedAnswerCorrect != false || state.answerText.isBlank() ||
-            task.mode == ReviewMode.SYNONYM || !task.mode.requiresTypedAnswer) return
+            !task.mode.requiresTypedAnswer) return
         submitResult(null)
     }
 
@@ -162,7 +212,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 val elapsedMinutes = maxOf(1, ((now - sessionStartMillis) / 60_000L).toInt())
                 submissionStore.save(
                     task, snapshot.answerText, rating, now,
-                    minutesSpent = (elapsedMinutes - recordedMinutes).coerceAtLeast(0), xp = xp
+                    minutesSpent = (elapsedMinutes - recordedMinutes).coerceAtLeast(0), xp = xp, hintUsed = snapshot.hintUsed
                 )
                 recordedMinutes = elapsedMinutes
                 val nextIndex = snapshot.currentIndex + 1
@@ -171,6 +221,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                     isAnswerRevealed = false,
                     answerText = "",
                     answerChecked = false,
+                    hintUsed = false,
                     typedAnswerCorrect = null,
                     completedCount = snapshot.completedCount + 1,
                     xpEarned = snapshot.xpEarned + xp,

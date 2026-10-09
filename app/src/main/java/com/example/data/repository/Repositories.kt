@@ -166,6 +166,7 @@ class VocabularyRepository(
     suspend fun recordReview(item: VocabularyItem, rating: ReviewRating, now: Long = System.currentTimeMillis()) {
         val result = SpacedRepetitionSystem.calculateNextReview(item, rating, now)
         val updated = item.copy(
+            schedulerVersion = com.example.srs.Fsrs6.VERSION,
             intervalDays = result.intervalDays,
             nextReview = result.nextReviewTimestamp,
             difficulty = result.newDifficulty,

@@ -64,7 +64,9 @@ data class VocabularyItem(
     val skillFocus: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val mastery: Int = 0, // 0 to 100
+    @ColumnInfo(defaultValue = "'legacy'")
+    val schedulerVersion: String = "legacy",
+    val mastery: Int = 0, // progress score, not recall probability
     val difficulty: Float = 2.5f,
     val stability: Float = 1.0f,
     val intervalDays: Int = 0,

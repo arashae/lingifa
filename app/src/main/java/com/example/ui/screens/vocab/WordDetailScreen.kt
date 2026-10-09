@@ -47,6 +47,8 @@ import com.example.audio.TtsManager
 import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularySense
 import com.example.srs.ReviewRating
+import com.example.ui.components.LexicalComparisonCard
+import com.example.vocab.LexicalBank
 import com.example.ui.components.AppCard
 import com.example.ui.components.AppInset
 import com.example.ui.components.AudioSpeakerButton
@@ -157,6 +159,10 @@ fun WordDetailScreen(
                     )
                 }
 
+                LexicalBank.forWord(currentWord.word)?.takeIf {
+                    currentWord.partOfSpeech.lowercase(java.util.Locale.US) in setOf("", "word", it.sense(currentWord.word).partOfSpeech)
+                }?.let { LexicalComparisonCard(it) }
+
                 RelatedLanguageCard(
                     collocations = currentWord.collocations,
                     synonyms = currentWord.synonyms,
@@ -173,16 +179,16 @@ fun WordDetailScreen(
                     gre = currentWord.greRelevance,
                     feedbackMessage = feedbackMessage,
                     onKnown = {
-                        viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD)
-                        feedbackMessage = "Saved: scheduled for the optimal spaced-review interval."
+                        feedbackMessage = "Saving…"
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.GOOD) { feedbackMessage = it }
                     },
                     onHard = {
-                        viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD)
-                        feedbackMessage = "Saved: scheduled for early review."
+                        feedbackMessage = "Saving…"
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.HARD) { feedbackMessage = it }
                     },
                     onPractice = {
-                        viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN)
-                        feedbackMessage = "Saved: added to the upcoming review queue."
+                        feedbackMessage = "Saving…"
+                        viewModel.recordLearningJudgement(currentWord, ReviewRating.AGAIN) { feedbackMessage = it }
                     }
                 )
             }

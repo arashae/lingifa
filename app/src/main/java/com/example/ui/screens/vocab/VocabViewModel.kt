@@ -391,10 +391,23 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Records the learner's first judgement so the word can enter SRS safely. */
-    fun recordLearningJudgement(item: VocabularyItem, rating: ReviewRating) {
+    private var learningSubmissionInFlight = false
+
+    fun recordLearningJudgement(item: VocabularyItem, rating: ReviewRating, onResult: (String) -> Unit = {}) {
+        if (learningSubmissionInFlight) return
+        learningSubmissionInFlight = true
         viewModelScope.launch {
-            val fresh = repo.getByIdSync(item.id) ?: item
-            repo.recordReview(fresh, rating)
+            try {
+                val fresh = repo.getByIdSync(item.id) ?: error("Word deleted")
+                com.example.ui.screens.review.ReviewLearningStore(db).recordBase(fresh, rating)
+                onResult("Saved: meaning assessed; Review also practises English retrieval and usage.")
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                onResult("Could not save. Try the assessment again.")
+            } finally {
+                learningSubmissionInFlight = false
+            }
         }
     }
 

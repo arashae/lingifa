@@ -25,7 +25,8 @@ class ExamTrackRepository(
     private val examTrackDao: ExamTrackDao,
     private val userProfileDao: UserProfileDao,
     private val streakDao: DailyStreakDao,
-    private val vocabularyDao: VocabularyDao
+    private val vocabularyDao: VocabularyDao,
+    private val database: com.example.data.local.AppDatabase? = null
 ) {
     private val streakRepository = DailyStreakRepository(streakDao, userProfileDao)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -277,19 +278,24 @@ class ExamTrackRepository(
 
             if (vocabItem != null) {
                 val rating = if (isMastered) com.example.srs.ReviewRating.GOOD else com.example.srs.ReviewRating.AGAIN
-                val srsResult = com.example.srs.SpacedRepetitionSystem.calculateNextReview(vocabItem, rating)
-                val updatedItem = vocabItem.copy(
-                    nextReview = srsResult.nextReviewTimestamp,
-                    intervalDays = srsResult.intervalDays,
-                    difficulty = srsResult.newDifficulty,
-                    stability = srsResult.newStability,
-                    mastery = srsResult.newMastery,
-                    correctCount = srsResult.correctCount,
-                    incorrectCount = srsResult.incorrectCount,
-                    lastReview = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                )
-                vocabularyDao.update(updatedItem)
+                if (database != null) {
+                    com.example.ui.screens.review.ReviewLearningStore(database).recordBase(vocabItem, rating, source = "EXAM_TRACK")
+                } else {
+                    val srsResult = com.example.srs.SpacedRepetitionSystem.calculateNextReview(vocabItem, rating)
+                    val updatedItem = vocabItem.copy(
+                        schedulerVersion = com.example.srs.Fsrs6.VERSION,
+                        nextReview = srsResult.nextReviewTimestamp,
+                        intervalDays = srsResult.intervalDays,
+                        difficulty = srsResult.newDifficulty,
+                        stability = srsResult.newStability,
+                        mastery = srsResult.newMastery,
+                        correctCount = srsResult.correctCount,
+                        incorrectCount = srsResult.incorrectCount,
+                        lastReview = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    vocabularyDao.update(updatedItem)
+                }
             }
         } catch (_: Exception) {
             // Best effort sync to prevent breaking track progress

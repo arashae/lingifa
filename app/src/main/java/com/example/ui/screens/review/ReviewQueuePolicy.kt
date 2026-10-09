@@ -34,6 +34,9 @@ internal object ReviewQueuePolicy {
             .asSequence()
             .filter(::isStudied)
             .filter { it.nextReview <= now }
+            // An ungraded alternative leaves the due date intact but still needs a short rest.
+            .filter { it.nextReview > ReviewPersistencePolicy.lastPractice(it) ||
+                now - ReviewPersistencePolicy.lastPractice(it) >= ReviewPersistencePolicy.COOLDOWN_MS }
             .distinctBy { it.id }
             .sortedWith(
                 compareBy<VocabularyItem> { it.nextReview }

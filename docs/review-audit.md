@@ -9,7 +9,7 @@ Baseline: `5e77e8325fbd42c574cd26cbc22fceca8acb8298` (PR #14). Scope: queue, tas
 | P1 | Non-due success advanced stability, scheduled dates, correct count and mastery; refreshing could repeatedly inflate them. | Early practice changes the exercised skill only. Due reviews advance SRS. Early failure brings the next review forward to at most 30 minutes, never postpones a nearer review. |
 | P1 | Vocabulary could commit while mistake/activity saving failed, leaving a blocked submission and making retries unsafe. | One Room transaction reads fresh vocabulary and writes vocabulary, mistake and daily activity. A failure rolls everything back and exposes retry. |
 | P2 | Finishing a session was required to record XP and activity. | Persist each submitted card. Minutes are incremental within the session. |
-| P2 | Cooldown was only a preference; a fallback immediately reused cards. | Remove fallback. Persist an independent practice timestamp so SRS elapsed time remains intact. Genuine due cards retain priority. |
+| P2 | Cooldown was only a preference; a fallback immediately reused cards. | Remove fallback. Persist an independent practice timestamp so SRS elapsed time remains intact. Genuine due cards retain priority. Ungraded due targets rest without changing their due date. |
 | P2 | Exact headword matching treated valid alternative words as errors. | Provide first-letter/length target cue; use neutral mismatch feedback. Learner-declared alternative answers skip target grading and leave skill/SRS unchanged. This does not automatically certify synonyms. |
 | P2 | Repeated headwords leaked through cloze prompts; punctuation deletion awarded false spelling matches. | Hide every exact occurrence; normalize typography and harmless terminal punctuation while preserving internal spelling errors. |
 | P2 | Learning/New filters disagreed with the stricter mastered gate. | New means no attempts. Learning means attempted and not mastered. Apply in both library and pack queries. |
@@ -20,7 +20,7 @@ Baseline: `5e77e8325fbd42c574cd26cbc22fceca8acb8298` (PR #14). Scope: queue, tas
 
 ## Regression coverage
 
-Added 16 tests covering early/due review differences, cooldown refresh, independent practice time, future-due input, cloze leakage, typography/spelling, transactional rollback and retry, per-card activity, alternative answers, stale content, preservation of unrelated edits, and actual Room library/pack classification. A simulated SQLite trigger fails activity saving after the word write to exercise rollback.
+Added 18 tests covering early/due review differences, cooldown refresh, independent practice time, future-due input, cloze leakage, typography/spelling, transactional rollback and retry, per-card activity, alternative answers, stale content, preservation of unrelated edits, and actual Room library/pack classification. A simulated SQLite trigger fails activity saving after the word write to exercise rollback.
 
 CI gate: `testDebugUnitTest lintDebug assembleDebug`, plus the existing vocabulary content suites and APK signer/version checks. Physical-device keyboard/layout behavior still needs a device check; a JVM build is not a visual test.
 

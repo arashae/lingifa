@@ -121,6 +121,25 @@ class ReviewQueuePolicyTest {
         assertTrue(ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now).isEmpty())
     }
 
+    @Test
+    fun `ungraded due target rests without changing its overdue date`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now - 10_000L, 40).copy(
+            tags = listOf("linguafa:last-practice:$now")
+        )
+        assertTrue(ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now).isEmpty())
+        assertEquals(1, ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now + 30 * 60_000L).size)
+    }
+
+    @Test
+    fun `nearer due review still wins over early practice cooldown`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now + 10_000L, 40).copy(
+            tags = listOf("linguafa:last-practice:$now")
+        )
+        assertEquals(1, ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now + 10_000L).size)
+    }
+
     private fun studiedItem(
         id: Long,
         now: Long,

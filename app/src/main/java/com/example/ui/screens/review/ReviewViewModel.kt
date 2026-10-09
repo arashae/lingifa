@@ -69,7 +69,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val now = System.currentTimeMillis()
                 val dueItems = vocabRepo
-                    .getDueVocabulariesForReview(limit = ReviewQueuePolicy.DEFAULT_SESSION_LIMIT, currentTime = now)
+                    .getDueVocabulariesForReview(limit = ReviewQueuePolicy.CANDIDATE_POOL_LIMIT, currentTime = now)
                     .first()
                 val studiedItems = vocabRepo.getStudiedVocabulariesForReview(
                     limit = ReviewQueuePolicy.CANDIDATE_POOL_LIMIT

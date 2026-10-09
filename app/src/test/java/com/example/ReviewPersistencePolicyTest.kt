@@ -21,8 +21,8 @@ class ReviewPersistencePolicyTest {
         val after = ReviewPersistencePolicy.apply(before, VocabularySkillAxis.RETRIEVAL, ReviewRating.EASY, now)
         assertEquals(before.nextReview, after.nextReview)
         assertEquals(before.lastReview, after.lastReview)
-        assertEquals(before.stability, after.stability)
-        assertEquals(before.difficulty, after.difficulty)
+        assertEquals(before.stability, after.stability, 0f)
+        assertEquals(before.difficulty, after.difficulty, 0f)
         assertEquals(before.intervalDays, after.intervalDays)
         assertEquals(before.correctCount, after.correctCount)
         assertEquals(before.mastery, after.mastery)
@@ -36,7 +36,7 @@ class ReviewPersistencePolicyTest {
         assertEquals(now + ReviewPersistencePolicy.COOLDOWN_MS, after.nextReview)
         assertEquals(before.correctCount, after.correctCount)
         assertEquals(before.lastReview, after.lastReview)
-        assertEquals(before.stability, after.stability)
+        assertEquals(before.stability, after.stability, 0f)
     }
 
     @Test fun `due success advances the spaced schedule once`() {

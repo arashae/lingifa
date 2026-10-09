@@ -25,11 +25,7 @@ internal class ReviewSubmissionStore(private val db: AppDatabase) {
             if (rating != null) {
                 vocabRepo.update(ReviewPersistencePolicy.apply(currentItem, task.mode.skill, rating, now))
             } else {
-                vocabRepo.update(currentItem.copy(
-                    tags = currentItem.tags.filterNot { it.startsWith(ReviewPersistencePolicy.PRACTICE_TIME_PREFIX) } +
-                        "${ReviewPersistencePolicy.PRACTICE_TIME_PREFIX}$now",
-                    updatedAt = now
-                ))
+                vocabRepo.update(ReviewPersistencePolicy.markPracticed(currentItem, now))
             }
             if (rating == ReviewRating.AGAIN) {
                 mistakeRepo.addMistake(

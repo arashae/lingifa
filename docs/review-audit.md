@@ -15,12 +15,13 @@ Baseline: `5e77e8325fbd42c574cd26cbc22fceca8acb8298` (PR #14). Scope: queue, tas
 | P2 | Learning/New filters disagreed with the stricter mastered gate. | New means no attempts. Learning means attempted and not mastered. Apply in both library and pack queries. |
 | P2 | Optional candidates were limited to the latest 2,000 studied words. | Sample up to 2,000 across all studied words before weighting weak/recent/rotating choices. All due words remain eligible through a separate query. |
 | P2 | No recovery for loading/storage errors; concurrent restart and stale/deleted cards could be graded. | Loading/submitting guards, explicit error/restart UI, fresh reads and content validation. Rating requires revealed feedback. |
+| P2 | Tied skill scores chose the same mode forever once scores saturated. | A persisted per-word exercise sequence rotates tied modes, including after scores reach 100. |
 | P3 | Keyboard/focus and scroll state carried into feedback/next card; no blank-answer route. | Clear focus on check, key scroll by task, add “I don’t know”. |
 | P3 | Empty-state and scheduler comments overstated behavior/scientific validation. | Correct text. Describe the scheduler as a custom heuristic and mastery as a progress score. |
 
 ## Regression coverage
 
-Added 18 tests covering early/due review differences, cooldown refresh, independent practice time, future-due input, cloze leakage, typography/spelling, transactional rollback and retry, per-card activity, alternative answers, stale content, preservation of unrelated edits, and actual Room library/pack classification. A simulated SQLite trigger fails activity saving after the word write to exercise rollback.
+Added 19 tests covering early/due review differences, cooldown refresh, independent practice time, future-due input, cloze leakage, typography/spelling, transactional rollback and retry, per-card activity, alternative answers, stale content, preservation of unrelated edits, and actual Room library/pack classification. A simulated SQLite trigger fails activity saving after the word write to exercise rollback.
 
 CI gate: `testDebugUnitTest lintDebug assembleDebug`, plus the existing vocabulary content suites and APK signer/version checks. Physical-device keyboard/layout behavior still needs a device check; a JVM build is not a visual test.
 

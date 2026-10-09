@@ -5,6 +5,8 @@ import com.example.ui.screens.review.ReviewMode
 import com.example.ui.screens.review.ReviewTask
 import com.example.vocab.VocabularySkillAxis
 import com.example.vocab.VocabularyStudyPolicy
+import com.example.vocab.ReviewPersistencePolicy
+import com.example.srs.ReviewRating
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -136,6 +138,22 @@ class ReviewTaskTest {
     fun `typographic apostrophes are accepted`() {
         val task = ReviewTask.forItem(item("don't", "نکن", lowest = VocabularySkillAxis.RETRIEVAL))
         assertTrue(task.isCorrect("don’t"))
+    }
+
+    @Test
+    fun `fully practised skills keep rotating instead of freezing on one mode`() {
+        val now = 1_700_000_000_000L
+        var current = item("allocate", "تخصیص دادن",
+            example = "We allocate resources carefully.",
+            definition = "To distribute resources for a particular purpose.",
+            lowest = VocabularySkillAxis.SPELLING).copy(correctCount = 5, nextReview = now + 86_400_000L)
+        val modes = mutableSetOf<ReviewMode>()
+        repeat(4) {
+            val task = ReviewTask.forItem(current)
+            modes += task.mode
+            current = ReviewPersistencePolicy.apply(current, task.mode.skill, ReviewRating.GOOD, now)
+        }
+        assertEquals(setOf(ReviewMode.MEANING, ReviewMode.WORD_RECALL, ReviewMode.ENGLISH_DEFINITION, ReviewMode.CONTEXT), modes)
     }
 
     private fun item(

@@ -7,7 +7,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.foundation.layout.PaddingValues
+import com.example.ui.components.LexicalComparisonCard
 import com.example.srs.Fsrs6
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,13 +113,17 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
         AlertDialog(onDismissRequest = { retentionDialog = false },
             title = { Text("FSRS retention target") },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text("A higher target brings future graded reviews closer together. This is a scheduling target, not a measured guarantee.")
                     listOf(0.85, 0.90, 0.95).forEach { target ->
                         TextButton(onClick = { actions.onRetention(target); retentionDialog = false }) {
-                            Text("${(target * 100).toInt()}% — a 10-day stability: ${Fsrs6.interval(10.0, target)} days")
+                            val workload = state.evidence.dailyWorkloadByRetention[target]
+                            Text("${(target * 100).toInt()}% — a 10-day stability: ${Fsrs6.interval(10.0, target)} days" +
+                                if (workload == null) "" else "\nEstimated ${"%.1f".format(java.util.Locale.US, workload)} skill reviews/day")
                         }
                     }
+                    Text("${state.evidence.reviewsLastSevenDays} practice submissions in the last seven days.")
+                    if (state.evidence.dailyWorkloadByRetention.isNotEmpty()) Text("Workload estimates use current skill stability; new learning and relearning add more work.")
                     Text("${state.evidence.samples} delayed, independent answers recorded.")
                     if (state.evidence.samples >= 20) {
                         Text("Observed recall: ${((state.evidence.recallRate ?: 0.0) * 100).toInt()}%")
@@ -433,23 +438,7 @@ private fun VocabularyReviewContent(
                     }
                 }
             }
-            task.lexicalRelation?.let { relation ->
-                val uriHandler = LocalUriHandler.current
-                Text("${relation.type.name.replace('_', ' ')} · compare these senses", style = MaterialTheme.typography.labelLarge)
-                listOf(relation.first, relation.second).forEach { sense ->
-                    AppInset {
-                        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space4)) {
-                            Text("${sense.word} (${sense.partOfSpeech})", fontWeight = FontWeight.Bold)
-                            Text(sense.definition)
-                            PersianContentRtl { Text(sense.meaningFa) }
-                            Text("“${sense.example}”")
-                        }
-                    }
-                }
-                relation.sources.forEachIndexed { index, url ->
-                    TextButton(onClick = { uriHandler.openUri(url) }) { Text("Usage reference: ${if (index == 0) relation.first.word else relation.second.word}") }
-                }
-            }
+            task.lexicalRelation?.let { LexicalComparisonCard(it) }
             if (task.lexicalRelation == null && item.englishDefinition.isNotBlank()) {
                 Text(
                     text = item.englishDefinition,
@@ -586,6 +575,7 @@ private fun ReviewRatingButton(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(Dimens.radiusSm),
+        contentPadding = PaddingValues(horizontal = Dimens.space4, vertical = Dimens.space6),
         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
             containerColor = color.copy(alpha = 0.10f),
             contentColor = color,

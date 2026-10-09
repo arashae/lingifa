@@ -89,7 +89,9 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
                 )
 
                 val settings = db.reviewLearningDao().settings() ?: VocabularyReviewSettings()
-                val evidence = ReviewEvidence.summarize(db.reviewLearningDao().recentEvents())
+                val evidence = ReviewEvidence.summarize(db.reviewLearningDao().recentEvents(),
+                    db.reviewLearningDao().initializedSkills(),
+                    db.reviewLearningDao().eventCountSince(now - 7 * com.example.srs.Fsrs6.DAY_MS))
                 val skills = db.reviewLearningDao().skillsFor(queue.map { it.id }).groupBy { it.vocabularyId }
                 val knownWords = db.vocabularyDao().getByNormalizedWords(LexicalBank.words.toList())
                     .filter { it.correctCount > 0 }.map { it.word.lowercase(java.util.Locale.US) }.toSet()

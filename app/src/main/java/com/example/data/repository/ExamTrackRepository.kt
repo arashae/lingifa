@@ -281,20 +281,20 @@ class ExamTrackRepository(
                 if (database != null) {
                     com.example.ui.screens.review.ReviewLearningStore(database).recordBase(vocabItem, rating, source = "EXAM_TRACK")
                 } else {
-                val srsResult = com.example.srs.SpacedRepetitionSystem.calculateNextReview(vocabItem, rating)
-                val updatedItem = vocabItem.copy(
-            schedulerVersion = com.example.srs.Fsrs6.VERSION,
-                    nextReview = srsResult.nextReviewTimestamp,
-                    intervalDays = srsResult.intervalDays,
-                    difficulty = srsResult.newDifficulty,
-                    stability = srsResult.newStability,
-                    mastery = srsResult.newMastery,
-                    correctCount = srsResult.correctCount,
-                    incorrectCount = srsResult.incorrectCount,
-                    lastReview = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                )
-                vocabularyDao.update(updatedItem)
+                    val srsResult = com.example.srs.SpacedRepetitionSystem.calculateNextReview(vocabItem, rating)
+                    val updatedItem = vocabItem.copy(
+                        schedulerVersion = com.example.srs.Fsrs6.VERSION,
+                        nextReview = srsResult.nextReviewTimestamp,
+                        intervalDays = srsResult.intervalDays,
+                        difficulty = srsResult.newDifficulty,
+                        stability = srsResult.newStability,
+                        mastery = srsResult.newMastery,
+                        correctCount = srsResult.correctCount,
+                        incorrectCount = srsResult.incorrectCount,
+                        lastReview = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    vocabularyDao.update(updatedItem)
                 }
             }
         } catch (_: Exception) {

@@ -20,6 +20,10 @@ interface ReviewLearningDao {
     suspend fun appendEvent(event: VocabularyReviewEvent): Long
     @Query("SELECT * FROM vocabulary_review_events ORDER BY reviewedAt DESC, id DESC LIMIT :limit")
     suspend fun recentEvents(limit: Int = 1000): List<VocabularyReviewEvent>
+    @Query("SELECT * FROM vocabulary_skill_progress WHERE lastReview > 0")
+    suspend fun initializedSkills(): List<VocabularySkillProgress>
+    @Query("SELECT COUNT(*) FROM vocabulary_review_events WHERE reviewedAt >= :since")
+    suspend fun eventCountSince(since: Long): Int
     @Query("SELECT * FROM vocabulary_review_settings WHERE id = 1")
     suspend fun settings(): VocabularyReviewSettings?
     @Insert(onConflict = OnConflictStrategy.REPLACE)

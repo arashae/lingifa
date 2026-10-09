@@ -121,8 +121,7 @@ jobs:
             adb shell wm size 1080x1920
             adb shell wm density 480
             adb shell settings put secure show_ime_with_hard_keyboard 1
-            gradle --no-daemon connectedDebugAndroidTest --stacktrace
-            adb pull /sdcard/Android/data/com.aistudio.linguafa.zqkxmr/files/review-ui-checks app/build/review-ui-checks
+            bash scripts/verify_review_ui.sh
       - name: Upload UI reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4

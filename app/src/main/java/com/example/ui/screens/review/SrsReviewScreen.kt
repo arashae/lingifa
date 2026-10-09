@@ -423,7 +423,7 @@ private fun VocabularyReviewContent(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            if (task.answerNoteFa.isNotBlank()) {
+            if (task.lexicalRelation == null && task.answerNoteFa.isNotBlank()) {
                 AppInset(
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer

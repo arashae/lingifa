@@ -3,6 +3,9 @@ package com.example.ui.screens.review
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
@@ -102,6 +105,7 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     LaunchedEffect(state.answerChecked, state.currentIndex) {
         if (state.answerChecked || state.currentIndex > 0) {
             focusManager.clearFocus(force = true)
@@ -141,7 +145,7 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
     EnglishLtrLayout {
         Scaffold(
             topBar = {
-                LinguaTopAppBar(
+                if (!keyboardVisible) LinguaTopAppBar(
                     title = "Vocabulary Review",
                     subtitle = "Only words you have already learned",
                     onBack = onBack
@@ -191,11 +195,11 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
                             .imePadding()
                             .padding(
                                 horizontal = Dimens.screenGutter,
-                                vertical = Dimens.space12
+                                vertical = if (keyboardVisible) Dimens.space4 else Dimens.space12
                             ),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.sectionGap)
+                        verticalArrangement = Arrangement.spacedBy(if (keyboardVisible) Dimens.space8 else Dimens.sectionGap)
                     ) {
-                        ReviewProgressHeader(
+                        if (!keyboardVisible) ReviewProgressHeader(
                             currentIndex = state.currentIndex,
                             total = state.sessionTotal,
                             mastery = currentWord.mastery,
@@ -210,6 +214,7 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
                                 answerChecked = state.answerChecked,
                                 typedAnswerCorrect = state.typedAnswerCorrect,
                                 hintUsed = state.hintUsed,
+                                compact = keyboardVisible,
                                 onHint = actions.onHint,
                                 onAnswerChange = actions.onAnswer,
                                 isRevealed = state.isAnswerRevealed,
@@ -245,27 +250,24 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
                                 onRate = actions.onRate
                             )
                         } else {
-                            if (task.mode.requiresTypedAnswer) {
-                                OutlinedButton(onClick = actions.onDontKnow, enabled = !state.isSubmitting) {
-                                    Text("I don’t know")
-                                }
-                            }
                             val canCheck = task.mode.requiresTypedAnswer && !state.answerChecked
-                            Button(
-                                onClick = if (canCheck) actions.onCheck else actions.onReveal,
-                                enabled = !state.isSubmitting && (!canCheck || state.answerText.isNotBlank()),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(Dimens.minTapTarget),
-                                shape = RoundedCornerShape(Dimens.radiusSm)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Visibility,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(Dimens.iconSm)
-                                )
-                                Spacer(modifier = Modifier.width(Dimens.space8))
-                                Text(if (canCheck) "Check Answer" else "Show Answer", maxLines = 1)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+                                if (task.mode.requiresTypedAnswer) {
+                                    OutlinedButton(onClick = actions.onDontKnow, enabled = !state.isSubmitting,
+                                        modifier = Modifier.weight(1f).height(Dimens.minTapTarget),
+                                        contentPadding = PaddingValues(horizontal = Dimens.space4)) {
+                                        Text("I don’t know", maxLines = 1)
+                                    }
+                                }
+                                Button(
+                                    onClick = if (canCheck) actions.onCheck else actions.onReveal,
+                                    enabled = !state.isSubmitting && (!canCheck || state.answerText.isNotBlank()),
+                                    modifier = Modifier.weight(1f).height(Dimens.minTapTarget),
+                                    contentPadding = PaddingValues(horizontal = Dimens.space4),
+                                    shape = RoundedCornerShape(Dimens.radiusSm)
+                                ) {
+                                    Text(if (canCheck) "Check Answer" else "Show Answer", maxLines = 1)
+                                }
                             }
                         }
                     }
@@ -330,6 +332,7 @@ private fun VocabularyReviewContent(
     answerChecked: Boolean,
     typedAnswerCorrect: Boolean?,
     hintUsed: Boolean,
+    compact: Boolean,
     onHint: () -> Unit,
     onAnswerChange: (String) -> Unit,
     isRevealed: Boolean,
@@ -342,9 +345,9 @@ private fun VocabularyReviewContent(
             .verticalScroll(rememberScrollState())
             .padding(vertical = Dimens.space4),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.blockGap)
+        verticalArrangement = Arrangement.spacedBy(if (compact) Dimens.space8 else Dimens.blockGap)
     ) {
-        Text(
+        if (!compact) Text(
             text = task.mode.instruction,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -352,7 +355,7 @@ private fun VocabularyReviewContent(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        CefrBadge(level = item.cefrLevel)
+        if (!compact) CefrBadge(level = item.cefrLevel)
         if (task.mode == ReviewMode.MEANING) {
             Text(
                 text = item.word,

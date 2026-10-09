@@ -10,7 +10,18 @@ import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import androidx.test.filters.SdkSuppress
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
+import android.view.WindowManager
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import org.junit.Before
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.data.model.VocabularyItem
 import com.example.srs.ReviewRating
@@ -22,7 +33,20 @@ import org.junit.Test
 
 @SdkSuppress(minSdkVersion = 30)
 class ReviewScreenTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @Before fun matchProductionWindow() {
+        compose.activityRule.scenario.onActivity { activity ->
+            activity.enableEdgeToEdge()
+            activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
+    }
+    @Composable private fun ReviewHost(content: @Composable () -> Unit) {
+        LinguaTheme(darkTheme = false) {
+            Scaffold { padding ->
+                Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) { content() }
+            }
+        }
+    }
     private val item = VocabularyItem(id = 1, word = "buy", persianMeaning = "خریدن", correctCount = 2)
     private fun screenshot(name: String) {
         compose.waitForIdle()
@@ -51,7 +75,7 @@ class ReviewScreenTest {
         compose.setContent {
             val view = LocalView.current
             SideEffect { rootView = view }
-            LinguaTheme(darkTheme = false) {
+            ReviewHost {
                 ReviewSessionScreen(state.value, ReviewSessionActions(
                     onAnswer = { state.value = state.value.copy(answerText = it) },
                     onHint = { state.value = state.value.copy(hintUsed = true) },
@@ -78,6 +102,8 @@ class ReviewScreenTest {
         compose.onNodeWithText("Your answer").performTextInput("buy")
         compose.onNodeWithText("Check Answer").assertIsDisplayed()
         compose.onNodeWithText("I don’t know").assertIsDisplayed()
+        compose.onNodeWithText("خریدن").assertIsDisplayed()
+        compose.onNodeWithText("Your answer").assertIsDisplayed()
         screenshot("01-keyboard")
         compose.onNodeWithText("Check Answer").performClick()
         compose.onNodeWithText("Good").assertIsDisplayed().performClick()
@@ -99,7 +125,7 @@ class ReviewScreenTest {
             pair.noteFa, pair.answers("buy"), lexicalRelation = pair)
         val state = ReviewSessionUiState(queue = listOf(task), sessionTotal = 1, answerText = "purchase",
             answerChecked = true, typedAnswerCorrect = true, isAnswerRevealed = true)
-        compose.setContent { LinguaTheme(darkTheme = false) { ReviewSessionScreen(state, ReviewSessionActions()) } }
+        compose.setContent { ReviewHost { ReviewSessionScreen(state, ReviewSessionActions()) } }
         compose.onNodeWithText("Valid alternative. The target word stays ungraded.").assertExists()
         compose.onNodeWithText(pair.second.definition).performScrollTo().assertIsDisplayed()
         screenshot("03-synonym-senses")
@@ -113,7 +139,7 @@ class ReviewScreenTest {
         var retention = 0.0
         var retry = false
         compose.setContent {
-            LinguaTheme(darkTheme = false) { ReviewSessionScreen(state.value, ReviewSessionActions(
+            ReviewHost { ReviewSessionScreen(state.value, ReviewSessionActions(
                 onDontKnow = { state.value = state.value.copy(answerChecked = true, typedAnswerCorrect = false, isAnswerRevealed = true) },
                 onStart = { retry = true }, onRetention = { retention = it }
             )) }

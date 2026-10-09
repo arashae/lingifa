@@ -5,11 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
 import com.example.data.model.VocabularyItem
-import com.example.data.repository.DailyStreakRepository
-import com.example.data.repository.MistakeRepository
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
-import com.example.vocab.VocabularyStudyPolicy
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -26,6 +24,8 @@ data class ReviewSessionUiState(
     val sessionTotal: Int = 0,
     val isSessionFinished: Boolean = false,
     val isSubmitting: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
     val xpEarned: Int = 0
 )
 
@@ -38,7 +38,8 @@ data class ReviewSessionUiState(
  * - Currently-due SRS words always come first.
  * - If fewer than a full session are due, Review is filled with weak/recent/rotating studied words
  *   from every pack so the learner can practice on demand instead of seeing an empty session.
- * - AGAIN is persisted with the SRS intra-day delay (30 minutes) and is not immediately
+ * - Early successful practice leaves the spaced schedule unchanged.
+ * - AGAIN returns within 30 minutes and is not immediately
  *   appended to the current session.
  */
 class ReviewViewModel(application: Application) : AndroidViewModel(application) {
@@ -49,12 +50,12 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         db.vocabularyPackDao(),
         db.vocabularyPackItemDao()
     )
-    private val mistakeRepo = MistakeRepository(db.mistakeDao())
-    private val streakRepo = DailyStreakRepository(db.dailyStreakDao(), db.userProfileDao())
+    private val submissionStore = ReviewSubmissionStore(db)
 
     private val _uiState = MutableStateFlow(ReviewSessionUiState())
     val uiState: StateFlow<ReviewSessionUiState> = _uiState
 
+    private var recordedMinutes = 0
     private var sessionStartMillis: Long = System.currentTimeMillis()
 
     init {
@@ -62,32 +63,41 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun startSession() {
+        if (_uiState.value.isLoading || _uiState.value.isSubmitting) return
+        _uiState.value = ReviewSessionUiState(isLoading = true)
         viewModelScope.launch {
-            val now = System.currentTimeMillis()
-            val dueItems = vocabRepo
-                .getDueVocabulariesForReview(limit = ReviewQueuePolicy.DEFAULT_SESSION_LIMIT, currentTime = now)
-                .first()
-            val studiedItems = vocabRepo.getStudiedVocabulariesForReview(
-                limit = ReviewQueuePolicy.CANDIDATE_POOL_LIMIT
-            )
-            val queue = ReviewQueuePolicy.buildQueue(
-                dueItems = dueItems,
-                studiedItems = studiedItems,
-                now = now
-            )
+            try {
+                val now = System.currentTimeMillis()
+                val dueItems = vocabRepo
+                    .getDueVocabulariesForReview(limit = ReviewQueuePolicy.DEFAULT_SESSION_LIMIT, currentTime = now)
+                    .first()
+                val studiedItems = vocabRepo.getStudiedVocabulariesForReview(
+                    limit = ReviewQueuePolicy.CANDIDATE_POOL_LIMIT
+                )
+                val queue = ReviewQueuePolicy.buildQueue(
+                    dueItems = dueItems,
+                    studiedItems = studiedItems,
+                    now = now
+                )
 
-            sessionStartMillis = now
-            _uiState.value = if (queue.isEmpty()) {
-                ReviewSessionUiState(
-                    sessionTotal = 0,
-                    isSessionFinished = true
-                )
-            } else {
-                ReviewSessionUiState(
-                    queue = queue.map(ReviewTask::forItem),
-                    currentIndex = 0,
-                    sessionTotal = queue.size
-                )
+                sessionStartMillis = now
+                recordedMinutes = 0
+                _uiState.value = if (queue.isEmpty()) {
+                    ReviewSessionUiState(
+                        sessionTotal = 0,
+                        isSessionFinished = true
+                    )
+                } else {
+                    ReviewSessionUiState(
+                        queue = queue.map(ReviewTask::forItem),
+                        currentIndex = 0,
+                        sessionTotal = queue.size
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = ReviewSessionUiState(errorMessage = "Could not load review. Please try again.")
             }
         }
     }
@@ -117,87 +127,65 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = state.copy(isAnswerRevealed = true)
     }
 
-    fun submitRating(rating: ReviewRating) {
-        if (_uiState.value.isSubmitting) return
-
-        val snapshot = _uiState.value
-        val task = snapshot.queue.getOrNull(snapshot.currentIndex) ?: return
-        if (task.mode.requiresTypedAnswer &&
-            (!snapshot.answerChecked || (snapshot.typedAnswerCorrect != true && rating != ReviewRating.AGAIN))
-        ) return
-        val queuedItem = task.item
-        _uiState.value = snapshot.copy(isSubmitting = true)
-
-        viewModelScope.launch {
-            val currentItem = vocabRepo.getByIdSync(queuedItem.id) ?: queuedItem
-            val skillUpdatedItem = VocabularyStudyPolicy.withSkillResult(
-                currentItem,
-                task.mode.skill,
-                success = if (task.mode.requiresTypedAnswer) snapshot.typedAnswerCorrect == true else rating != ReviewRating.AGAIN
-            )
-            vocabRepo.recordReview(skillUpdatedItem, rating)
-
-            val isSuccess = rating != ReviewRating.AGAIN
-            if (!isSuccess) {
-                mistakeRepo.addMistake(
-                    question = task.prompt,
-                    myAnswer = snapshot.answerText.ifBlank { "I could not recall it / needs review" },
-                    correctAnswer = task.expectedAnswer + if (currentItem.persianMeaning.isNotBlank()) {
-                        " — ${currentItem.persianMeaning}"
-                    } else {
-                        ""
-                    },
-                    explanationFa = currentItem.examplePersian.ifEmpty { currentItem.example },
-                    whyWrongFa = if (snapshot.typedAnswerCorrect == false) {
-                        "پاسخ ثبت‌شده با جواب مورد انتظار یکی نبود؛ این واژه ۳۰ دقیقه دیگر دوباره مرور می‌شود."
-                    } else {
-                        "Could not recall it during vocabulary review; this word is due again in 30 minutes."
-                    },
-                    concept = currentItem.word,
-                    skillType = "VOCABULARY"
-                )
-            }
-
-            advanceAfterRating(isSuccess)
-        }
+    fun dontKnow() {
+        val state = _uiState.value
+        if (state.isSubmitting) return
+        _uiState.value = state.copy(answerChecked = true, typedAnswerCorrect = false, isAnswerRevealed = true)
     }
 
-    private suspend fun advanceAfterRating(wasSuccess: Boolean) {
+    fun submitRating(rating: ReviewRating) = submitResult(rating)
+
+    // An alternative can be valid without proving recall of the intended headword.
+    // Leave its grade and schedule unchanged; the learner still sees target feedback.
+    fun submitAlternative() {
         val state = _uiState.value
-        val nextIndex = state.currentIndex + 1
-        val newCompleted = state.completedCount + 1
-        val newXp = state.xpEarned + if (wasSuccess) 10 else 2
+        val task = state.queue.getOrNull(state.currentIndex) ?: return
+        if (!state.answerChecked || state.typedAnswerCorrect != false || state.answerText.isBlank() ||
+            task.mode == ReviewMode.SYNONYM || !task.mode.requiresTypedAnswer) return
+        submitResult(null)
+    }
 
-        if (nextIndex < state.queue.size) {
-            _uiState.value = state.copy(
-                currentIndex = nextIndex,
-                isAnswerRevealed = false,
-                answerText = "",
-                answerChecked = false,
-                typedAnswerCorrect = null,
-                completedCount = newCompleted,
-                xpEarned = newXp,
-                isSubmitting = false
-            )
-            return
+    private fun submitResult(rating: ReviewRating?) {
+        val snapshot = _uiState.value
+        if (snapshot.isSubmitting || !snapshot.isAnswerRevealed) return
+        val task = snapshot.queue.getOrNull(snapshot.currentIndex) ?: return
+        if (task.mode.requiresTypedAnswer &&
+            (!snapshot.answerChecked || (snapshot.typedAnswerCorrect != true && rating != null && rating != ReviewRating.AGAIN))
+        ) return
+        _uiState.value = snapshot.copy(isSubmitting = true, errorMessage = null)
+
+        viewModelScope.launch {
+            try {
+                val now = System.currentTimeMillis()
+                val success = rating != null && rating != ReviewRating.AGAIN
+                val xp = if (success) 10 else 2
+                val elapsedMinutes = maxOf(1, ((now - sessionStartMillis) / 60_000L).toInt())
+                submissionStore.save(
+                    task, snapshot.answerText, rating, now,
+                    minutesSpent = (elapsedMinutes - recordedMinutes).coerceAtLeast(0), xp = xp
+                )
+                recordedMinutes = elapsedMinutes
+                val nextIndex = snapshot.currentIndex + 1
+                _uiState.value = snapshot.copy(
+                    currentIndex = nextIndex,
+                    isAnswerRevealed = false,
+                    answerText = "",
+                    answerChecked = false,
+                    typedAnswerCorrect = null,
+                    completedCount = snapshot.completedCount + 1,
+                    xpEarned = snapshot.xpEarned + xp,
+                    isSubmitting = false,
+                    isSessionFinished = nextIndex >= snapshot.queue.size,
+                    errorMessage = null
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = snapshot.copy(
+                    isSubmitting = false,
+                    errorMessage = "Could not save this answer. Retry, or restart if the word was deleted."
+                )
+            }
         }
-
-        val elapsedMinutes = maxOf(
-            1,
-            ((System.currentTimeMillis() - sessionStartMillis) / 60_000L).toInt()
-        )
-        streakRepo.recordPracticeActivity(
-            itemsCount = newCompleted,
-            minutesSpent = elapsedMinutes,
-            xpEarned = newXp,
-            activityType = "VOCABULARY_SRS_REVIEW"
-        )
-
-        _uiState.value = state.copy(
-            completedCount = newCompleted,
-            xpEarned = newXp,
-            isSubmitting = false,
-            isSessionFinished = true
-        )
     }
 }

@@ -56,7 +56,7 @@ object VocabularyStudyPolicy {
     const val KEY_DAILY_NEW_LIMIT = "daily_new_word_limit"
     val DAILY_NEW_LIMIT_OPTIONS = listOf(10, 15, 20, 25)
 
-    // Keep the dashboard counts identical to what ReviewViewModel actually schedules per session.
+    // Dashboard targets are recommendations; Review sessions can contain up to 50 studied cards.
     const val MAX_DUE_REVIEWS_PER_SESSION = 30
     const val MAX_WEAK_WORDS_PER_SESSION = 10
 
@@ -247,7 +247,7 @@ object VocabularyStudyPolicy {
         if (example.isBlank() || item.word.isBlank()) return null
         val regex = Regex("(?i)(?<![A-Za-z])${Regex.escape(item.word.trim())}(?![A-Za-z])")
         if (!regex.containsMatchIn(example)) return null
-        return regex.replaceFirst(example, "____")
+        return regex.replace(example, "____")
     }
 
     private fun strongestRelevance(item: VocabularyItem): String {

@@ -30,7 +30,7 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_items WHERE (correctCount > 0 OR incorrectCount > 0) AND nextReview <= :currentTime ORDER BY nextReview ASC LIMIT :limit")
     fun getDueVocabulariesForReview(currentTime: Long, limit: Int): Flow<List<VocabularyItem>>
 
-    @Query("SELECT * FROM vocabulary_items WHERE correctCount > 0 OR incorrectCount > 0 ORDER BY lastReview DESC LIMIT :limit")
+    @Query("SELECT * FROM vocabulary_items WHERE correctCount > 0 OR incorrectCount > 0 ORDER BY RANDOM() LIMIT :limit")
     suspend fun getStudiedVocabulariesForReview(limit: Int): List<VocabularyItem>
 
     @Query("SELECT * FROM vocabulary_items ORDER BY RANDOM() LIMIT :limit")
@@ -86,8 +86,8 @@ interface VocabularyDao {
               OR :status = 'All'
               OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
               OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7)
-              OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
-              OR (:status IN ('جدید', 'New') AND v.mastery = 0)
+              OR (:status IN ('در حال یادگیری', 'Learning') AND (v.correctCount > 0 OR v.incorrectCount > 0) AND NOT (v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7))
+              OR (:status IN ('جدید', 'New') AND v.correctCount = 0 AND v.incorrectCount = 0)
               OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
           )
         ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,
@@ -117,8 +117,8 @@ interface VocabularyDao {
               OR :status = 'All'
               OR (:status IN ('مرور امروز', 'Due Today') AND v.nextReview <= :currentTime AND (v.correctCount > 0 OR v.incorrectCount > 0))
               OR (:status IN ('یاد گرفته شده', 'Mastered') AND v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7)
-              OR (:status IN ('در حال یادگیری', 'Learning') AND v.mastery BETWEEN 1 AND 69)
-              OR (:status IN ('جدید', 'New') AND v.mastery = 0)
+              OR (:status IN ('در حال یادگیری', 'Learning') AND (v.correctCount > 0 OR v.incorrectCount > 0) AND NOT (v.mastery >= 70 AND v.correctCount >= 4 AND v.intervalDays >= 7))
+              OR (:status IN ('جدید', 'New') AND v.correctCount = 0 AND v.incorrectCount = 0)
               OR (:status IN ('نشان‌شده‌ها', 'Favorites') AND v.isFavorite = 1)
           )
         ORDER BY CASE WHEN v.learningOrder > 0 THEN v.learningOrder ELSE 2147483647 END,

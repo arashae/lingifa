@@ -31,6 +31,10 @@ data class ReviewTask(
     fun isCorrect(answer: String): Boolean =
         normalize(answer) == normalize(expectedAnswer)
 
+    val allowsAlternative: Boolean get() = mode.requiresTypedAnswer && mode != ReviewMode.SYNONYM
+
+    val targetHint: String get() = "Target: ${expectedAnswer.firstOrNull() ?: '?'}… (${expectedAnswer.length} characters)"
+
     companion object {
         private data class Contrast(
             val first: String,
@@ -176,7 +180,12 @@ data class ReviewTask(
         private fun normalize(value: String): String = value
             .trim()
             .lowercase(Locale.US)
-            .replace(Regex("[^\\p{L}\\p{N}' -]"), "")
+            .replace('’', '\'')
+            .replace('‘', '\'')
+            .replace('–', '-')
+            .replace('—', '-')
+            .trimEnd('.', ',', '!', '?', ';', ':')
+            .trim()
             .replace(Regex("\\s+"), " ")
     }
 }

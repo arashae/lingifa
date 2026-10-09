@@ -117,6 +117,27 @@ class ReviewTaskTest {
         assertEquals(ReviewMode.WORD_RECALL, unrelated.mode)
     }
 
+    @Test
+    fun `repeated target occurrences are all hidden in context`() {
+        val task = ReviewTask.forItem(item("allocate", "تخصیص دادن",
+            example = "We allocate funds now and allocate staff later.", lowest = VocabularySkillAxis.CONTEXT))
+        assertEquals("We ____ funds now and ____ staff later.", task.prompt)
+    }
+
+    @Test
+    fun `internal punctuation errors are not erased to award a correct answer`() {
+        val task = ReviewTask.forItem(item("allocate", "تخصیص دادن", lowest = VocabularySkillAxis.RETRIEVAL))
+        assertFalse(task.isCorrect("al!locate"))
+        assertFalse(task.isCorrect("allo\ncate"))
+        assertTrue(task.isCorrect("  ALLOCATE! "))
+    }
+
+    @Test
+    fun `typographic apostrophes are accepted`() {
+        val task = ReviewTask.forItem(item("don't", "نکن", lowest = VocabularySkillAxis.RETRIEVAL))
+        assertTrue(task.isCorrect("don’t"))
+    }
+
     private fun item(
         word: String,
         meaning: String,

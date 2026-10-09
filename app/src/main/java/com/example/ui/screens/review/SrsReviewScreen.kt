@@ -32,6 +32,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,6 +70,10 @@ fun SrsReviewScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(state.answerChecked) {
+        if (state.answerChecked) focusManager.clearFocus()
+    }
     val tts = remember { TtsManager(context) }
 
     DisposableEffect(tts) {
@@ -84,6 +91,12 @@ fun SrsReviewScreen(
             }
         ) { paddingValues ->
             when {
+                state.errorMessage != null && state.queue.isEmpty() -> {
+                    Column(Modifier.padding(paddingValues).padding(Dimens.screenGutter)) {
+                        Text(state.errorMessage.orEmpty())
+                        Button(onClick = viewModel::startSession) { Text("Retry") }
+                    }
+                }
                 state.isSessionFinished -> {
                     FinishedVocabularyReview(
                         reviewedCount = state.completedCount,
@@ -128,32 +141,49 @@ fun SrsReviewScreen(
                             total = state.sessionTotal,
                             mastery = currentWord.mastery
                         )
-                        VocabularyReviewContent(
-                            task = task,
-                            item = currentWord,
-                            answerText = state.answerText,
-                            answerChecked = state.answerChecked,
-                            typedAnswerCorrect = state.typedAnswerCorrect,
-                            onAnswerChange = viewModel::updateAnswer,
-                            isRevealed = state.isAnswerRevealed,
-                            onPlayWord = { tts.speak(currentWord.word) },
-                            onPlayExample = {
-                                if (currentWord.example.isNotBlank()) {
-                                    tts.speak(currentWord.example)
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        )
+                        key(task.item.id, task.mode) {
+                            VocabularyReviewContent(
+                                task = task,
+                                item = currentWord,
+                                answerText = state.answerText,
+                                answerChecked = state.answerChecked,
+                                typedAnswerCorrect = state.typedAnswerCorrect,
+                                onAnswerChange = viewModel::updateAnswer,
+                                isRevealed = state.isAnswerRevealed,
+                                onPlayWord = { tts.speak(currentWord.word) },
+                                onPlayExample = {
+                                    if (currentWord.example.isNotBlank()) {
+                                        tts.speak(currentWord.example)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            )
+                        }
+                        if (state.errorMessage != null) {
+                            Text(state.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                            OutlinedButton(onClick = viewModel::startSession) { Text("Restart review") }
+                        }
                         if (state.isAnswerRevealed) {
+                            if (task.allowsAlternative && state.typedAnswerCorrect == false && state.answerText.isNotBlank()) {
+                                OutlinedButton(onClick = viewModel::submitAlternative, enabled = !state.isSubmitting) {
+                                    Text("My answer also fits — leave target ungraded")
+                                }
+                            }
                             ReviewActionBar(
                                 item = currentWord,
                                 enabled = !state.isSubmitting,
+                                isScheduled = currentWord.nextReview <= System.currentTimeMillis(),
                                 successEnabled = !task.mode.requiresTypedAnswer || state.typedAnswerCorrect == true,
                                 onRate = viewModel::submitRating
                             )
                         } else {
+                            if (task.mode.requiresTypedAnswer) {
+                                OutlinedButton(onClick = viewModel::dontKnow, enabled = !state.isSubmitting) {
+                                    Text("I don’t know — show the target")
+                                }
+                            }
                             val canCheck = task.mode.requiresTypedAnswer && !state.answerChecked
                             Button(
                                 onClick = if (canCheck) viewModel::checkAnswer else viewModel::revealAnswer,
@@ -270,6 +300,9 @@ private fun VocabularyReviewContent(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (task.allowsAlternative) {
+                Text(task.targetHint, style = MaterialTheme.typography.labelMedium)
+            }
             OutlinedTextField(
                 value = answerText,
                 onValueChange = onAnswerChange,
@@ -280,7 +313,7 @@ private fun VocabularyReviewContent(
             )
             if (answerChecked) {
                 Text(
-                    text = if (typedAnswerCorrect == true) "Correct" else "Not quite — review the answer below",
+                    text = if (typedAnswerCorrect == true) "Correct" else "Different from the target. Another word may also fit.",
                     color = if (typedAnswerCorrect == true) Accent.success else Accent.danger,
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center
@@ -396,11 +429,12 @@ private fun ReviewActionBar(
     item: VocabularyItem,
     enabled: Boolean,
     successEnabled: Boolean,
+    isScheduled: Boolean,
     onRate: (ReviewRating) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
         Text(
-            text = "How well did you remember this word?",
+            text = if (isScheduled) "How well did you remember this word?" else "Extra practice — success keeps your scheduled review",
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -421,7 +455,7 @@ private fun ReviewActionBar(
             )
             ReviewRatingButton(
                 label = "Hard",
-                interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD),
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD) else "Practice",
                 color = Accent.warning,
                 enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.HARD) },
@@ -429,7 +463,7 @@ private fun ReviewActionBar(
             )
             ReviewRatingButton(
                 label = "Good",
-                interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD),
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD) else "Practice",
                 color = MaterialTheme.colorScheme.primary,
                 enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.GOOD) },
@@ -437,7 +471,7 @@ private fun ReviewActionBar(
             )
             ReviewRatingButton(
                 label = "Easy",
-                interval = SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY),
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY) else "Practice",
                 color = Accent.success,
                 enabled = enabled && successEnabled,
                 onClick = { onRate(ReviewRating.EASY) },
@@ -532,7 +566,7 @@ private fun FinishedVocabularyReview(
                 )
                 Text(
                     text = if (reviewedCount == 0) {
-                        "No vocabulary is due right now"
+                        "No cards available right now"
                     } else {
                         "Vocabulary review complete"
                     },
@@ -545,9 +579,9 @@ private fun FinishedVocabularyReview(
                 )
                 Text(
                     text = if (reviewedCount == 0) {
-                        "Review shows learned words only when their SRS time has arrived. New words never appear here."
+                        "Due words come first, followed by extra practice. Recently practised words rest for 30 minutes. New words never appear here."
                     } else {
-                        "You reviewed $reviewedCount learned words. Words marked Again return in 30 minutes."
+                        "You reviewed $reviewedCount learned words. Words marked Again return within 30 minutes."
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

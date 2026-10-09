@@ -3,6 +3,7 @@ package com.example.ui.screens.review
 import com.example.data.model.VocabularyItem
 import com.example.vocab.VocabularySkillAxis
 import com.example.vocab.VocabularyStudyPolicy
+import com.example.vocab.ReviewPersistencePolicy
 import java.util.Locale
 
 enum class ReviewMode(
@@ -30,6 +31,10 @@ data class ReviewTask(
 ) {
     fun isCorrect(answer: String): Boolean =
         normalize(answer) == normalize(expectedAnswer)
+
+    val allowsAlternative: Boolean get() = mode.requiresTypedAnswer && mode != ReviewMode.SYNONYM
+
+    val targetHint: String get() = "Target: ${expectedAnswer.firstOrNull() ?: '?'}… (${expectedAnswer.length} characters)"
 
     companion object {
         private data class Contrast(
@@ -144,7 +149,7 @@ data class ReviewTask(
             val leastPracticed = candidates.minOf { VocabularyStudyPolicy.skillMastery(item, it.skill) }
             val tied = candidates.filter { VocabularyStudyPolicy.skillMastery(item, it.skill) == leastPracticed }
             // Spread first encounters across eligible modes; then prioritize the weakest skill.
-            val mode = tied[Math.floorMod(item.id, tied.size.toLong()).toInt()]
+            val mode = tied[Math.floorMod(item.id + ReviewPersistencePolicy.sequence(item), tied.size.toLong()).toInt()]
 
             return when (mode) {
                 ReviewMode.MEANING -> ReviewTask(item, mode, item.word, item.persianMeaning)
@@ -176,7 +181,12 @@ data class ReviewTask(
         private fun normalize(value: String): String = value
             .trim()
             .lowercase(Locale.US)
-            .replace(Regex("[^\\p{L}\\p{N}' -]"), "")
+            .replace('’', '\'')
+            .replace('‘', '\'')
+            .replace('–', '-')
+            .replace('—', '-')
+            .trimEnd('.', ',', '!', '?', ';', ':')
+            .trim()
             .replace(Regex("\\s+"), " ")
     }
 }

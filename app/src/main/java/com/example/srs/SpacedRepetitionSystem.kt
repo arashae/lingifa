@@ -25,16 +25,9 @@ data class SrsCalculationResult(
 )
 
 /**
- * Enhanced Spaced Repetition System based on modern DSR (Difficulty, Stability, Retrievability)
- * memory modeling (FSRS / SuperMemo DSR dynamics) combined with cognitive psychology principles:
- *
- * 1. Desirable Difficulty: Retrieving a memory when its retrievability is fading produces
- *    the strongest synaptic consolidation boost.
- * 2. Non-Amnesic Lapses: When a mature word is forgotten (AGAIN), the stability is reduced
- *    proportionally rather than wiped out, allowing rapid relearning.
- * 3. Difficulty Mean Reversion: Difficulty adjusts dynamically based on ratings while
- *    gently regressing toward the center to avoid "ease hell".
- * 4. Multi-Dimensional Mastery: Mastery requires high accuracy, repetition depth, and interval longevity.
+ * Custom heuristic scheduler using difficulty, stability and elapsed time.
+ * This is not an implementation of FSRS and has no fitted retention parameters.
+ * Mastery is a progress score, not a calibrated probability of remembering.
  */
 object SpacedRepetitionSystem {
 
@@ -67,7 +60,7 @@ object SpacedRepetitionSystem {
         val intervalDays: Int
 
         if (isFirstReview) {
-            // Initial stability calibrated for first-time retention
+            // Heuristic starting stability for first-time learning
             when (rating) {
                 ReviewRating.AGAIN -> {
                     newStability = 0.4f

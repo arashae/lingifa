@@ -2,6 +2,7 @@ package com.example.ui.screens.review
 
 import com.example.data.model.VocabularyItem
 import kotlin.random.Random
+import com.example.vocab.ReviewPersistencePolicy
 
 /**
  * Builds a useful review session without weakening the spaced-repetition schedule.
@@ -16,7 +17,6 @@ internal object ReviewQueuePolicy {
     const val CANDIDATE_POOL_LIMIT = 2_000
 
     private const val RECENT_WINDOW_MS = 3L * 24L * 60L * 60L * 1_000L
-    private const val REINFORCEMENT_COOLDOWN_MS = 30L * 60L * 1_000L
 
     // After due cards, target roughly 60% hard/weak, 20% recently learned, 20% rotating mix.
     private const val WEAK_SHARE = 0.60f
@@ -33,6 +33,10 @@ internal object ReviewQueuePolicy {
         val due = dueItems
             .asSequence()
             .filter(::isStudied)
+            .filter { it.nextReview <= now }
+            // An ungraded alternative leaves the due date intact but still needs a short rest.
+            .filter { it.nextReview > ReviewPersistencePolicy.lastPractice(it) ||
+                now - ReviewPersistencePolicy.lastPractice(it) >= ReviewPersistencePolicy.COOLDOWN_MS }
             .distinctBy { it.id }
             .sortedWith(
                 compareBy<VocabularyItem> { it.nextReview }
@@ -55,9 +59,10 @@ internal object ReviewQueuePolicy {
 
         val result = due.toMutableList()
         val preferredCandidates = candidates.filter {
-            it.lastReview <= 0L || now - it.lastReview >= REINFORCEMENT_COOLDOWN_MS
+            now - ReviewPersistencePolicy.lastPractice(it) >= ReviewPersistencePolicy.COOLDOWN_MS
         }
-        val preferredPool = preferredCandidates.ifEmpty { candidates }
+        val preferredPool = preferredCandidates
+        if (preferredPool.isEmpty()) return due
         val remaining = sessionLimit - result.size
 
         val weak = preferredPool.sortedByDescending(::weaknessScore)
@@ -78,13 +83,6 @@ internal object ReviewQueuePolicy {
         appendUnique(result, usedIds, weak, weakQuota, sessionLimit)
         appendUnique(result, usedIds, recent, recentQuota, sessionLimit)
         appendUnique(result, usedIds, rotating, sessionLimit - result.size, sessionLimit)
-
-        // If the 30-minute cooldown excluded too many cards, reuse studied cards only as a final
-        // fallback. Difficulty still leads the fallback, and unseen words can never enter Review.
-        if (result.size < sessionLimit) {
-            val fallback = candidates.sortedByDescending(::weaknessScore)
-            appendUnique(result, usedIds, fallback, sessionLimit - result.size, sessionLimit)
-        }
 
         return result
     }

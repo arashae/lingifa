@@ -97,6 +97,49 @@ class ReviewQueuePolicyTest {
         assertEquals(12, queue.take(12).count { it.id in 1L..12L })
     }
 
+    @Test
+    fun `refresh cannot bypass cooldown even when no older candidates exist`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now + 86_400_000L, 40).copy(lastReview = now - 1_000)
+        assertTrue(ReviewQueuePolicy.buildQueue(emptyList(), listOf(item), now).isEmpty())
+    }
+
+    @Test
+    fun `practice timestamp prevents immediate repetition without changing last review`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now + 86_400_000L, 40).copy(
+            tags = listOf("linguafa:last-practice:${now - 1_000}")
+        )
+        assertTrue(ReviewQueuePolicy.buildQueue(emptyList(), listOf(item), now).isEmpty())
+        assertEquals(1, ReviewQueuePolicy.buildQueue(emptyList(), listOf(item), now + 30 * 60_000L).size)
+    }
+
+    @Test
+    fun `future entries in due input cannot bypass cooldown`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now + 86_400_000L, 40).copy(lastReview = now)
+        assertTrue(ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now).isEmpty())
+    }
+
+    @Test
+    fun `ungraded due target rests without changing its overdue date`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now - 10_000L, 40).copy(
+            tags = listOf("linguafa:last-practice:$now")
+        )
+        assertTrue(ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now).isEmpty())
+        assertEquals(1, ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now + 30 * 60_000L).size)
+    }
+
+    @Test
+    fun `nearer due review still wins over early practice cooldown`() {
+        val now = 1_700_000_000_000L
+        val item = studiedItem(1, now, now + 10_000L, 40).copy(
+            tags = listOf("linguafa:last-practice:$now")
+        )
+        assertEquals(1, ReviewQueuePolicy.buildQueue(listOf(item), listOf(item), now + 10_000L).size)
+    }
+
     private fun studiedItem(
         id: Long,
         now: Long,
@@ -119,3 +162,4 @@ class ReviewQueuePolicyTest {
         nextReview = nextReview
     )
 }
+

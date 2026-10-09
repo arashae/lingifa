@@ -63,6 +63,10 @@ class ReviewScreenTest {
         compose.onNodeWithText("Good").assertIsDisplayed().performClick()
         assertEquals(ReviewRating.HARD, submitted)
         compose.onNodeWithText("Word 2 of 2").assertIsDisplayed()
+        // Android's IME hides asynchronously; wait for the next cue to settle on screen.
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runCatching { compose.onNodeWithText("حفظ کردن").assertIsDisplayed() }.isSuccess
+        }
         compose.onNodeWithText("حفظ کردن").assertIsDisplayed()
         compose.onNodeWithText("Target:", substring = true).assertDoesNotExist()
         screenshot("02-next-card")

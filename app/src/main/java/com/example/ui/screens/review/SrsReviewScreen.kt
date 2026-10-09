@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,8 +101,12 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
     var retentionDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    LaunchedEffect(state.answerChecked) {
-        if (state.answerChecked) focusManager.clearFocus()
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(state.answerChecked, state.currentIndex) {
+        if (state.answerChecked || state.currentIndex > 0) {
+            focusManager.clearFocus(force = true)
+            keyboard?.hide()
+        }
     }
     val tts = remember { TtsManager(context) }
 
@@ -124,6 +129,7 @@ internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSes
                     }
                     Text("${state.evidence.reviewsLastSevenDays} practice submissions in the last seven days.")
                     if (state.evidence.dailyWorkloadByRetention.isNotEmpty()) Text("Workload estimates use current skill stability; new learning and relearning add more work.")
+                    if (state.evidence.lexicalAttempts > 0) Text("${state.evidence.lexicalAttempts} delayed usage attempts; ${state.evidence.counterpartConfusions} counterpart confusions.")
                     Text("${state.evidence.samples} delayed, independent answers recorded.")
                     if (state.evidence.samples >= 20) {
                         Text("Observed recall: ${((state.evidence.recallRate ?: 0.0) * 100).toInt()}%")

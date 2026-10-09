@@ -23,6 +23,16 @@ class ReviewEvidenceTest {
         assertEquals(.41, result.brierScore!!, 1e-12)
     }
 
+    @Test fun `usage confusion is measured separately from exact word retrieval`() {
+        val confusion = event.copy(word = "say", expectedAnswer = "say", axis = "SYNONYM", rating = 1,
+            exactTarget = false, answer = "tell", senseKey = "lexical:say-tell:say")
+        val result = ReviewEvidence.summarize(listOf(confusion, confusion.copy(answer = "say", exactTarget = true, rating = 3),
+            confusion.copy(category = "VERIFIED_ALTERNATIVE"), confusion.copy(hintUsed = true)))
+        assertEquals(0, result.samples)
+        assertEquals(2, result.lexicalAttempts)
+        assertEquals(1, result.counterpartConfusions)
+    }
+
     @Test fun `workload compares retention targets without confusing estimates with recall measurements`() {
         val state = VocabularySkillProgress(1, axis = "RETRIEVAL", stability = 10.0, lastReview = 1)
         val result = ReviewEvidence.summarize(emptyList(), listOf(state), 12)

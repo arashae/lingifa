@@ -5,6 +5,7 @@ if gradle --no-daemon connectedDebugAndroidTest --stacktrace; then
   result=0
 else
   result=$?
+  adb shell dumpsys input_method
 fi
 mkdir -p app/build/review-ui-checks
 # Public MediaStore pictures survive the test runner uninstalling its APK.

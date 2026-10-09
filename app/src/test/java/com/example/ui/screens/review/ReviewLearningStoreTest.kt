@@ -51,6 +51,35 @@ class ReviewLearningStoreTest {
         assertEquals("EARLY", db.reviewLearningDao().recentEvents().first().category)
     }
 
+    @Test fun `early forgetting updates memory and relearning starts from the observed lapse`() = runBlocking {
+        store.record(task(), "buy", ReviewRating.EASY, now)
+        val before = db.reviewLearningDao().skills(1).single()
+        val failureTime = now + Fsrs6.DAY_MS
+        store.record(task(), "", ReviewRating.AGAIN, failureTime)
+        val failed = db.reviewLearningDao().skills(1).single()
+        assertTrue(failed.stability < before.stability)
+        assertEquals(failureTime, failed.lastReview)
+        assertEquals(1, failed.incorrectCount)
+        assertEquals(failureTime + 30 * 60_000L, failed.nextReview)
+        assertEquals("EARLY", db.reviewLearningDao().recentEvents().first().category)
+        assertEquals(1, db.vocabularyDao().getByIdSync(1)!!.incorrectCount)
+        store.record(task(), "buy", ReviewRating.GOOD, failed.nextReview)
+        assertEquals(0.0, db.reviewLearningDao().recentEvents().first().elapsedDays, 0.0)
+    }
+
+    @Test fun `an incompatible typed scheduler version initializes from a real grade`() = runBlocking {
+        db.reviewLearningDao().saveSkill(VocabularySkillProgress(1, axis = "RETRIEVAL", stability = 200.0,
+            difficulty = 9.0, lastReview = now - Fsrs6.DAY_MS, firstReview = now - 100 * Fsrs6.DAY_MS,
+            nextReview = now, independentSuccesses = 50, schedulerVersion = "other-algorithm"))
+        store.record(task(), "buy", ReviewRating.GOOD, now)
+        val state = db.reviewLearningDao().skills(1).single()
+        assertEquals(Fsrs6.VERSION, state.schedulerVersion)
+        assertEquals(2.3065, state.stability, 1e-10)
+        assertEquals(now, state.firstReview)
+        assertEquals(1, state.independentSuccesses)
+        assertNull(db.reviewLearningDao().recentEvents().single().prediction)
+    }
+
     @Test fun `a hint records guided Hard practice without independent success`() = runBlocking {
         store.record(task(), "buy", ReviewRating.EASY, now, hintUsed = true)
         val state = db.reviewLearningDao().skills(1).single()

@@ -6,8 +6,9 @@ import android.provider.MediaStore
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.view.WindowInsets
+import android.view.inputmethod.InputMethodManager
+import androidx.test.filters.SdkSuppress
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -19,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
+@SdkSuppress(minSdkVersion = 30)
 class ReviewScreenTest {
     @get:Rule val compose = createComposeRule()
     private val item = VocabularyItem(id = 1, word = "buy", persianMeaning = "خریدن", correctCount = 2)
@@ -62,9 +64,16 @@ class ReviewScreenTest {
         compose.onNodeWithText("Check Answer").assertIsNotEnabled()
         compose.onNodeWithText("Show a hint").performClick()
         compose.onNodeWithText("Target: b", substring = true).assertExists()
-        compose.onNodeWithText("Your answer").performClick()
-        compose.waitUntil(timeoutMillis = 5_000) {
-            ViewCompat.getRootWindowInsets(rootView)?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        // Enable the real device IME after the test runner's device setup, then send a touch.
+        InstrumentationRegistry.getInstrumentation().uiAutomation
+            .executeShellCommand("settings put secure show_ime_with_hard_keyboard 1").close()
+        compose.onNodeWithText("Your answer").performTouchInput { click() }
+        compose.runOnIdle {
+            rootView.context.getSystemService(InputMethodManager::class.java).showSoftInput(rootView, InputMethodManager.SHOW_IMPLICIT)
+            rootView.windowInsetsController?.show(WindowInsets.Type.ime())
+        }
+        compose.waitUntil(timeoutMillis = 15_000) {
+            rootView.rootWindowInsets?.isVisible(WindowInsets.Type.ime()) == true
         }
         compose.onNodeWithText("Your answer").performTextInput("buy")
         compose.onNodeWithText("Check Answer").assertIsDisplayed()
@@ -76,7 +85,7 @@ class ReviewScreenTest {
         compose.onNodeWithText("Word 2 of 2").assertIsDisplayed()
         // Android's IME hides asynchronously; wait for the next cue to settle on screen.
         compose.waitUntil(timeoutMillis = 5_000) {
-            ViewCompat.getRootWindowInsets(rootView)?.isVisible(WindowInsetsCompat.Type.ime()) == false &&
+            rootView.rootWindowInsets?.isVisible(WindowInsets.Type.ime()) == false &&
                 runCatching { compose.onNodeWithText("حفظ کردن").assertIsDisplayed() }.isSuccess
         }
         compose.onNodeWithText("حفظ کردن").assertIsDisplayed()

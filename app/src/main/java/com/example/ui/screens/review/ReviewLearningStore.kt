@@ -26,7 +26,7 @@ class ReviewLearningStore(private val db: AppDatabase) {
         val dao = db.reviewLearningDao()
         val states = dao.skills(item.id)
         val before = states.firstOrNull { it.senseKey == task.senseKey && it.axis == task.mode.skill.name }
-        val initialized = before != null && before.stability > 0 && before.lastReview > 0
+        val initialized = before != null && before.stability > 0 && before.lastReview > 0 && before.schedulerVersion == Fsrs6.VERSION
         val due = initialized && before!!.nextReview <= now
         val elapsed = if (initialized) ((now - before!!.lastReview).coerceAtLeast(0) / Fsrs6.DAY_MS).toDouble() else 0.0
         val exact = task.mode.requiresTypedAnswer && task.isExactTarget(answer)
@@ -42,17 +42,18 @@ class ReviewLearningStore(private val db: AppDatabase) {
             else -> "EARLY"
         }
         var progress = before ?: VocabularySkillProgress(item.id, task.senseKey, task.mode.skill.name, nextReview = item.nextReview)
-        if (effective != null && !verifiedAlternative && (!initialized || due)) {
+        if (effective != null && !verifiedAlternative && (!initialized || due || effective == ReviewRating.AGAIN)) {
             val memory = Fsrs6.update(if (initialized) Fsrs6.Memory(progress.stability, progress.difficulty) else null, elapsed, effective)
             val days = if (effective == ReviewRating.AGAIN) 0 else Fsrs6.interval(memory.stability, retention)
+            val scheduled = now + if (days == 0) ReviewPersistencePolicy.COOLDOWN_MS else days * Fsrs6.DAY_MS
+            val next = if (initialized && !due && effective == ReviewRating.AGAIN) minOf(progress.nextReview, scheduled) else scheduled
             progress = progress.copy(stability = memory.stability, difficulty = memory.difficulty,
-                firstReview = progress.firstReview.takeIf { it > 0 } ?: now, lastReview = now,
-                nextReview = now + if (days == 0) ReviewPersistencePolicy.COOLDOWN_MS else days * Fsrs6.DAY_MS,
+                firstReview = if (initialized) progress.firstReview.takeIf { it > 0 } ?: now else now, lastReview = now,
+                nextReview = next,
                 correctCount = progress.correctCount + if (effective == ReviewRating.AGAIN) 0 else 1,
                 incorrectCount = progress.incorrectCount + if (effective == ReviewRating.AGAIN) 1 else 0,
-                independentSuccesses = progress.independentSuccesses + if (!hintUsed && !verifiedAlternative && effective != ReviewRating.AGAIN) 1 else 0)
-        } else if (effective == ReviewRating.AGAIN && !verifiedAlternative) {
-            progress = progress.copy(nextReview = minOf(progress.nextReview, now + ReviewPersistencePolicy.COOLDOWN_MS))
+                independentSuccesses = (if (initialized) progress.independentSuccesses else 0) + if (!hintUsed && !verifiedAlternative && effective != ReviewRating.AGAIN) 1 else 0,
+                schedulerVersion = Fsrs6.VERSION)
         }
         progress = progress.copy(lastPractice = now)
         dao.saveSkill(progress)
@@ -60,7 +61,8 @@ class ReviewLearningStore(private val db: AppDatabase) {
         updated = ReviewPersistencePolicy.markPracticed(updated, now)
         // Canonical counts remain compatible with older screens; semantic alternatives never
         // certify recall of the intended headword, and one axis cannot postpone another.
-        if (effective != null && !verifiedAlternative && item.nextReview <= now && (!initialized || due)) {
+        if (effective != null && !verifiedAlternative &&
+            (effective == ReviewRating.AGAIN || (item.nextReview <= now && (!initialized || due)))) {
             val interval = if (effective == ReviewRating.AGAIN) 0 else Fsrs6.interval(progress.stability, retention)
             updated = updated.copy(intervalDays = interval, stability = progress.stability.toFloat(),
                 difficulty = progress.difficulty.toFloat(),
@@ -88,7 +90,8 @@ class ReviewLearningStore(private val db: AppDatabase) {
         } }
         if (rating != null && !verifiedAlternative && active.isNotEmpty()) {
             val next = active.minOf { it.nextReview }
-            updated = updated.copy(nextReview = if (updated.schedulerVersion == "legacy") minOf(item.nextReview, next) else next)
+            val routed = if (updated.schedulerVersion == "legacy") minOf(item.nextReview, next) else next
+            updated = updated.copy(nextReview = if (effective == ReviewRating.AGAIN && item.nextReview > now) minOf(item.nextReview, routed) else routed)
             val core = active.filter { it.senseKey == "primary" && it.axis in setOf(VocabularySkillAxis.MEANING.name, VocabularySkillAxis.RETRIEVAL.name) }
             val mature = core.size == 2 && core.all { it.independentSuccesses >= 4 && now - it.firstReview >= 7 * Fsrs6.DAY_MS && Fsrs6.interval(it.stability, retention) >= 7 }
             if (!mature) updated = updated.copy(mastery = updated.mastery.coerceAtMost(69))

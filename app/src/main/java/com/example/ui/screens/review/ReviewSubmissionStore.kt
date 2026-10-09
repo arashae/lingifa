@@ -6,7 +6,6 @@ import com.example.data.repository.DailyStreakRepository
 import com.example.data.repository.MistakeRepository
 import com.example.data.repository.VocabularyRepository
 import com.example.srs.ReviewRating
-import com.example.vocab.ReviewPersistencePolicy
 
 /** One submitted card is durable, even if the learner leaves before finishing a session. */
 internal class ReviewSubmissionStore(private val db: AppDatabase) {
@@ -14,7 +13,7 @@ internal class ReviewSubmissionStore(private val db: AppDatabase) {
     private val mistakeRepo = MistakeRepository(db.mistakeDao())
     private val streakRepo = DailyStreakRepository(db.dailyStreakDao(), db.userProfileDao())
 
-    suspend fun save(task: ReviewTask, answerText: String, rating: ReviewRating?, now: Long, minutesSpent: Int, xp: Int) {
+    suspend fun save(task: ReviewTask, answerText: String, rating: ReviewRating?, now: Long, minutesSpent: Int, xp: Int, hintUsed: Boolean = false) {
         db.withTransaction {
             val currentItem = vocabRepo.getByIdSync(task.item.id)
                 ?: error("Word deleted")
@@ -22,11 +21,7 @@ internal class ReviewSubmissionStore(private val db: AppDatabase) {
                 currentItem.persianMeaning == task.item.persianMeaning &&
                 currentItem.example == task.item.example &&
                 currentItem.englishDefinition == task.item.englishDefinition) { "Card changed; restart review" }
-            if (rating != null) {
-                vocabRepo.update(ReviewPersistencePolicy.apply(currentItem, task.mode.skill, rating, now))
-            } else {
-                vocabRepo.update(ReviewPersistencePolicy.markPracticed(currentItem, now))
-            }
+            ReviewLearningStore(db).record(task, answerText, rating, now, hintUsed)
             if (rating == ReviewRating.AGAIN) {
                 mistakeRepo.addMistake(
                     question = task.prompt,

@@ -1,3 +1,5 @@
+> Historical audit of PR #15. The FSRS, skill-history, synonym-bank and emulator follow-ups are now implemented; see [learning engine](learning-engine.md) for current behavior.
+
 # Review integrity audit
 
 Baseline: `5e77e8325fbd42c574cd26cbc22fceca8acb8298` (PR #14). Scope: queue, task generation, grading, SRS persistence, daily activity and library status queries.

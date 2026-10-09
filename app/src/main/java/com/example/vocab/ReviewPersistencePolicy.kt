@@ -35,6 +35,7 @@ object ReviewPersistencePolicy {
         }
         val result = SpacedRepetitionSystem.calculateNextReview(item, rating, now)
         return tagged.copy(
+            schedulerVersion = com.example.srs.Fsrs6.VERSION,
             intervalDays = result.intervalDays, nextReview = result.nextReviewTimestamp,
             difficulty = result.newDifficulty, stability = result.newStability,
             mastery = result.newMastery, correctCount = result.correctCount,

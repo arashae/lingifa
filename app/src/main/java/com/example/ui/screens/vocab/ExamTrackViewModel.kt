@@ -42,7 +42,8 @@ class ExamTrackViewModel(application: Application) : AndroidViewModel(applicatio
         db.examTrackDao(),
         db.userProfileDao(),
         db.dailyStreakDao(),
-        db.vocabularyDao()
+        db.vocabularyDao(),
+        db
     )
     val streakRepository = DailyStreakRepository(
         db.dailyStreakDao(),

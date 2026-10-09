@@ -394,7 +394,7 @@ class VocabViewModel(application: Application) : AndroidViewModel(application) {
     fun recordLearningJudgement(item: VocabularyItem, rating: ReviewRating) {
         viewModelScope.launch {
             val fresh = repo.getByIdSync(item.id) ?: item
-            repo.recordReview(fresh, rating)
+            com.example.ui.screens.review.ReviewLearningStore(db).recordBase(fresh, rating)
         }
     }
 

@@ -1,6 +1,14 @@
 package com.example.ui.screens.review
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalUriHandler
+import com.example.srs.Fsrs6
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +77,26 @@ fun SrsReviewScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    ReviewSessionScreen(state, ReviewSessionActions(
+        onStart = viewModel::startSession, onAnswer = viewModel::updateAnswer,
+        onCheck = viewModel::checkAnswer, onReveal = viewModel::revealAnswer,
+        onRate = viewModel::submitRating, onDontKnow = viewModel::dontKnow,
+        onAlternative = viewModel::submitAlternative, onHint = viewModel::showHint,
+        onRetention = viewModel::setRetention
+    ), onBack)
+}
+
+internal data class ReviewSessionActions(
+    val onStart: () -> Unit = {}, val onAnswer: (String) -> Unit = {},
+    val onCheck: () -> Unit = {}, val onReveal: () -> Unit = {},
+    val onRate: (ReviewRating) -> Unit = {}, val onDontKnow: () -> Unit = {},
+    val onAlternative: () -> Unit = {}, val onHint: () -> Unit = {},
+    val onRetention: (Double) -> Unit = {}
+)
+
+@Composable
+internal fun ReviewSessionScreen(state: ReviewSessionUiState, actions: ReviewSessionActions, onBack: () -> Unit = {}) {
+    var retentionDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     LaunchedEffect(state.answerChecked) {
@@ -80,6 +108,25 @@ fun SrsReviewScreen(
         onDispose { tts.shutdown() }
     }
 
+    if (retentionDialog) {
+        AlertDialog(onDismissRequest = { retentionDialog = false },
+            title = { Text("FSRS retention target") },
+            text = {
+                Column {
+                    Text("A higher target brings reviews closer together. This is a scheduling target, not a measured guarantee.")
+                    listOf(0.85, 0.90, 0.95).forEach { target ->
+                        TextButton(onClick = { actions.onRetention(target); retentionDialog = false }) {
+                            Text("${(target * 100).toInt()}% — a 10-day stability: ${Fsrs6.interval(10.0, target)} days")
+                        }
+                    }
+                    Text("${state.evidence.samples} delayed, independent answers recorded.")
+                    if (state.evidence.samples >= 20) {
+                        Text("Observed recall: ${((state.evidence.recallRate ?: 0.0) * 100).toInt()}%")
+                        Text("Prediction error (Brier): ${"%.3f".format(java.util.Locale.US, state.evidence.brierScore ?: 0.0)}; lower is better.")
+                    } else Text("Your history is still building; long-term recall has not yet been measured.")
+                }
+            }, confirmButton = { TextButton(onClick = { retentionDialog = false }) { Text("Close") } })
+    }
     EnglishLtrLayout {
         Scaffold(
             topBar = {
@@ -94,14 +141,14 @@ fun SrsReviewScreen(
                 state.errorMessage != null && state.queue.isEmpty() -> {
                     Column(Modifier.padding(paddingValues).padding(Dimens.screenGutter)) {
                         Text(state.errorMessage.orEmpty())
-                        Button(onClick = viewModel::startSession) { Text("Retry") }
+                        Button(onClick = actions.onStart) { Text("Retry") }
                     }
                 }
                 state.isSessionFinished -> {
                     FinishedVocabularyReview(
                         reviewedCount = state.completedCount,
                         xp = state.xpEarned,
-                        onRefresh = viewModel::startSession,
+                        onRefresh = actions.onStart,
                         onBack = onBack,
                         modifier = Modifier.padding(paddingValues)
                     )
@@ -130,6 +177,7 @@ fun SrsReviewScreen(
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
                             .padding(paddingValues)
+                            .imePadding()
                             .padding(
                                 horizontal = Dimens.screenGutter,
                                 vertical = Dimens.space12
@@ -139,7 +187,9 @@ fun SrsReviewScreen(
                         ReviewProgressHeader(
                             currentIndex = state.currentIndex,
                             total = state.sessionTotal,
-                            mastery = currentWord.mastery
+                            mastery = currentWord.mastery,
+                            retention = state.desiredRetention,
+                            onSettings = { retentionDialog = true }
                         )
                         key(task.item.id, task.mode) {
                             VocabularyReviewContent(
@@ -148,7 +198,9 @@ fun SrsReviewScreen(
                                 answerText = state.answerText,
                                 answerChecked = state.answerChecked,
                                 typedAnswerCorrect = state.typedAnswerCorrect,
-                                onAnswerChange = viewModel::updateAnswer,
+                                hintUsed = state.hintUsed,
+                                onHint = actions.onHint,
+                                onAnswerChange = actions.onAnswer,
                                 isRevealed = state.isAnswerRevealed,
                                 onPlayWord = { tts.speak(currentWord.word) },
                                 onPlayExample = {
@@ -163,30 +215,33 @@ fun SrsReviewScreen(
                         }
                         if (state.errorMessage != null) {
                             Text(state.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
-                            OutlinedButton(onClick = viewModel::startSession) { Text("Restart review") }
+                            OutlinedButton(onClick = actions.onStart) { Text("Restart review") }
                         }
                         if (state.isAnswerRevealed) {
                             if (task.allowsAlternative && state.typedAnswerCorrect == false && state.answerText.isNotBlank()) {
-                                OutlinedButton(onClick = viewModel::submitAlternative, enabled = !state.isSubmitting) {
-                                    Text("My answer also fits — leave target ungraded")
+                                OutlinedButton(onClick = actions.onAlternative, enabled = !state.isSubmitting) {
+                                    Text("Another answer fits — skip grading")
                                 }
                             }
                             ReviewActionBar(
-                                item = currentWord,
+                                item = task.predictionItem,
+                                desiredRetention = state.desiredRetention,
+                                hintUsed = state.hintUsed,
+                                verifiedAlternative = task.mode.requiresTypedAnswer && state.typedAnswerCorrect == true && !task.isExactTarget(state.answerText),
                                 enabled = !state.isSubmitting,
-                                isScheduled = currentWord.nextReview <= System.currentTimeMillis(),
+                                isScheduled = task.isSkillDue,
                                 successEnabled = !task.mode.requiresTypedAnswer || state.typedAnswerCorrect == true,
-                                onRate = viewModel::submitRating
+                                onRate = actions.onRate
                             )
                         } else {
                             if (task.mode.requiresTypedAnswer) {
-                                OutlinedButton(onClick = viewModel::dontKnow, enabled = !state.isSubmitting) {
-                                    Text("I don’t know — show the target")
+                                OutlinedButton(onClick = actions.onDontKnow, enabled = !state.isSubmitting) {
+                                    Text("I don’t know")
                                 }
                             }
                             val canCheck = task.mode.requiresTypedAnswer && !state.answerChecked
                             Button(
-                                onClick = if (canCheck) viewModel::checkAnswer else viewModel::revealAnswer,
+                                onClick = if (canCheck) actions.onCheck else actions.onReveal,
                                 enabled = !state.isSubmitting && (!canCheck || state.answerText.isNotBlank()),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -213,7 +268,9 @@ fun SrsReviewScreen(
 private fun ReviewProgressHeader(
     currentIndex: Int,
     total: Int,
-    mastery: Int
+    mastery: Int,
+    retention: Double,
+    onSettings: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
         Row(
@@ -230,7 +287,8 @@ private fun ReviewProgressHeader(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "$mastery% mastery",
+                text = "$mastery progress · FSRS ${(retention * 100).toInt()}%",
+                modifier = Modifier.clickable(onClick = onSettings).padding(Dimens.space4),
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -260,6 +318,8 @@ private fun VocabularyReviewContent(
     answerText: String,
     answerChecked: Boolean,
     typedAnswerCorrect: Boolean?,
+    hintUsed: Boolean,
+    onHint: () -> Unit,
     onAnswerChange: (String) -> Unit,
     isRevealed: Boolean,
     onPlayWord: () -> Unit,
@@ -300,8 +360,10 @@ private fun VocabularyReviewContent(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (task.allowsAlternative) {
+            if (hintUsed) {
                 Text(task.targetHint, style = MaterialTheme.typography.labelMedium)
+            } else if (!answerChecked) {
+                TextButton(onClick = onHint) { Text("Show a hint") }
             }
             OutlinedTextField(
                 value = answerText,
@@ -313,7 +375,12 @@ private fun VocabularyReviewContent(
             )
             if (answerChecked) {
                 Text(
-                    text = if (typedAnswerCorrect == true) "Correct" else "Different from the target. Another word may also fit.",
+                    text = when {
+                        typedAnswerCorrect != true -> "Different from the target. Another word may also fit."
+                        !task.isExactTarget(answerText) -> "Valid alternative. The target word stays ungraded."
+                        hintUsed -> "Correct with a hint — guided practice"
+                        else -> "Correct"
+                    },
                     color = if (typedAnswerCorrect == true) Accent.success else Accent.danger,
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center
@@ -366,7 +433,24 @@ private fun VocabularyReviewContent(
                     }
                 }
             }
-            if (item.englishDefinition.isNotBlank()) {
+            task.lexicalRelation?.let { relation ->
+                val uriHandler = LocalUriHandler.current
+                Text("${relation.type.name.replace('_', ' ')} · compare these senses", style = MaterialTheme.typography.labelLarge)
+                listOf(relation.first, relation.second).forEach { sense ->
+                    AppInset {
+                        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space4)) {
+                            Text("${sense.word} (${sense.partOfSpeech})", fontWeight = FontWeight.Bold)
+                            Text(sense.definition)
+                            PersianContentRtl { Text(sense.meaningFa) }
+                            Text("“${sense.example}”")
+                        }
+                    }
+                }
+                relation.sources.forEachIndexed { index, url ->
+                    TextButton(onClick = { uriHandler.openUri(url) }) { Text("Usage reference: ${if (index == 0) relation.first.word else relation.second.word}") }
+                }
+            }
+            if (task.lexicalRelation == null && item.englishDefinition.isNotBlank()) {
                 Text(
                     text = item.englishDefinition,
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -427,6 +511,9 @@ private fun VocabularyReviewContent(
 @Composable
 private fun ReviewActionBar(
     item: VocabularyItem,
+    desiredRetention: Double,
+    hintUsed: Boolean,
+    verifiedAlternative: Boolean,
     enabled: Boolean,
     successEnabled: Boolean,
     isScheduled: Boolean,
@@ -434,7 +521,12 @@ private fun ReviewActionBar(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
         Text(
-            text = if (isScheduled) "How well did you remember this word?" else "Extra practice — success keeps your scheduled review",
+            text = when {
+                verifiedAlternative -> "Valid alternative — continue without grading target"
+                hintUsed -> "A hint was used — successful answers count as Hard"
+                isScheduled -> "How well did you remember this word?"
+                else -> "Extra practice — success keeps your scheduled review"
+            },
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -446,35 +538,35 @@ private fun ReviewActionBar(
             horizontalArrangement = Arrangement.spacedBy(Dimens.space6)
         ) {
             ReviewRatingButton(
-                label = "Again",
-                interval = "30 min",
+                label = if (verifiedAlternative) "Continue" else "Again",
+                interval = if (verifiedAlternative) "Ungraded" else "30 min",
                 color = Accent.danger,
                 enabled = enabled,
-                onClick = { onRate(ReviewRating.AGAIN) },
+                onClick = { onRate(if (verifiedAlternative) ReviewRating.GOOD else ReviewRating.AGAIN) },
                 modifier = Modifier.weight(1f)
             )
             ReviewRatingButton(
                 label = "Hard",
-                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD) else "Practice",
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.HARD, desiredRetention) else "Practice",
                 color = Accent.warning,
-                enabled = enabled && successEnabled,
+                enabled = enabled && successEnabled && !verifiedAlternative,
                 onClick = { onRate(ReviewRating.HARD) },
                 modifier = Modifier.weight(1f)
             )
             ReviewRatingButton(
                 label = "Good",
-                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.GOOD) else "Practice",
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, if (hintUsed) ReviewRating.HARD else ReviewRating.GOOD, desiredRetention) else "Practice",
                 color = MaterialTheme.colorScheme.primary,
-                enabled = enabled && successEnabled,
-                onClick = { onRate(ReviewRating.GOOD) },
+                enabled = enabled && successEnabled && !verifiedAlternative,
+                onClick = { onRate(if (hintUsed) ReviewRating.HARD else ReviewRating.GOOD) },
                 modifier = Modifier.weight(1f)
             )
             ReviewRatingButton(
                 label = "Easy",
-                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, ReviewRating.EASY) else "Practice",
+                interval = if (isScheduled) SpacedRepetitionSystem.getIntervalLabel(item, if (hintUsed) ReviewRating.HARD else ReviewRating.EASY, desiredRetention) else "Practice",
                 color = Accent.success,
-                enabled = enabled && successEnabled,
-                onClick = { onRate(ReviewRating.EASY) },
+                enabled = enabled && successEnabled && !verifiedAlternative,
+                onClick = { onRate(if (hintUsed) ReviewRating.HARD else ReviewRating.EASY) },
                 modifier = Modifier.weight(1f)
             )
         }

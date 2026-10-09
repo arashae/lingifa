@@ -21,6 +21,9 @@ import com.example.data.model.VocabularyItem
 import com.example.data.model.VocabularyPack
 import com.example.data.model.VocabularyPackItem
 import com.example.data.model.VocabularySense
+import com.example.data.model.VocabularySkillProgress
+import com.example.data.model.VocabularyReviewEvent
+import com.example.data.model.VocabularyReviewSettings
 import com.example.data.seed.IeltsDeckSeed
 import com.example.data.seed.InitialDataSeed
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +37,9 @@ import java.util.Locale
     entities = [
         VocabularyItem::class,
         VocabularySense::class,
+        VocabularySkillProgress::class,
+        VocabularyReviewEvent::class,
+        VocabularyReviewSettings::class,
         VocabularyPack::class,
         VocabularyPackItem::class,
         VocabularyDatasetChunk::class,
@@ -46,11 +52,12 @@ import java.util.Locale
         ExamWordProgressRecord::class,
         ExamTrackSettingsRecord::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun reviewLearningDao(): ReviewLearningDao
     abstract fun vocabularyDao(): VocabularyDao
     abstract fun vocabularySenseDao(): VocabularySenseDao
     abstract fun vocabularyPackDao(): VocabularyPackDao
@@ -197,6 +204,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE vocabulary_items ADD COLUMN schedulerVersion TEXT NOT NULL DEFAULT 'legacy'")
+                db.execSQL("""CREATE TABLE IF NOT EXISTS vocabulary_skill_progress (
+                    vocabularyId INTEGER NOT NULL, senseKey TEXT NOT NULL, axis TEXT NOT NULL,
+                    stability REAL NOT NULL, difficulty REAL NOT NULL, firstReview INTEGER NOT NULL,
+                    lastReview INTEGER NOT NULL, lastPractice INTEGER NOT NULL, nextReview INTEGER NOT NULL,
+                    correctCount INTEGER NOT NULL, incorrectCount INTEGER NOT NULL, independentSuccesses INTEGER NOT NULL,
+                    schedulerVersion TEXT NOT NULL, PRIMARY KEY(vocabularyId, senseKey, axis),
+                    FOREIGN KEY(vocabularyId) REFERENCES vocabulary_items(id) ON DELETE CASCADE)""")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_skill_progress_vocabularyId ON vocabulary_skill_progress(vocabularyId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_skill_progress_nextReview ON vocabulary_skill_progress(nextReview)")
+                db.execSQL("""CREATE TABLE IF NOT EXISTS vocabulary_review_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, vocabularyId INTEGER NOT NULL,
+                    senseKey TEXT NOT NULL, senseId INTEGER, word TEXT NOT NULL, axis TEXT NOT NULL,
+                    reviewedAt INTEGER NOT NULL, category TEXT NOT NULL, rating INTEGER, hintUsed INTEGER NOT NULL,
+                    exactTarget INTEGER NOT NULL, answer TEXT NOT NULL, prompt TEXT NOT NULL,
+                    expectedAnswer TEXT NOT NULL, prediction REAL, elapsedDays REAL NOT NULL, desiredRetention REAL NOT NULL,
+                    schedulerVersion TEXT NOT NULL, source TEXT NOT NULL)""")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_review_events_vocabularyId ON vocabulary_review_events(vocabularyId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_vocabulary_review_events_reviewedAt ON vocabulary_review_events(reviewedAt)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS vocabulary_review_settings (id INTEGER NOT NULL PRIMARY KEY, desiredRetention REAL NOT NULL)")
+                db.execSQL("INSERT OR IGNORE INTO vocabulary_review_settings(id, desiredRetention) VALUES(1, 0.9)")
+                // Existing dates, counts, packs, senses and legacy skill tags stay intact.
+                // No historical event is fabricated; each skill starts FSRS on its first real grade.
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val appContext = context.applicationContext
@@ -205,7 +240,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "linguafa_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .addCallback(DatabaseCallback(scope, appContext))
                     .build()
                 INSTANCE = instance
